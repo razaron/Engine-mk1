@@ -14,6 +14,8 @@ env:
 # Install dependencies
 addons:
   apt:
+    sources:
+	  - sourceline: 'ppa:libreoffice/libreoffice-4-2'
     packages:
       - doxygen
       - doxygen-doc
