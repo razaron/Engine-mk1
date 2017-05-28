@@ -4,7 +4,7 @@
     - Component
     - Space
     - ObjectPool
-    - EventStream
+    - ~EventStream~
     - System
     - Entity
 - Make everything use ObjectPool
