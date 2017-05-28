@@ -8,13 +8,13 @@
 */
 namespace razaron::eventstream
 {
-	/*! Denotes the direction of an EventStream. */
+	/*! @brief Denotes the direction of an EventStream. */
 	enum class StreamType { 
 		INCOMING,	/*!< will stay in this EventStream */ 
 		OUTGOING	/*!< will leave this EventStream */ 
 	};
 
-	/*! The EventType is used to determine how to process an Event. */
+	/*! @brief The EventType is used to determine how to process an Event. */
 	enum class EventType : unsigned short { 
 		TYPE_1,	/*!< example, TODO REMOVE THIS SHIT */
 		TYPE_2	/*!< example, TODO REMOVE THIS SHIT */
