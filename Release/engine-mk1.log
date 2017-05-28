@@ -1,0 +1,11 @@
+﻿  Component.cpp
+  EventStream.cpp
+  main.cpp
+  PhysicsSystem.cpp
+  RenderComponent.cpp
+  Space.cpp
+  TransformComponent.cpp
+  Generating code
+  All 2642 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Finished generating code
+  engine-mk1.vcxproj -> c:\users\babar\documents\visual studio 2017\Projects\engine-mk1\Release\engine-mk1.exe
