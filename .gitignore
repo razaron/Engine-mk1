@@ -45,3 +45,13 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
+
+
+# =========================
+# Custom Ignore
+# =========================
+Debug
+*.vcxproj
+engine-mk1.vcxproj.filters
+engine-mk1.vcxproj.user
+travis.yml
