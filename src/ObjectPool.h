@@ -12,6 +12,7 @@
 
 #include "Misc.h"
 
+/*! Things related to an aligned generic object pool implementation. */
 namespace razaron::objectpool
 {
 	using Array8 = alignedArray<char, OBJECT_POOL_PAGE_LENGTH * 8, OBJECT_POOL_PAGE_ALIGNMENT>;

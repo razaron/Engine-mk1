@@ -6,7 +6,7 @@
 #include <functional>
 
 
-/*! Contains classes, enums and structs related to event streaming. */
+/*! Contains classes, enums and structs related to graphs and graph traversal. */
 namespace razaron::graph
 {
 	template <class, class> struct Vertex;
@@ -49,7 +49,7 @@ namespace razaron::graph
 		char state;				/*!< The current state of the Edge, represented by a bitfield. */
 	};
 
-	/*! A template struct for representing Edge objects.
+	/*! A template class for representing Graph objects.
 	*
 	*	@tparam V The data type held by Vertex objects
 	*	@tparam E The data type held by Edge objects
