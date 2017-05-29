@@ -274,7 +274,7 @@ void testGraph()
 {
 	g.onVertexDiscoverFunc = [](TestVertex& v, TestGraph& g) { g_foo++; };
 
-	g.breadthFirstSearch(0);
+	g.breadthFirstTraversal(0);
 
 	std::cout << "g_foo == " << g_foo.get() << ", curID == " << curID << std::endl;
 	g_foo = 0;
@@ -373,7 +373,7 @@ int main() {
 		nextRow.clear();
 	}
 
-	test(testGraph, "Graph", 10, false, false);
+	test(testGraph, "Graph", 10, true, false);
 
 	std::cin.get();
 }

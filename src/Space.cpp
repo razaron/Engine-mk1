@@ -13,7 +13,7 @@ Space::Space(SystemGraph p_systemGraph)
 Space::~Space()
 {
 	m_systemGraph.onVertexDiscoverFunc = [](SystemGraphVertex& v, SystemGraph& g) { delete v.data; };
-	m_systemGraph.breadthFirstSearch(0);
+	m_systemGraph.breadthFirstTraversal(0);
 
 	std::clog << "Space Destructor" << std::endl;
 	g_destroyed++;
@@ -34,7 +34,7 @@ void Space::update(double delta)
 	m_systemGraph.onEdgeDiscoverFunc = [](SystemGraphEdge& e, SystemGraph& g) {
 		g.data.orderedSystems.push_back({ g[e.target].data, g[e.source].data });
 	};
-	m_systemGraph.breadthFirstSearch(0);
+	m_systemGraph.breadthFirstTraversal(0);
 
 	//Bubble events up the graph to the root system
 	auto vec = m_systemGraph.data.orderedSystems;
@@ -64,7 +64,7 @@ void Space::update(double delta)
 	std::vector<Entity>* vE = &m_entities;
 	m_systemGraph.onVertexDiscoverFunc = [vE, delta](SystemGraphVertex& v, SystemGraph& g) { v.data->update(vE, (delta <= 0) ? 0 : delta); };
 
-	m_systemGraph.breadthFirstSearch(0);
+	m_systemGraph.breadthFirstTraversal(0);
 }
 
 void razaron::core::space::Space::addEntity(Entity && p_entity)
