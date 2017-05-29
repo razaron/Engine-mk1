@@ -32,7 +32,7 @@ namespace razaron::graph
 		unsigned short id;					/*!< An ID that doubles as an index value. */
 		char state;							/*!< The current state of the Vertex, represented by a bitfield. */
 
-		/*! Constructs an empty Vertex with <tt>index == p_index</tt>. */
+		/*! Constructs an empty Vertex with the ID <tt>p_index</tt>. */
 		Vertex(unsigned short p_index) :id(p_index), data(V{}), state(STATE_WHITE) {}
 	};
 
@@ -44,8 +44,8 @@ namespace razaron::graph
 	struct Edge
 	{
 		E data;					/*!< The data held by this Edge. */
-		unsigned short source;	/*!< The id of the source Vertex. */
-		unsigned short target;	/*!< The id of the target Vertex. */
+		unsigned short source;	/*!< The ID of the source Vertex. */
+		unsigned short target;	/*!< The ID of the target Vertex. */
 		char state;				/*!< The current state of the Edge, represented by a bitfield. */
 	};
 
@@ -65,33 +65,41 @@ namespace razaron::graph
 
 		/*! Performs a breadth first traversal of the Graph.
 		*	
-		*	Starting at the Vertex with <tt>id == p_origin</tt>, traverses the Graph in breadth first order.
-		*	Runs <tt>onVertexDiscoverFunc</tt> for every Vertex with <tt>state == STATE_WHITE</tt> and
-		*	<tt>onEdgeDiscoverFunc</tt> for every Edge with <tt>state == STATE_WHITE</tt>.
+		*	Starting at the Vertex with the ID <tt>p_origin</tt>, traverses the Graph in breadth first order.
+		*	Runs onVertexDiscoverFunc for every Vertex with the state <tt>STATE_WHITE</tt> and
+		*	onEdgeDiscoverFunc for every Edge with the state <tt>STATE_WHITE</tt>.
 		*
-		*	By default Sets the <tt>state</tt> of every touched Vertex and Edge to <tt>STATE_GREY</tt> unless specified otherwise
-		*	in <tt>onVertexDiscoverFunc</tt> or <tt>onEdgeDiscoverFunc</tt>. 
+		*	By default Sets the state of every touched Vertex and Edge to <tt>STATE_GREY</tt> unless specified otherwise
+		*	in onVertexDiscoverFunc or onEdgeDiscoverFunc. 
 		*
-		*	@param p_origin The <tt>id</tt> of the vertex to start the traversal from.
+		*	@param p_origin The ID of the Vertex to start the traversal from.
 		*/
 		void breadthFirstTraversal(unsigned short p_origin);
 
 		/*!	Constructs and adds a new Edge to the Graph.
 		*	
-		*	If no Vertex exists with id p_source or p_target, constructs and adds new Vertex objects for the missing id%s to the Graph.
+		*	If no Vertex objects exist with the IDs <tt>p_source</tt> or <tt>p_target</tt>, constructs and adds new Vertex objects for the missing IDs to the Graph.
 		*
 		*	@param p_data The data held by the edge.
-		*	@param p_source The id of the source Vertex.
-		*	@param p_target The id of the target Vertex.
+		*	@param p_source The ID of the source Vertex.
+		*	@param p_target The ID of the target Vertex.
 		*/
 		void addEdge(E p_data, unsigned short p_source, unsigned short p_target);
+
+		/*! Resets the state of all Edge and Vertex objects belonging to the Graph to STATE_WHITE. */
 		void reset();
 
+		/*!	Searched the graph for the Vertex with id == p_index.
+		*
+		*	@exception std::out_of_range p_index out of range for m_vertices.
+		*
+		*	@return The Vertex object.
+		*/
 		Vertex<V, E>& operator [](unsigned short p_index);
 			
-		G data;
-		std::function<void(Vertex<V, E>&, Graph<V, E, G>&)> onVertexDiscoverFunc = nullptr;
-		std::function<void(Edge<E>&, Graph<V, E, G>&)> onEdgeDiscoverFunc = nullptr;
+		G data; /*!< The data held by this Graph */
+		std::function<void(Vertex<V, E>&, Graph<V, E, G>&)> onVertexDiscoverFunc = nullptr;	/*!< The function to run on Vertex discovery. */
+		std::function<void(Edge<E>&, Graph<V, E, G>&)> onEdgeDiscoverFunc = nullptr;		/*<! The function to run on Edge discovery */
 
 	private:
 		std::vector<Vertex<V, E>> m_vertices;
@@ -129,7 +137,7 @@ namespace razaron::graph
 		m_openQueue.push_back(&(*this)[p_origin]);
 
 		//add adjacent vertices to openQueue
-		for (auto& e : static_cast<Vertex<V,E>>((*this)[p_origin]).adjacencyList)
+		for (auto& e : (*this)[p_origin].adjacencyList)
 		{
 
 			if (onEdgeDiscoverFunc && e.state == STATE_WHITE)
