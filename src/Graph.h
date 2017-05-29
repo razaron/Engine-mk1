@@ -11,10 +11,7 @@
 #define  VERTEX_RED 0x08 //Failure
 #define  VERTEX_GREEN 0x10 //Success
 
-/*!
-*
-*
-*/
+/*! Contains classes, enums and structs related to event streaming. */
 namespace razaron::graph
 {
 	template <class, class> struct Vertex;

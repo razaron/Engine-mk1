@@ -4,8 +4,7 @@
 
 #include "Misc.h"
 
-/*! Contains classes, enums and structs related to event streaming.
-*/
+/*! Contains classes, enums and structs related to event streaming. */
 namespace razaron::eventstream
 {
 	/*! Denotes the direction of an EventStream. */
@@ -15,9 +14,9 @@ namespace razaron::eventstream
 	};
 
 	/*! The EventType is used to determine how to process an Event. */
-	enum class EventType : unsigned short { 
-		TYPE_1,
-		TYPE_2
+	enum class EventType : unsigned short {
+		TYPE_1,	/*!< example, TODO REMOVE THIS SHIT. */
+		TYPE_2	/*!< example, TODO REMOVE THIS SHIT. */
 	};
 	
 	/*! Contains the data required to receive and process an Event. */
