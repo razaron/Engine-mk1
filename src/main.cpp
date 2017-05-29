@@ -264,43 +264,21 @@ void testEventStream()
 	}
 }
 
+typedef Graph<char, char, char> TestGraph;
+typedef Vertex<char, char> TestVertex;
+typedef Edge<char> TestEdge;
+
+TestGraph g;
+unsigned short curID = 0;
 void testGraph()
 {
-
-	typedef Graph<char, char, char> TestGraph;
-	typedef Vertex<char, char> TestVertex;
-	typedef Edge<char> TestEdge;
-
-	TestGraph g;
-
-	unsigned short curID = 0;
-	std::vector<unsigned short> curRow;
-	std::vector<unsigned short> nextRow;
-
-	curRow.push_back(curID++);
-	for (auto i = 0; i < 5; i++) 
-	{
-		for (auto vertID : curRow)
-		{
-			for (auto j = 0; j < 2; j++) 
-			{
-				g.addEdge('a', vertID, curID);
-				nextRow.push_back(curID);
-				curID++;
-			}
-		}
-
-		curRow = nextRow;
-		nextRow.clear();
-	}
-
-	//g.onEdgeDiscoverFunc = [](Edge e) {std::cout << "Edge source: " << e.source << " Edge target: " << e.target << std::endl;};
 	g.onVertexDiscoverFunc = [](TestVertex& v, TestGraph& g) { g_foo++; };
 
 	g.breadthFirstSearch(0);
 
 	std::cout << "g_foo == " << g_foo.get() << ", curID == " << curID << std::endl;
 	g_foo = 0;
+	g.reset();
 }
 
 using namespace razaron::render::component;
@@ -374,7 +352,28 @@ void testSpace()
 }
 
 int main() {
-	test(testGraph, "Graph", 100, false, false);
+
+	std::vector<unsigned short> curRow;
+	std::vector<unsigned short> nextRow;
+
+	curRow.push_back(curID++);
+	for (auto i = 0; i < 4; i++)
+	{
+		for (auto vertID : curRow)
+		{
+			for (auto j = 0; j < 8; j++)
+			{
+				g.addEdge('a', vertID, curID);
+				nextRow.push_back(curID);
+				curID++;
+			}
+		}
+
+		curRow = nextRow;
+		nextRow.clear();
+	}
+
+	test(testGraph, "Graph", 10, false, false);
 
 	std::cin.get();
 }

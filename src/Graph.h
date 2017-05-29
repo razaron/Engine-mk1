@@ -196,7 +196,7 @@ namespace razaron::graph
 		else
 		{
 			std::vector<Vertex<V, E>>::iterator it = std::find_if(m_vertices.begin(), m_vertices.end(),
-				[p_index](const Vertex<V, E>& v) {return v.index == p_index;}
+				[p_index](const Vertex<V, E>& v) {return v.index == p_index; }
 			);
 
 			if (it == m_vertices.end())

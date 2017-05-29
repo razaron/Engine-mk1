@@ -51,7 +51,7 @@ Temporary Items
 # Custom Ignore
 # =========================
 Debug
+Release
 *.vcxproj
 engine-mk1.vcxproj.filters
 engine-mk1.vcxproj.user
-Release
