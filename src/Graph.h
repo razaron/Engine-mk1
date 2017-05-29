@@ -28,21 +28,31 @@ namespace razaron::graph
 	{
 		V data;	/*!< The data held by this Vertex. */
 		std::list<Edge<E>> adjacencyList; /*!< An adjacency list of connected Edge%s. */
-		unsigned short index; /*!< An ID that doubles as an index value. */
+		unsigned short id; /*!< An ID that doubles as an index value. */
 		char state; /*!< The current state of the Vertex, represented by a bitfield. */
 
-		/*! Constructs an empty Vertex with index = p_index */
-		Vertex(unsigned short p_index) :index(p_index), data(V{}), state(VERTEX_WHITE) {}
+		/*! Constructs an empty Vertex with index = p_index. */
+		Vertex(unsigned short p_index) :id(p_index), data(V{}), state(VERTEX_WHITE) {}
 	};
 
+	/*! A template struct for representing Edge objects.
+	*
+	*	@tparam E The data type held by the Edge
+	*/
 	template <class E>
 	struct Edge
 	{
-		E data;
-		unsigned short source;
+		E data; /*!< The data held by this Edge. */
+		unsigned short source; 
 		unsigned short target;
 	};
 
+	/*! A template struct for representing Edge objects.
+	*
+	*	@tparam V The data type held by the Edge
+	*	@tparam E The data type held by the Edge
+	*	@tparam G The data type held by the Edge
+	*/
 	template <class V, class E, class G>
 	class Graph
 	{
@@ -118,10 +128,10 @@ namespace razaron::graph
 					if (v->state == VERTEX_WHITE)
 					{
 						if (onVertexDiscoverFunc)
-							onVertexDiscoverFunc((*this)[v->index], *this);
+							onVertexDiscoverFunc((*this)[v->id], *this);
 
 						//add adjacent vertices to openQueue
-						for (auto& e : (*this)[v->index].adjacencyList)
+						for (auto& e : (*this)[v->id].adjacencyList)
 						{
 							if (onEdgeDiscoverFunc)
 								onEdgeDiscoverFunc(e, *this);
@@ -192,14 +202,14 @@ namespace razaron::graph
 		{
 			throw std::out_of_range("p_index out of range for m_vertices");
 		}
-		else if (m_vertices[p_index].index == p_index)
+		else if (m_vertices[p_index].id == p_index)
 		{
 			return m_vertices[p_index];
 		}
 		else
 		{
 			std::vector<Vertex<V, E>>::iterator it = std::find_if(m_vertices.begin(), m_vertices.end(),
-				[p_index](const Vertex<V, E>& v) {return v.index == p_index; }
+				[p_index](const Vertex<V, E>& v) {return v.id == p_index; }
 			);
 
 			if (it == m_vertices.end())
