@@ -26,10 +26,10 @@ namespace razaron::graph
 	template <class V, class E>
 	struct Vertex
 	{
-		V data;	/*! The data held by this Vertex */
-		std::list<Edge<E>> adjacencyList; /*! An adjacency list of connected Edge%s*/
-		unsigned short index; /*! An ID that doubles as an index value */
-		char state; /*! The current state of the Vertex, represented by a bitfield */
+		V data;	/*!< The data held by this Vertex. */
+		std::list<Edge<E>> adjacencyList; /*!< An adjacency list of connected Edge%s. */
+		unsigned short index; /*!< An ID that doubles as an index value. */
+		char state; /*!< The current state of the Vertex, represented by a bitfield. */
 
 		/*! Constructs an empty Vertex with index = p_index */
 		Vertex(unsigned short p_index) :index(p_index), data(V{}), state(VERTEX_WHITE) {}
