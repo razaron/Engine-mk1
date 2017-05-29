@@ -12,9 +12,9 @@ namespace razaron::core::space
 
 	struct SpaceGraphData;
 
-	typedef Graph<System, char, SpaceGraphData> SpaceGraph;
-	typedef Vertex<System> SpaceGraphVertex;
-	typedef Edge SpaceGraphEdge;
+	typedef Graph<System*, char, SpaceGraphData> SystemGraph;
+	typedef Vertex<System*, char> SystemGraphVertex;
+	typedef Edge<char> SystemGraphEdge;
 
 	struct SpaceGraphData
 	{
@@ -23,7 +23,7 @@ namespace razaron::core::space
 
 	class Space {
 	public:
-		Space(SpaceGraph p_systemGraph);
+		Space(SystemGraph p_systemGraph);
 		~Space();
 
 		void update(double delta);
@@ -38,7 +38,7 @@ namespace razaron::core::space
 	private:
 		unsigned m_id;
 
-		SpaceGraph m_systemGraph;
+		SystemGraph m_systemGraph;
 
 		std::vector<Entity> m_entities;
 		EventStream m_eventStream;

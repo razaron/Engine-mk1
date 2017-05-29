@@ -54,3 +54,4 @@ Debug
 *.vcxproj
 engine-mk1.vcxproj.filters
 engine-mk1.vcxproj.user
+Release

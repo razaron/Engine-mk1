@@ -3,7 +3,7 @@
 using namespace razaron::core::space;
 using namespace razaron::core::entity;
 
-Space::Space(SpaceGraph p_systemGraph)
+Space::Space(SystemGraph p_systemGraph)
 	:m_systemGraph(std::move(p_systemGraph))
 {
 	std::clog << "Space Constructor" << std::endl;
@@ -12,7 +12,7 @@ Space::Space(SpaceGraph p_systemGraph)
 
 Space::~Space()
 {
-	m_systemGraph.onVertexDiscoverFunc = [](Vertex<System>& v, SpaceGraph& g) { delete v.data; };
+	m_systemGraph.onVertexDiscoverFunc = [](SystemGraphVertex& v, SystemGraph& g) { delete v.data; };
 	m_systemGraph.breadthFirstSearch(0);
 
 	std::clog << "Space Destructor" << std::endl;
@@ -31,7 +31,7 @@ void Space::update(double delta)
 
 	//Creates a breadth first ordered vector of {*system, parent *system} pairs
 	m_systemGraph.data.orderedSystems.clear();
-	m_systemGraph.onEdgeDiscoverFunc = [](SpaceGraphEdge& e, SpaceGraph& g) {
+	m_systemGraph.onEdgeDiscoverFunc = [](SystemGraphEdge& e, SystemGraph& g) {
 		g.data.orderedSystems.push_back({ g[e.target].data, g[e.source].data });
 	};
 	m_systemGraph.breadthFirstSearch(0);
@@ -62,7 +62,7 @@ void Space::update(double delta)
 	m_systemGraph.reset();
 
 	std::vector<Entity>* vE = &m_entities;
-	m_systemGraph.onVertexDiscoverFunc = [vE, delta](SpaceGraphVertex& v, SpaceGraph& g) { v.data->update(vE, (delta <= 0) ? 0 : delta); };
+	m_systemGraph.onVertexDiscoverFunc = [vE, delta](SystemGraphVertex& v, SystemGraph& g) { v.data->update(vE, (delta <= 0) ? 0 : delta); };
 
 	m_systemGraph.breadthFirstSearch(0);
 }

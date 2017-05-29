@@ -14,6 +14,7 @@
 
 AtomicCounter<unsigned> g_constructed;
 AtomicCounter<unsigned> g_destroyed;
+AtomicCounter<unsigned> g_foo;
 
 using namespace razaron::core::space;
 using namespace razaron::core::system;
@@ -265,30 +266,41 @@ void testEventStream()
 
 void testGraph()
 {
-	std::cout << std::endl;
-	enum V { A, B, C, D, E, F, G, H };
 
-	Graph<char, char, char> g;
-	g.addEdge(V::A, V::B);
-	g.addEdge(V::A, V::C);
-	g.addEdge(V::B, V::D);
-	g.addEdge(V::C, V::E);
-	g.addEdge(V::D, V::F);
-	g.addEdge(V::E, V::F);
+	typedef Graph<char, char, char> TestGraph;
+	typedef Vertex<char, char> TestVertex;
+	typedef Edge<char> TestEdge;
 
-	g[V::A].data = "first";
-	g[V::B].data = "second";
-	g[V::C].data = "third";
-	g[V::D].data = "fourth";
-	g[V::E].data = "fifth";
-	g[V::F].data = "sixth";
+	TestGraph g;
+
+	unsigned short curID = 0;
+	std::vector<unsigned short> curRow;
+	std::vector<unsigned short> nextRow;
+
+	curRow.push_back(curID++);
+	for (auto i = 0; i < 5; i++) 
+	{
+		for (auto vertID : curRow)
+		{
+			for (auto j = 0; j < 2; j++) 
+			{
+				g.addEdge('a', vertID, curID);
+				nextRow.push_back(curID);
+				curID++;
+			}
+		}
+
+		curRow = nextRow;
+		nextRow.clear();
+	}
 
 	//g.onEdgeDiscoverFunc = [](Edge e) {std::cout << "Edge source: " << e.source << " Edge target: " << e.target << std::endl;};
-	g.onVertexDiscoverFunc = [](Vertex<char>& v, Graph<char, char, char>& g) { std::cout << "Vertex data: " << v.data << std::endl; };
+	g.onVertexDiscoverFunc = [](TestVertex& v, TestGraph& g) { g_foo++; };
 
-	g.breadthFirstSearch(V::A);
+	g.breadthFirstSearch(0);
 
-	std::cout << std::endl;
+	std::cout << "g_foo == " << g_foo.get() << ", curID == " << curID << std::endl;
+	g_foo = 0;
 }
 
 using namespace razaron::render::component;
@@ -304,15 +316,15 @@ void testSpace()
 	razaron::physics::PhysicsSystem e;
 	razaron::render::RenderSystem f;
 
-	enum V { A, B, C, D, E, F, G, H };
+	enum V: unsigned short { A, B, C, D, E, F, G, H };
 
-	Graph<System, char, SpaceGraphData> g;
-	g.addEdge(V::A, V::B);
-	g.addEdge(V::A, V::C);
-	g.addEdge(V::B, V::D);
-	g.addEdge(V::C, V::E);
-	g.addEdge(V::D, V::F);
-	g.addEdge(V::E, V::F);
+	SystemGraph g;
+	g.addEdge('a', V::A, V::B);
+	g.addEdge('a', V::A, V::C);
+	g.addEdge('a', V::B, V::D);
+	g.addEdge('a', V::C, V::E);
+	g.addEdge('a', V::D, V::F);
+	g.addEdge('a', V::E, V::F);
 
 	g[V::A].data = &a;
 	g[V::B].data = &b;
@@ -362,14 +374,7 @@ void testSpace()
 }
 
 int main() {
-	//test(testEventStream, "EventStream", 1000, false, false);
-
-	//test(testHeap, "Heap", 1000, false, false);
-	//test(testObjectPool, "ObjectPool", 1000, false, false);
-
-	//test(testGraph, "Graph", 1000, false, false);
-
-	test(testSpace, "Space", 10, false, false);
+	test(testGraph, "Graph", 100, false, false);
 
 	std::cin.get();
 }

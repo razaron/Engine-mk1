@@ -2,6 +2,7 @@
 
 #include "Misc.h"
 
+/*! */
 namespace razaron::core::component
 {
 	enum class ComponentType { DEFAULT, FOO, BAR, RENDER, MESH, TRANSFORM, LOCOMOTION, COLLIDER, CONTROLLER, STEERING, ENUM_SIZE};

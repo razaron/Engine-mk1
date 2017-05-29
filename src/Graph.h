@@ -11,25 +11,31 @@
 #define  VERTEX_RED 0x08 //Failure
 #define  VERTEX_GREEN 0x10 //Success
 
+/*!
+*
+*
+*/
 namespace razaron::graph
 {
-	template <class> struct Vertex;
-	struct Edge;
+	template <class, class> struct Vertex;
+	template <class> struct Edge;
 	template <class, class, class> class Graph;
 
-	template <class V>
+	template <class V, class E>
 	struct Vertex
 	{
-		V* data;
-		std::list<Edge> adjacencyList;
+		V data;
+		std::list<Edge<E>> adjacencyList;
 		unsigned short index;
 		char state;
 
-		Vertex(unsigned short p_index) :index(p_index), data(nullptr), state(VERTEX_WHITE) {}
+		Vertex(unsigned short p_index) :index(p_index), data(V{}), state(VERTEX_WHITE) {}
 	};
 
+	template <class E>
 	struct Edge
 	{
+		E data;
 		unsigned short source;
 		unsigned short target;
 	};
@@ -43,19 +49,19 @@ namespace razaron::graph
 		~Graph();
 
 		void breadthFirstSearch(unsigned short p_origin);
-		void addEdge(unsigned short source, unsigned short target);
+		void addEdge(E data, unsigned short source, unsigned short target);
 		void reset();
 
-		Vertex<V>& operator [](unsigned short p_index);
+		Vertex<V, E>& operator [](unsigned short p_index);
 			
 		G data;
-		std::function<void(Vertex<V>&, Graph<V, E, G>&)> onVertexDiscoverFunc = nullptr;
-		std::function<void(Edge&, Graph<V, E, G>&)> onEdgeDiscoverFunc = nullptr;
+		std::function<void(Vertex<V, E>&, Graph<V, E, G>&)> onVertexDiscoverFunc = nullptr;
+		std::function<void(Edge<E>&, Graph<V, E, G>&)> onEdgeDiscoverFunc = nullptr;
 
 	private:
-		std::vector<Vertex<V>> m_vertices;
-		std::list<Vertex<V>*> m_openQueue;
-		std::list<Vertex<V>*> m_orderedQueue;
+		std::vector<Vertex<V, E>> m_vertices;
+		std::list<Vertex<V, E>*> m_openQueue;
+		std::list<Vertex<V, E>*> m_orderedQueue;
 			
 	};
 
@@ -103,7 +109,7 @@ namespace razaron::graph
 		while (!curOpenQueue.empty())
 		{
 			curOpenQueue.erase(
-				std::remove_if(curOpenQueue.begin(), curOpenQueue.end(), [&](Vertex<V>* v) 
+				std::remove_if(curOpenQueue.begin(), curOpenQueue.end(), [&](Vertex<V, E>* v) 
 				{
 					//Process newly discovered vertex
 					if (v->state == VERTEX_WHITE)
@@ -127,7 +133,7 @@ namespace razaron::graph
 				})
 			);
 			
-			std::cout << "curOpenQueue.size() = " << curOpenQueue.size() << std::endl;
+			std::clog << "curOpenQueue.size() = " << curOpenQueue.size() << std::endl;
 
 			curOpenQueue = m_openQueue;
 			m_openQueue.clear();
@@ -135,13 +141,13 @@ namespace razaron::graph
 	}
 
 	template<class V, class E, class G>
-	inline void Graph<V, E, G>::addEdge(unsigned short source, unsigned short target)
+	inline void Graph<V, E, G>::addEdge(E data, unsigned short source, unsigned short target)
 	{
 		try
 		{
 			(*this)[source];
 		}
-		catch(std::out_of_range E)
+		catch(std::out_of_range e)
 		{
 			if (source >= m_vertices.size())
 				m_vertices.emplace_back(source);
@@ -153,7 +159,7 @@ namespace razaron::graph
 		{
 			(*this)[target];
 		}
-		catch (std::out_of_range E)
+		catch (std::out_of_range e)
 		{
 			if(target >= m_vertices.size())
 				m_vertices.emplace_back(target);
@@ -161,7 +167,7 @@ namespace razaron::graph
 				m_vertices.emplace(m_vertices.begin() + target, target);
 		}
 
-		(*this)[source].adjacencyList.push_back({source, target});
+		(*this)[source].adjacencyList.push_back({data, source, target});
 	}
 
 	template<class V, class E, class G>
@@ -177,7 +183,7 @@ namespace razaron::graph
 	}
 
 	template<class V, class E, class G>
-	inline Vertex<V>& graph::Graph<V, E, G>::operator[](unsigned short p_index)
+	inline Vertex<V, E>& graph::Graph<V, E, G>::operator[](unsigned short p_index)
 	{
 		if (p_index >= m_vertices.size())
 		{
@@ -189,8 +195,8 @@ namespace razaron::graph
 		}
 		else
 		{
-			std::vector<Vertex<V>>::iterator it = std::find_if(m_vertices.begin(), m_vertices.end(),
-				[p_index](const Vertex<V>& v) {return v.index == p_index;}
+			std::vector<Vertex<V, E>>::iterator it = std::find_if(m_vertices.begin(), m_vertices.end(),
+				[p_index](const Vertex<V, E>& v) {return v.index == p_index;}
 			);
 
 			if (it == m_vertices.end())
