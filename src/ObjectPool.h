@@ -15,6 +15,7 @@
 /*! Things related to an aligned generic object pool implementation. */
 namespace razaron::objectpool
 {
+	/*! @cond */
 	using Array8 = alignedArray<char, OBJECT_POOL_PAGE_LENGTH * 8, OBJECT_POOL_PAGE_ALIGNMENT>;
 	using Array16 = alignedArray<char, OBJECT_POOL_PAGE_LENGTH * 16, OBJECT_POOL_PAGE_ALIGNMENT>;
 	using Array32 = alignedArray<char, OBJECT_POOL_PAGE_LENGTH * 32, OBJECT_POOL_PAGE_ALIGNMENT>;
@@ -28,6 +29,7 @@ namespace razaron::objectpool
 	using Pool64 = std::pair<Handle*, std::list<Array64*>>;
 	using Pool128 = std::pair<Handle*, std::list<Array128*>>;
 	using Pool256 = std::pair<Handle*, std::list<Array256*>>;
+	/*! @endcond */
 
 	class ObjectPool {
 	public:
