@@ -18,14 +18,20 @@ namespace razaron::graph
 	template <class> struct Edge;
 	template <class, class, class> class Graph;
 
+	/*! A template struct for representing Vertex objects.
+	*	
+	*	@tparam V The data type to be held by the Vertex
+	*	@tparam E The data type held by the Edge
+	*/
 	template <class V, class E>
 	struct Vertex
 	{
-		V data;
-		std::list<Edge<E>> adjacencyList;
-		unsigned short index;
-		char state;
+		V data;	/*! The data held by this Vertex */
+		std::list<Edge<E>> adjacencyList; /*! An adjacency list of connected Edge%s*/
+		unsigned short index; /*! An ID that doubles as an index value */
+		char state; /*! The current state of the Vertex, represented by a bitfield */
 
+		/*! Constructs an empty Vertex with index = p_index */
 		Vertex(unsigned short p_index) :index(p_index), data(V{}), state(VERTEX_WHITE) {}
 	};
 
