@@ -20,7 +20,7 @@ Click here for [documentation](https://razaron.github.io/engine-mk1/ "Documentat
 - Hook [SIGIL](http://www.libsigil.com/) into RenderSystem
 
 #### razaron::taskscheduler
-- Hook [EnkiTS] into TaskScheduler
+- Hook [EnkiTS](https://github.com/dougbinks/enkiTS/tree/C++11) into TaskScheduler
 
 #### razaron::objectpool
 - ObjectPool concurency v1
