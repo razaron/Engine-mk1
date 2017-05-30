@@ -16,7 +16,7 @@ namespace razaron::physics
 		PhysicsSystem() {}
 		~PhysicsSystem() {}
 
-		Graph<Task, char, SystemGraphData>* update(std::vector<Entity>* p_entities, double delta);
+		Graph<Task, char, TaskGraphData>* update(std::vector<Entity>* p_entities, double delta);
 
 	private:
 		char* sysName{ "Physics System" };

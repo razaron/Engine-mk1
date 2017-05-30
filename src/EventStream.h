@@ -21,9 +21,9 @@ namespace razaron::eventstream
 	
 	/*! Contains the data required to receive and process an Event. */
 	struct Event {
-		unsigned int recipient;	/*!< The Component id of the recipient. */
+		unsigned int recipient;	/*!< The unique id of the recipient. */
 		EventType type;			/*!< The EventType. */
-		void* data;				/*!< The Component id of the recipient. */
+		void* data;				/*!< A pointer to the data being sent. */
 
 		/*! Evaluates deep equality between two Event structs. */
 		bool operator==(const Event& rhs)

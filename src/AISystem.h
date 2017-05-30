@@ -15,7 +15,7 @@ namespace razaron::ai
 		AISystem() {}
 		~AISystem() {}
 
-		Graph<Task, char, SystemGraphData>* update(std::vector<Entity>* p_entities, double delta) { std::cout << sysName << std::endl; return{}; }
+		Graph<Task, char, TaskGraphData>* update(std::vector<Entity>* p_entities, double delta) { std::cout << sysName << std::endl; return{}; }
 		Handle addComponent(Component* p_component) { return{}; }
 		void removeComponent(Handle p_handle) {}
 

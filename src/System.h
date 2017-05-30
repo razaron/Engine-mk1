@@ -7,6 +7,7 @@
 
 #include <vector>
 
+/*! Things related to */
 namespace razaron::core::system
 {
 	using namespace razaron::eventstream;
@@ -17,7 +18,7 @@ namespace razaron::core::system
 
 	enum class SystemType {CONSOLE, RENDER, PHYSICS, AI, UI, CONTROLLER, GAMEPLAY, ENUM_SIZE};
 
-	struct SystemGraphData
+	struct TaskGraphData
 	{
 
 	};
@@ -27,7 +28,7 @@ namespace razaron::core::system
 	public:
 		virtual ~System() = 0;
 	
-		virtual Graph<Task, char, SystemGraphData>* update(std::vector<Entity>* p_entities, double delta) = 0;
+		virtual Graph<Task, char, TaskGraphData>* update(std::vector<Entity>* p_entities, double delta) = 0;
 		template <class C, typename... Args> Handle constructComponent(Args... p_args) { return m_pool.emplace<C>(p_args...); }
 		template<class T> T* getComponent(Handle p_handle) { return m_pool.getObject<T>(p_handle); }
 		void removeComponent(Handle p_handle) { m_pool.removeObject(p_handle); };
@@ -42,7 +43,7 @@ namespace razaron::core::system
 		unsigned short m_interval = 50; //Loop interval in ms
 		EventStream m_eventStream;
 		std::vector<ComponentType> m_types;
-		Graph<Task, char, SystemGraphData> m_taskGraph;
+		Graph<Task, char, TaskGraphData> m_taskGraph;
 	};
 
 	inline System::~System()

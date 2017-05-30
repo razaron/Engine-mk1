@@ -27,24 +27,24 @@ Component::~Component()
 	std::clog << "Component Destructor. ID = " << m_id << std::endl;
 }
 
-Component & Component::operator=(const Component & other)
+Component & Component::operator=(const Component & rhs)
 {
-	std::clog << "Component Copy Operator. Old ID = " << m_id << " New ID = " << other.m_id << std::endl;
+	std::clog << "Component Copy Operator. Old ID = " << m_id << " New ID = " << rhs.m_id << std::endl;
 
-	m_id = other.m_id;
+	m_id = rhs.m_id;
 
 	return *this;
 }
 
-Component & Component::operator=(Component && other)
+Component & Component::operator=(Component && rhs)
 {
-	if (this != &other)
+	if (this != &rhs)
 	{
-		std::clog << "Component Move Operator. ID = " << other.m_id << std::endl;
+		std::clog << "Component Move Operator. ID = " << rhs.m_id << std::endl;
 
-		m_id = other.m_id;
+		m_id = rhs.m_id;
 
-		other.m_id = std::numeric_limits<unsigned int>::max();
+		rhs.m_id = std::numeric_limits<unsigned int>::max();
 	}
 
 	return *this;

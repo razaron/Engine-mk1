@@ -43,7 +43,7 @@ namespace razaron::render
 			}
 		}
 
-		Graph<Task, char, SystemGraphData>* update(std::vector<Entity>* p_entities, double delta) 
+		Graph<Task, char, TaskGraphData>* update(std::vector<Entity>* p_entities, double delta) 
 		{
 			Event e = m_eventStream.popEvent(StreamType::INCOMING);
 			Event eNull = {};

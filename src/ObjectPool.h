@@ -10,6 +10,7 @@
 #include <list>
 #include <tuple>
 #include <sstream>
+#include <typeinfo>
 
 #include "Misc.h"
 

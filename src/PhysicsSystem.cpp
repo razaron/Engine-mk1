@@ -3,7 +3,7 @@
 using namespace razaron::physics;
 using namespace razaron::physics::component;
 
-Graph<Task, char, SystemGraphData>* PhysicsSystem::update(std::vector<Entity>* p_entities, double delta)
+Graph<Task, char, TaskGraphData>* PhysicsSystem::update(std::vector<Entity>* p_entities, double delta)
 {
 	std::map<unsigned int, Entity> entityMap;
 	for (auto&& e : *p_entities)

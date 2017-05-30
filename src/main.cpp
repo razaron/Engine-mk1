@@ -69,7 +69,7 @@ public:
 	SystemA() {}
 	~SystemA() {}
 
-	Graph<Task, char, SystemGraphData>* update(std::vector<Entity>* p_entities, double delta) { std::cout << sysName << std::endl; return{}; }
+	Graph<Task, char, TaskGraphData>* update(std::vector<Entity>* p_entities, double delta) { std::cout << sysName << std::endl; return{}; }
 	Handle addComponent(Component* p_component) { return{}; }
 	void removeComponent(Handle p_handle) {}
 
@@ -83,7 +83,7 @@ public:
 	SystemC() {}
 	~SystemC() {}
 
-	Graph<Task, char, SystemGraphData>* update(std::vector<Entity>* p_entities, double delta) { std::cout << sysName << std::endl; return{}; }
+	Graph<Task, char, TaskGraphData>* update(std::vector<Entity>* p_entities, double delta) { std::cout << sysName << std::endl; return{}; }
 	Handle addComponent(Component* p_component) { return{}; }
 	void removeComponent(Handle p_handle) {}
 
@@ -97,7 +97,7 @@ public:
 	SystemD() {}
 	~SystemD() {}
 
-	Graph<Task, char, SystemGraphData>* update(std::vector<Entity>* p_entities, double delta) { std::cout << sysName << std::endl; return{}; }
+	Graph<Task, char, TaskGraphData>* update(std::vector<Entity>* p_entities, double delta) { std::cout << sysName << std::endl; return{}; }
 	Handle addComponent(Component* p_component) { return{}; }
 	void removeComponent(Handle p_handle) {}
 
@@ -111,7 +111,7 @@ public:
 	SystemB() {}
 	~SystemB() {}
 
-	Graph<Task, char, SystemGraphData>* update(std::vector<Entity>* p_entities, double delta) { std::cout << sysName << std::endl; return{}; }
+	Graph<Task, char, TaskGraphData>* update(std::vector<Entity>* p_entities, double delta) { std::cout << sysName << std::endl; return{}; }
 	Handle addComponent(Component* p_component) { return{}; }
 	void removeComponent(Handle p_handle) {}
 
@@ -125,7 +125,7 @@ public:
 	SystemE() {}
 	~SystemE() {}
 
-	Graph<Task, char, SystemGraphData>* update(std::vector<Entity>* p_entities, double delta) { std::cout << sysName << std::endl; return{}; }
+	Graph<Task, char, TaskGraphData>* update(std::vector<Entity>* p_entities, double delta) { std::cout << sysName << std::endl; return{}; }
 	Handle addComponent(Component* p_component) { return{}; }
 	void removeComponent(Handle p_handle) {}
 
@@ -139,7 +139,7 @@ public:
 	SystemF() {}
 	~SystemF() {}
 
-	Graph<Task, char, SystemGraphData>* update(std::vector<Entity>* p_entities, double delta) { std::cout << sysName << std::endl; return{}; }
+	Graph<Task, char, TaskGraphData>* update(std::vector<Entity>* p_entities, double delta) { std::cout << sysName << std::endl; return{}; }
 	Handle addComponent(Component* p_component) { return{}; }
 	void removeComponent(Handle p_handle) {}
 
@@ -369,6 +369,10 @@ int main() {
 	}
 
 	test(testGraph, "Graph", 10, true, false);
+
+	TypeTraits<Foo32> tF;
+	TypeTraits<razaron::eventstream::Event> tE;
+	TypeTraits<razaron::core::component::Component> tC;
 
 	std::cin.get();
 }

@@ -2,13 +2,13 @@
 Click here for [documentation](https://razaron.github.io/engine-mk1/ "Documentation")
 ## TODO
 ### Documentation
-- Component
 - Space
-- ObjectPool
-- ~EventStream~
 - System
-- Entity
-- ~Graph~
+- ~~Entity~~
+- ~~Component~~
+- ~~ObjectPool~~
+- ~~EventStream~~
+- ~~Graph~~
 - Add [concepts](http://en.cppreference.com/w/cpp/concept "cppreference") for templates
 - Add time complexity for algorithms
 
@@ -24,25 +24,23 @@ Click here for [documentation](https://razaron.github.io/engine-mk1/ "Documentat
 - Hook [EnkiTS](https://github.com/dougbinks/enkiTS/tree/C++11) into TaskScheduler
 
 #### razaron::objectpool
-- Miscelaneous
+- Miscellaneous
     - getObject : Return a fail value
-- ObjectPool concurency v1
+- ObjectPool concurrency v1
     - [flat combining](http://people.csail.mit.edu/shanir/publications/Flat%20Combining%20SPAA%2010.pdf "pdf") OR [single shared lock](http://en.cppreference.com/w/cpp/thread/lock_guard "cppreference") for everything
-- Add optional reference counting
-```C++
-  // Add bool countRef to relevant functions.
-  // E.g,
-  template<class T, class... Args> Handle emplace(Args... p_args, bool countRef);
-  // then in function removeObject
-  void removeObject(Handle p_handle){
-    if(!hasReferences(p_handle)){
-      // delete it
-    }
-  }
-```
+- Add optional reference counting (for remove) via [std::shared_ptr](http://en.cppreference.com/w/cpp/memory/shared_ptr "cppreference")
+
+### Miscellaneous
+- Replace pointers with references for all function parameters and return types
+
+### Unit Testing
+- Check out [Catch](https://github.com/philsquared/Catch/blob/master/docs/tutorial.md "Catch Tutorial")
 
 ### Code Branches
-- example
-    - barebones example showing preferred way to use space, systems, events processing etc.
-- animal
-    - the [animal](https://trello.com/b/tYrgDzDo/animal-v1 "Trello") game
+- master
+    - Brick breaker example
+- clean
+    - Barebones branch with derived systems/components removed.
+    - Example showing preferred way to use space, systems, events processing etc.
+- animal (??? separate project instead ???)
+    - The [animal](https://trello.com/b/tYrgDzDo/animal-v1 "Trello") game

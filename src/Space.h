@@ -10,13 +10,13 @@ namespace razaron::core::space
 	using namespace razaron::core::component;
 	using namespace razaron::core::entity;
 
-	struct SpaceGraphData;
+	struct SystemGraphData;
 
-	typedef Graph<System*, char, SpaceGraphData> SystemGraph;
+	typedef Graph<System*, char, SystemGraphData> SystemGraph;
 	typedef Vertex<System*, char> SystemGraphVertex;
 	typedef Edge<char> SystemGraphEdge;
 
-	struct SpaceGraphData
+	struct SystemGraphData
 	{
 		std::vector<std::pair<System*, System*>> orderedSystems;
 	};
