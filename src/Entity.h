@@ -14,15 +14,9 @@ namespace razaron::core::entity
 		Entity() {}
 
 		Entity(std::map<ComponentType, Handle> p_components)
-			:m_components(p_components), m_id(g_nextID++) 
-		{
-			g_constructed++;
-		}
+			:m_components(p_components), m_id(g_nextID++) {}
 
-		~Entity()
-		{
-			g_destroyed++;
-		}
+		~Entity() {}
 
 		std::pair<ComponentType, Handle> addComponent(std::pair<ComponentType, Handle> p_component)
 		{

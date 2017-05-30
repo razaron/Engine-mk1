@@ -11,9 +11,8 @@
 #include <chrono>
 #include <functional>
 #include <string>
+#include <sstream>
 
-AtomicCounter<unsigned> g_constructed;
-AtomicCounter<unsigned> g_destroyed;
 AtomicCounter<unsigned> g_foo;
 
 using namespace razaron::core::space;
@@ -180,12 +179,8 @@ void test(std::function<void()> testFunc, std::string testName, int runs, bool p
 	std::cout << "Total time elapsed: " << totalTime << std::endl;
 	std::cout << "Average time elapsed: " << totalTime / runs << std::endl;
 	std::cout << "Average FPS: " << 1 / (totalTime / runs) << std::endl;
-	std::cout << "constucted: " << g_constructed.get() << " destructed: " << g_destroyed.get() << std::endl;
 	std::cout << std::endl;
 	std::cout << "---------------------------------------------------------------------" << std::endl;
-
-	g_constructed = 0;
-	g_destroyed = 0;
 
 	if (!printCLog)
 		std::clog.clear();
@@ -294,7 +289,7 @@ void testSpace()
 	razaron::physics::PhysicsSystem e;
 	razaron::render::RenderSystem f;
 
-	enum V: unsigned short { A, B, C, D, E, F, G, H };
+	enum V : unsigned short { A, B, C, D, E, F, G, H };
 
 	SystemGraph g;
 	g.addEdge('a', V::A, V::B);

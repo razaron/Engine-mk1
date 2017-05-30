@@ -7,7 +7,6 @@ Space::Space(SystemGraph p_systemGraph)
 	:m_systemGraph(std::move(p_systemGraph))
 {
 	std::clog << "Space Constructor" << std::endl;
-	g_constructed++;
 }
 
 Space::~Space()
@@ -16,7 +15,6 @@ Space::~Space()
 	m_systemGraph.breadthFirstTraversal(0);
 
 	std::clog << "Space Destructor" << std::endl;
-	g_destroyed++;
 }
 
 void Space::update(double delta)

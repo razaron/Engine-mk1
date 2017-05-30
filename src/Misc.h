@@ -32,9 +32,6 @@ struct AtomicCounter {
 	}
 };
 
-extern AtomicCounter<unsigned> g_constructed;
-extern AtomicCounter<unsigned> g_destroyed;
-
 template <class T, std::size_t S, std::size_t A>
 struct alignas(A) alignedArray
 {

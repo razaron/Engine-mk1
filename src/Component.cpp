@@ -8,13 +8,11 @@ Component::Component()
 	:m_id(g_nextID++)
 {
 	std::clog << "Component Default Constructor. ID = " << m_id << std::endl;
-	g_constructed++;
 }
 
 Component::Component(Component && other)
 {
 	std::clog << "Component Move Constructor. ID = " << other.m_id << std::endl;
-	g_constructed++;
 
 	*this = std::move(other);
 }
@@ -22,13 +20,11 @@ Component::Component(Component && other)
 Component::Component(const Component & other)
 {
 	std::clog << "Component Copy Constructor. ID = " << m_id << std::endl;
-	g_constructed++;
 }
 
 Component::~Component()
 {
 	std::clog << "Component Destructor. ID = " << m_id << std::endl;
-	g_destroyed++;
 }
 
 Component & Component::operator=(const Component & other)

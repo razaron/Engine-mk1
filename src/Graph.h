@@ -9,9 +9,9 @@
 /*! Contains classes, enums and structs related to graphs and graph traversal. */
 namespace razaron::graph
 {
-	template <class, class> struct Vertex;
-	template <class> struct Edge;
-	template <class, class, class> class Graph;
+	template <class V, class E> struct Vertex;
+	template <class E> struct Edge;
+	template <class V, class E, class G> class Graph;
 
 	const char STATE_WHITE = 0x01;	/*!< Untouched */
 	const char STATE_GREY = 0x02;	/*!< Touched */
@@ -19,7 +19,7 @@ namespace razaron::graph
 	const char STATE_RED = 0x08;	/*!< Failure */
 	const char STATE_GREEN = 0x10;	/*!< Success */
 
-	/*! A template struct for representing Vertex objects.
+	/*!	A template struct for representing Vertex objects.
 	*	
 	*	@tparam V The data type held by Vertex objects
 	*	@tparam E The data type held by Edge objects
@@ -36,7 +36,7 @@ namespace razaron::graph
 		Vertex(unsigned short p_index) :id(p_index), data(V{}), state(STATE_WHITE) {}
 	};
 
-	/*! A template struct for representing Edge objects.
+	/*!	A template struct for representing Edge objects.
 	*
 	*	@tparam E The data type held by the Edge
 	*/
@@ -49,7 +49,7 @@ namespace razaron::graph
 		char state;				/*!< The current state of the Edge, represented by a bitfield. */
 	};
 
-	/*! A template class for representing Graph objects.
+	/*!	A template class for representing Graph objects.
 	*
 	*	@tparam V The data type held by Vertex objects
 	*	@tparam E The data type held by Edge objects
@@ -59,11 +59,11 @@ namespace razaron::graph
 	class Graph
 	{
 	public:
-		Graph();						/*!< Default constructor. */
+		Graph() {}						/*!< Default constructor. */
 		Graph(Graph<V,E,G> &&other);	/*!< Move constructor. */
-		~Graph();						/*!< Default destructor. */
+		~Graph() {}						/*!< Default destructor. */
 
-		/*! Performs a breadth first traversal of the Graph.
+		/*!	Performs a breadth first traversal of the Graph.
 		*	
 		*	Starting at the Vertex with the ID <tt>p_origin</tt>, traverses the Graph in breadth first order.
 		*	Runs onVertexDiscoverFunc for every Vertex with the state <tt>STATE_WHITE</tt> and
@@ -109,22 +109,10 @@ namespace razaron::graph
 	};
 
 	template<class V, class E, class G>
-	inline Graph<V, E, G>::Graph()
-	{
-		g_constructed++;
-	}
-
-	template<class V, class E, class G>
 	inline Graph<V, E, G>::Graph(Graph<V, E, G>&& other)
 		:m_vertices(std::move(other.m_vertices)), m_openQueue(std::move(other.m_openQueue)), m_orderedQueue(std::move(other.m_orderedQueue))
 	{
-		g_constructed++;
-	}
-
-	template<class V, class E, class G>
-	inline Graph<V, E, G>::~Graph()
-	{
-		g_destroyed++;
+		
 	}
 
 	template<class V, class E, class G>
