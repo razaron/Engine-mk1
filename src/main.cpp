@@ -12,6 +12,7 @@
 #include <functional>
 #include <string>
 #include <sstream>
+#include <random>
 
 AtomicCounter<unsigned> g_foo;
 
@@ -276,6 +277,37 @@ void testGraph()
 	g.reset();
 }
 
+void testGraphPerf(int repeats, bool cout, bool clog)
+{
+	std::vector<unsigned short> curRow;
+	std::vector<unsigned short> nextRow;
+
+	curRow.push_back(curID++);
+	for (auto i = 0; i < 1; i++)
+	{
+		for (auto vertID : curRow)
+		{
+			for (auto j = 0; j < 8; j++)
+			{
+				g.addEdge('a', vertID, curID);
+				nextRow.push_back(curID);
+				curID++;
+
+				if (curID > 65000u) break;
+			}
+
+			if (curID > 65000u) break;
+		}
+
+		curRow = nextRow;
+		nextRow.clear();
+	}
+
+	test(testGraph, "Graph", repeats, cout, clog);
+
+	delete ;
+}
+
 using namespace razaron::render::component;
 using namespace razaron::physics::component;
 using namespace razaron::core::entity;
@@ -346,33 +378,75 @@ void testSpace()
 	}
 }
 
-int main() {
 
-	std::vector<unsigned short> curRow;
-	std::vector<unsigned short> nextRow;
+std::vector<int> vec;
 
-	curRow.push_back(curID++);
-	for (auto i = 0; i < 4; i++)
+void testVectorSort()
+{
+	sort(vec.begin(), vec.end());
+	vec.erase(unique(vec.begin(), vec.end()), vec.end());
+}
+
+void testVectorToSetManual()
+{
+	std::set<int> s;
+	unsigned size = vec.size();
+	for (unsigned i = 0; i < size; ++i) s.insert(vec[i]);
+	vec.assign(s.begin(), s.end());
+}
+
+void testVectorToSetAuto()
+{
+	std::set<int> s(vec.begin(), vec.end());
+	vec.assign(s.begin(), s.end());
+}
+
+void testDuplicates()
+{
+	int size = 6 * 100000;
+	std::random_device r;
+	std::default_random_engine gen(r());
+	std::uniform_int_distribution<int> dist1000(1, 1000);
+	std::uniform_int_distribution<int> dist100(1, 100);
+	std::uniform_int_distribution<int> dist10(1, 10);
+
+
+	std::cout << "------- LOW ---------" << std::endl;
+	for (int i = 0; i < size; i++)
 	{
-		for (auto vertID : curRow)
-		{
-			for (auto j = 0; j < 8; j++)
-			{
-				g.addEdge('a', vertID, curID);
-				nextRow.push_back(curID);
-				curID++;
-			}
-		}
-
-		curRow = nextRow;
-		nextRow.clear();
+		vec.push_back(dist1000(gen));
 	}
 
-	test(testGraph, "Graph", 10, true, false);
+	test(testVectorSort, "testVectorSort", 10, false, false);
+	test(testVectorToSetManual, "testVectorToSetManual", 10, false, false);
+	test(testVectorToSetAuto, "testVectorToSetAuto", 10, false, false);
 
-	TypeTraits<Foo32> tF;
-	TypeTraits<razaron::eventstream::Event> tE;
-	TypeTraits<razaron::core::component::Component> tC;
+	std::cout << "------- MEDIUM ---------" << std::endl;
+	for (int i = 0; i < size / 2; i++)
+	{
+		vec.push_back(dist1000(gen));
+		vec.push_back(dist100(gen));
+	}
+
+	test(testVectorSort, "testVectorSort", 10, false, false);
+	test(testVectorToSetManual, "testVectorToSetManual", 10, false, false);
+	test(testVectorToSetAuto, "testVectorToSetAuto", 10, false, false);
+
+	std::cout << "------- HIGH ---------" << std::endl;
+	for (int i = 0; i < size / 3; i++)
+	{
+		vec.push_back(dist1000(gen));
+		vec.push_back(dist100(gen));
+		vec.push_back(dist10(gen));
+	}
+
+	test(testVectorSort, "testVectorSort", 10, false, false);
+	test(testVectorToSetManual, "testVectorToSetManual", 10, false, false);
+	test(testVectorToSetAuto, "testVectorToSetAuto", 10, false, false);
+}
+
+int main() {
+	testGraphPerf(1, false, false);
 
 	std::cin.get();
 }

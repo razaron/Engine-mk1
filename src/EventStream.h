@@ -4,7 +4,7 @@
 
 #include "Misc.h"
 
-/*! Contains classes, enums and structs related to event streaming. */
+/*! %Event streams are used to queue up events to be consumed at a later time. */
 namespace razaron::eventstream
 {
 	/*! Denotes the direction of an EventStream. */
@@ -47,10 +47,10 @@ namespace razaron::eventstream
 		void pushEvent(Event p_event, StreamType p_streamType);					/*!< Pushes an Event onto this EventStream. */
 		void pushEvents(std::vector<Event>& p_events, StreamType p_streamType);	/*!< Pushes a vector of Events onto this EventStream. */
 		Event popEvent(StreamType p_streamType);								/*!< Pops an Event from this EventStream. */
-		std::vector<Event> popEvents(StreamType p_streamType);					/*!< Pops a vector of Event%s from this EventStream. */
+		std::vector<Event> popEvents(StreamType p_streamType);					/*!< Pops a std::vector of Event%s from this EventStream. */
 
-		void bubbleEvents(EventStream* p_dst);									/*!< Sends all of this EventStream%s outgoing Event%s to another EventStream. */
-		void captureEvents(EventStream* p_src);									/*!< Takes all of another EventStream%s outgoing Event%s into this EventStream. */
+		void bubbleEvents(EventStream* p_dst);									/*!< Moves all of this EventStream%s outgoing Event%s to another EventStream. */
+		void captureEvents(EventStream* p_src);									/*!< Copies all of another EventStream%s outgoing Event%s into this EventStream. */
 
 	private:
 		std::vector<Event> m_incomingEvents;

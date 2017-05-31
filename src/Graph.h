@@ -21,14 +21,14 @@ namespace razaron::graph
 
 	/*!	A template struct for representing Vertex objects.
 	*	
-	*	@tparam V The data type held by Vertex objects
-	*	@tparam E The data type held by Edge objects
+	*	@tparam	V	The data type held by Vertex objects
+	*	@tparam	E	The data type held by Edge objects
 	*/
 	template <class V, class E>
 	struct Vertex
 	{
 		V data;								/*!< The data held by this Vertex. */
-		std::list<Edge<E>> adjacencyList;	/*!< An adjacency list of connected Edge%s. */
+		std::list<Edge<E>> adjacencyList;	/*!< An std::list of connected Edge%s. */
 		unsigned short id;					/*!< An ID that doubles as an index value. */
 		char state;							/*!< The current state of the Vertex, represented by a bitfield. */
 
@@ -38,7 +38,7 @@ namespace razaron::graph
 
 	/*!	A template struct for representing Edge objects.
 	*
-	*	@tparam E The data type held by the Edge
+	*	@tparam	E	The data type held by the Edge
 	*/
 	template <class E>
 	struct Edge
@@ -51,9 +51,9 @@ namespace razaron::graph
 
 	/*!	A template class for representing Graph objects.
 	*
-	*	@tparam V The data type held by Vertex objects
-	*	@tparam E The data type held by Edge objects
-	*	@tparam G The data type held by Graph objects
+	*	@tparam	V	The data type held by Vertex objects
+	*	@tparam	E	The data type held by Edge objects
+	*	@tparam	G	The data type held by Graph objects
 	*/
 	template <class V, class E, class G>
 	class Graph
@@ -72,7 +72,7 @@ namespace razaron::graph
 		*	By default Sets the state of every touched Vertex and Edge to <tt>STATE_GREY</tt> unless specified otherwise
 		*	in onVertexDiscoverFunc or onEdgeDiscoverFunc. 
 		*
-		*	@param p_origin The ID of the Vertex to start the traversal from.
+		*	@param	p_origin	The ID of the Vertex to start the traversal from.
 		*/
 		void breadthFirstTraversal(unsigned short p_origin);
 
@@ -80,9 +80,9 @@ namespace razaron::graph
 		*	
 		*	If no Vertex objects exist with the IDs <tt>p_source</tt> or <tt>p_target</tt>, constructs and adds new Vertex objects for the missing IDs to the Graph.
 		*
-		*	@param p_data The data held by the edge.
-		*	@param p_source The ID of the source Vertex.
-		*	@param p_target The ID of the target Vertex.
+		*	@param	p_data		The data held by the edge.
+		*	@param	p_source	The ID of the source Vertex.
+		*	@param	p_target	The ID of the target Vertex.
 		*/
 		void addEdge(E p_data, unsigned short p_source, unsigned short p_target);
 
@@ -91,9 +91,9 @@ namespace razaron::graph
 
 		/*!	Searched the graph for the Vertex with id == p_index.
 		*
-		*	@exception std::out_of_range p_index out of range for m_vertices.
+		*	@exception	std::out_of_range	p_index out of range for m_vertices.
 		*
-		*	@return The Vertex object.
+		*	@return	The Vertex object.
 		*/
 		Vertex<V, E>& operator [](unsigned short p_index);
 			

@@ -4,7 +4,7 @@
 
 #include "Component.h"
 
-/*!	An Entity acts as a container for the Handle%s of related Component%s. */
+/*!	Entities are a way of organizing related components into groups. */
 namespace razaron::core::entity
 {
 	using namespace razaron::core::component;
@@ -16,7 +16,7 @@ namespace razaron::core::entity
 
 		/*!	Constructs an Entity object from a pre-constructed map of Component objects.
 		*
-		*	@param p_components The ComponentMap of components to initialize this Entity with.
+		*	@param	p_components	The ComponentMap of components to initialize this Entity with.
 		*/
 		Entity(ComponentMap p_components)
 			:m_components(p_components), m_id(g_nextID++) {}
@@ -25,9 +25,9 @@ namespace razaron::core::entity
 
 		/*!	Adds a ComponentHandle to the ComponentMap of Entity
 		*
-		*	@param p_component The ComponentHandle to add
+		*	@param	p_component		The ComponentHandle to add
 		*
-		*	@retval ComponentHandle The passed ComponentHandle on success
+		*	@retval	ComponentHandle	The passed ComponentHandle on success
 		*/
 		ComponentHandle addComponent(ComponentHandle p_component)
 		{
@@ -37,7 +37,7 @@ namespace razaron::core::entity
 
 		/*!	Gets the current ComponentMap of the Entity.
 		*
-		*	@returns The current ComponentMap of the Entity
+		*	@returns	The current ComponentMap of the Entity
 		*/
 		ComponentMap getComponents()
 		{ 
@@ -46,15 +46,15 @@ namespace razaron::core::entity
 
 		/*! Gets the unique ID of this Entity. 
 		*
-		*	@returns The unique id of this Entity.
+		*	@returns	The unique id of this Entity.
 		*/
 		unsigned int getID() { return m_id; }
 
 		/*!	Gets the Handle mapped to the passed ComponentType
 		*
-		*	@param p_type The ComponentType to search for
+		*	@param	p_type	The ComponentType to search for
 		*
-		*	@retval Handle The passed ComponentHandle on success
+		*	@retval	Handle	The passed ComponentHandle on success
 		*/
 		Handle& operator[](ComponentType p_type)
 		{

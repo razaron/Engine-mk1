@@ -41,28 +41,28 @@ namespace razaron::objectpool
 
 		/*!	Moves an object of type T into the ObjectPool.
 		*	
-		*	@tparam T The type of the object to be moved int o the ObjectPool.
+		*	@tparam		T				The type of the object to be moved int o the ObjectPool.
 		*
-		*	@param p_object The object to move into the ObjectPool.
+		*	@param		p_object		The object to move into the ObjectPool.
 		*	
-		*	@exception std::exception T is too large for ObjectPool.
+		*	@exception	std::exception	T is too large for ObjectPool.
 		*	
-		*	@retval Handle	On success, a handle for accessing the object.
-		*	@retval	Handle	On failure, an empty handle.
+		*	@retval		Handle			On success, a handle for accessing the object.
+		*	@retval		Handle			On failure, an empty handle.
 		*/
 		template<class T> Handle push(T&& p_object);
 
 		/*!	Constructs an object of type T directly into the ObjectPool.
 		*
-		*	@tparam T The type of the object to be moved into the ObjectPool.
-		*	@tparam Args The parameter pack used to construct the T object.<sup>[1]</sup>
+		*	@tparam		T				The type of the object to be moved into the ObjectPool.
+		*	@tparam		Args			The parameter pack used to construct the T object.<sup>[1]</sup>
 		*
-		*	@param p_args Constructor arguments to pass to the constructor of T.
+		*	@param		p_args			Constructor arguments to pass to the constructor of T.
 		*	
-		*	@exception std::exception T is too large for ObjectPool.
+		*	@exception	std::exception	T is too large for ObjectPool.
 		*
-		*	@retval Handle	On success, a handle for accessing the object.
-		*	@retval	Handle	On failure, an empty handle.
+		*	@retval		Handle			On success, a handle for accessing the object.
+		*	@retval		Handle			On failure, an empty handle.
 		*
 		*	<small><sup>[1]</sup> Don't enter this. It <a title="cppreference" href="http://en.cppreference.com/w/cpp/language/template_argument_deduction">deduced</a> by the compiler.</small>
 		*/
@@ -70,11 +70,11 @@ namespace razaron::objectpool
 
 		/*!	Gets a pointer to an object in the ObjectPool.	
 		*
-		*	@tparam T The type of the object to get from the ObjectPool.
+		*	@tparam	T			The type of the object to get from the ObjectPool.
 		*
-		*	@param p_handle The handle used to search for the object in the ObjectPool.
+		*	@param	p_handle	The handle used to search for the object in the ObjectPool.
 		*
-		*	@retval T*	On success, a pointer to the desired object.
+		*	@retval T*			On success, a pointer to the desired object.
 		*/
 		template<class T> T* getObject(Handle p_handle);
 		//TODO template<class T> T* getObjects(std::vector<Handle> p_handles);
@@ -82,7 +82,7 @@ namespace razaron::objectpool
 		/*!	Removes an object from the ObjectPool and free's the space for use.
 		*	It does not call the objects destructor, it just resets the memory used to store the object in the ObjectPool.
 		*
-		*	@param p_handle The handle of the object to remove from the ObjectPool.
+		*	@param	p_handle	The handle of the object to remove from the ObjectPool.
 		*/
 		void removeObject(Handle p_handle);
 		//TODO template<class T> void removeObject(Handle p_handle); // for calling the destructor ~T()
@@ -339,6 +339,8 @@ namespace razaron::objectpool
 		v++;
 
 		T* object = reinterpret_cast<T*>(&page->data()[p_handle.index*v]);
+
+		// TODO if p_handle.size != sizeof(T) return nullptr
 
 		return object;
 	}
