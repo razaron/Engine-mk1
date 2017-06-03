@@ -1,5 +1,6 @@
 #define CATCH_CONFIG_RUNNER
-#include "catch.hpp"
+
+#include <catch.hpp>
 
 #include "TransformComponent.hpp"
 #include "ObjectPool.hpp"

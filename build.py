@@ -1,20 +1,59 @@
-#!/usr/bin/python
-
-import sys
+import json
+import platform
 import os
 import shutil
 import errno
 
-options = " -DCMAKE_BUILD_TYPE=Debug";
+data = json.load(open("build.json"))
 
-# create options string
-if len(sys.argv) > 1:
-    options = " -DCMAKE_BUILD_TYPE=" + sys.argv[1]
-if len(sys.argv) > 2:
-    options += " -DENVIRONMENT=" + sys.argv[2]
+config = data["default"]
+
+targetPlatform = ""
+
+# Find and set platform
+if platform.system() == "Linux":
+    targetPlatform = "linux"
+elif platform.system() == "Windows":
+    targetPlatform = "windows"
+else:
+    raise NameError("Only Linux and Windows are supported")
+    exit(1)
+
+# set up config data for the current platform
+if "includes" in data[targetPlatform]:
+    config["includes"] = data[targetPlatform]["includes"]
+
+if "build_opts" in data[targetPlatform]:
+    config["build_opts"] = data[targetPlatform]["build_opts"]
+
+if "cmake_opts" in data[targetPlatform]:
+    config["cmake_opts"] = data[targetPlatform]["cmake_opts"]
+
+# Generate cmake includes list
+includes = ""
+for i in config["includes"]:
+    includes += i["fullpath"] + ";"
+
+# Generate cmake compiler options
+complileOpts = ""
+for i in config["compiler_opts"]:
+    complileOpts += i + " "
+
+# Generate cmake CMAKE options
+cmakeOpts = ""
+for key, val in config["cmake_opts"].items():
+    cmakeOpts += "-D" + key + "=" + val + " "
+
+# Generate executable names
+testName = "test_" + config["build_opts"]["environment"]
+
+options = cmakeOpts + " -DMY_COMPILE_FLAGS=" + complileOpts + " -DMY_LINKER_FLAGS=" + complileOpts + " -DMY_INCLUDES=" + includes + " -DTEST_NAME=" + testName
+
+if targetPlatform == "windows":
+    options += ' -G "Unix Makefiles"'
 
 # cd to correct folder
-if (len(sys.argv) == 1) or (sys.argv[1].find("Debug") != -1):
+if config["cmake_opts"]["CMAKE_BUILD_TYPE"] == "Debug":
     try:
         os.mkdir("Debug")
     except OSError as e:
@@ -26,7 +65,8 @@ if (len(sys.argv) == 1) or (sys.argv[1].find("Debug") != -1):
             pass
 
     os.chdir("Debug")
-elif sys.argv[1].find("Release") != -1:
+
+elif config["cmake_opts"]["CMAKE_BUILD_TYPE"] == "Release":
     try:
         os.mkdir("Release")
     except OSError as e:
@@ -39,7 +79,11 @@ elif sys.argv[1].find("Release") != -1:
 
     os.chdir("Release")
 
-os.system("cmake"+options+" ..")
+else:
+    raise NameError("CMAKE_BUILD_TYPE must be Debug or Release")
+    exit(1)
+
+os.system("cmake "+options+" ..")
 os.system("make")
 
 exit(0)

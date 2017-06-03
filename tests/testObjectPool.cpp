@@ -1,6 +1,6 @@
 #include "ObjectPool.hpp"
 
-#include "catch.hpp"
+#include <catch.hpp>
 
 using namespace razaron::objectpool;
 

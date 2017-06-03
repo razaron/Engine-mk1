@@ -1,0 +1,40 @@
+{
+    "default":{
+        "includes":[
+            {
+                "fullpath": "lol",
+                "description": "lol description"
+            }
+        ],
+        "build_opts":{
+            "environment": "32"
+        },
+        "compiler_opts":[
+            "-Wall",
+            "-Wextra"
+        ],
+        "cmake_opts":{
+            "CMAKE_BUILD_TYPE": "Debug"
+        }
+    },
+    "linux":{
+        "includes":[
+            {
+                "fullpath": "./usr/include",
+                "description": "General include directory. Should contain 'catch.hpp'."
+            }
+        ]
+    },
+    "windows": {
+        "includes":[
+            {
+                "fullpath": "C:/Libraries/C_C++/glm",
+                "description": "GLM include directory"
+            },
+            {
+                "fullpath": "C:/Libraries/C_C++/include",
+                "description": "General include directory. Should contain 'catch.hpp'."
+            }
+        ]
+    }
+}
