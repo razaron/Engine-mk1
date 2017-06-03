@@ -1,4 +1,4 @@
-#include "Space.h"
+#include "Space.hpp"
 
 using namespace razaron::core::space;
 using namespace razaron::core::entity;
@@ -11,7 +11,11 @@ Space::Space(SystemGraph p_systemGraph)
 
 Space::~Space()
 {
-	m_systemGraph.onVertexDiscoverFunc = [](SystemGraphVertex& v, SystemGraph& g) { delete v.data; };
+	m_systemGraph.onVertexDiscoverFunc = [](SystemGraphVertex& v, SystemGraph& g) {
+		UNUSED(g);
+
+		delete v.data;
+	};
 	m_systemGraph.breadthFirstTraversal(0);
 
 	std::clog << "Space Destructor" << std::endl;
@@ -60,7 +64,11 @@ void Space::update(double delta)
 	m_systemGraph.reset();
 
 	std::vector<Entity>* vE = &m_entities;
-	m_systemGraph.onVertexDiscoverFunc = [vE, delta](SystemGraphVertex& v, SystemGraph& g) { v.data->update(vE, (delta <= 0) ? 0 : delta); };
+	m_systemGraph.onVertexDiscoverFunc = [vE, delta](SystemGraphVertex& v, SystemGraph& g) {
+		UNUSED(g);
+
+		v.data->update(vE, (delta <= 0) ? 0 : delta);
+	};
 
 	m_systemGraph.breadthFirstTraversal(0);
 }

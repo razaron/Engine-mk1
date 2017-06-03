@@ -1,4 +1,4 @@
-#include "RenderComponent.h"
+#include "RenderComponent.hpp"
 
 using namespace razaron::render::component;
 

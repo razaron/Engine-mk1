@@ -1,4 +1,4 @@
-#include "PhysicsSystem.h"
+#include "PhysicsSystem.hpp"
 
 using namespace razaron::physics;
 using namespace razaron::physics::component;
@@ -18,6 +18,8 @@ Graph<Task, char, TaskGraphData>* PhysicsSystem::update(std::vector<Entity>* p_e
 		Entity entity = entityMap[e.recipient];
 		TransformComponent* r = m_pool.getObject<TransformComponent>(entity[ComponentType::TRANSFORM]);
 
+		UNUSED(r);
+
 		//DO STUFF
 
 		e = m_eventStream.popEvent(StreamType::INCOMING);
@@ -26,7 +28,6 @@ Graph<Task, char, TaskGraphData>* PhysicsSystem::update(std::vector<Entity>* p_e
 	for (auto& e : entityMap)
 	{
 		TransformComponent* t = m_pool.getObject<TransformComponent>(e.second[ComponentType::TRANSFORM]);
-		float d = (float)delta;
 		float angle = glm::radians(static_cast<float>(36.0*delta));
 		glm::quat q = glm::angleAxis(angle, glm::vec3(0.f, 0.f, 1.f));
 		t->rotate(q);

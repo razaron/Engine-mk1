@@ -1,4 +1,4 @@
-#include "Component.h"
+#include "Component.hpp"
 
 using namespace razaron::core::component;
 
@@ -19,7 +19,9 @@ Component::Component(Component && other)
 
 Component::Component(const Component & other)
 {
-	std::clog << "Component Copy Constructor. ID = " << m_id << std::endl;
+	std::clog << "Component Copy Constructor. ID = " << other.m_id << std::endl;
+
+	*this = other;
 }
 
 Component::~Component()

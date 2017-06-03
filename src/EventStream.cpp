@@ -1,4 +1,4 @@
-#include "EventStream.h"
+#include "EventStream.hpp"
 
 using namespace razaron::eventstream;
 
@@ -14,7 +14,7 @@ EventStream::~EventStream()
 
 void EventStream::pushEvent(Event p_event, StreamType p_streamType)
 {
-	switch (p_streamType) 
+	switch (p_streamType)
 	{
 	case StreamType::INCOMING:
 	{
@@ -44,7 +44,7 @@ void EventStream::pushEvents(std::vector<Event>& p_events, StreamType p_streamTy
 	{
 		m_outgoingEvents.reserve(m_outgoingEvents.size() + p_events.size());
 		m_outgoingEvents.insert(m_outgoingEvents.end(), p_events.begin(), p_events.end());
-		
+
 		break;
 	}
 	}

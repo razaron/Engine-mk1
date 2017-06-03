@@ -7,7 +7,7 @@ Click here for [documentation](https://razaron.github.io/engine-mk1/ "Documentat
 - ~~Space~~
 - ~~System~~
 - ~~Entity~~
-- ~~Component~~
+- ~~Component~
 - ~~ObjectPool~~
 - ~~EventStream~~
 - ~~Graph~~
