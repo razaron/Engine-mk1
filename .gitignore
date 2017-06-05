@@ -54,6 +54,7 @@ Temporary Items
 # FILES
 # =========================
 src/main.cpp
+results.txt
 
 # FOLDERS
 # =========================
@@ -64,4 +65,5 @@ Debug
 # =========================
 *.out
 *.a
+*.odg
 *.exe

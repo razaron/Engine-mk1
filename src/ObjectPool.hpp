@@ -7,42 +7,61 @@
 #define OBJECT_POOL_PAGE_ALIGNMENT 64
 #endif
 
+#define OBJECT_SIZE_MIN sizeof(std::size_t) * 2
+
+#define OBJECT_SIZE_2 sizeof(std::size_t) * 2
+#define OBJECT_SIZE_4 sizeof(std::size_t) * 4
+#define OBJECT_SIZE_8 sizeof(std::size_t) * 8
+#define OBJECT_SIZE_16 sizeof(std::size_t) * 16
+#define OBJECT_SIZE_32 sizeof(std::size_t) * 32
+#define OBJECT_SIZE_64 sizeof(std::size_t) * 64
+
 #include "Misc.hpp"
 
-#include <list>
-#include <tuple>
-#include <sstream>
-#include <typeinfo>
 #include <cstring>
+#include <list>
+#include <sstream>
+#include <tuple>
+#include <typeinfo>
 
 /*! Things related to an aligned generic object pool implementation. */
 namespace razaron::objectpool
 {
-	/*! @cond */
-	using Array8 = alignedArray<char, OBJECT_POOL_PAGE_LENGTH * 8, OBJECT_POOL_PAGE_ALIGNMENT>;
-	using Array16 = alignedArray<char, OBJECT_POOL_PAGE_LENGTH * 16, OBJECT_POOL_PAGE_ALIGNMENT>;
-	using Array32 = alignedArray<char, OBJECT_POOL_PAGE_LENGTH * 32, OBJECT_POOL_PAGE_ALIGNMENT>;
-	using Array64 = alignedArray<char, OBJECT_POOL_PAGE_LENGTH * 64, OBJECT_POOL_PAGE_ALIGNMENT>;
-	using Array128 = alignedArray<char, OBJECT_POOL_PAGE_LENGTH * 128, OBJECT_POOL_PAGE_ALIGNMENT>;
-	using Array256 = alignedArray<char, OBJECT_POOL_PAGE_LENGTH * 256, OBJECT_POOL_PAGE_ALIGNMENT>;
+    /*! @cond */
+    using ArrayA = alignedArray<char, OBJECT_POOL_PAGE_LENGTH * OBJECT_SIZE_2, OBJECT_POOL_PAGE_ALIGNMENT>;
+    using ArrayB = alignedArray<char, OBJECT_POOL_PAGE_LENGTH * OBJECT_SIZE_4, OBJECT_POOL_PAGE_ALIGNMENT>;
+    using ArrayC = alignedArray<char, OBJECT_POOL_PAGE_LENGTH * OBJECT_SIZE_8, OBJECT_POOL_PAGE_ALIGNMENT>;
+    using ArrayD = alignedArray<char, OBJECT_POOL_PAGE_LENGTH * OBJECT_SIZE_16, OBJECT_POOL_PAGE_ALIGNMENT>;
+    using ArrayE = alignedArray<char, OBJECT_POOL_PAGE_LENGTH * OBJECT_SIZE_32, OBJECT_POOL_PAGE_ALIGNMENT>;
+    using ArrayF = alignedArray<char, OBJECT_POOL_PAGE_LENGTH * OBJECT_SIZE_64, OBJECT_POOL_PAGE_ALIGNMENT>;
 
-	using Pool8 = std::pair<Handle*, std::list<Array8*>>;
-	using Pool16 = std::pair<Handle*, std::list<Array16*>>;
-	using Pool32 = std::pair<Handle*, std::list<Array32*>>;
-	using Pool64 = std::pair<Handle*, std::list<Array64*>>;
-	using Pool128 = std::pair<Handle*, std::list<Array128*>>;
-	using Pool256 = std::pair<Handle*, std::list<Array256*>>;
-	/*! @endcond */
+    using PoolA = std::pair<Handle *, std::list<ArrayA *>>;
+    using PoolB = std::pair<Handle *, std::list<ArrayB *>>;
+    using PoolC = std::pair<Handle *, std::list<ArrayC *>>;
+    using PoolD = std::pair<Handle *, std::list<ArrayD *>>;
+    using PoolE = std::pair<Handle *, std::list<ArrayE *>>;
+    using PoolF = std::pair<Handle *, std::list<ArrayF *>>;
 
-	/*!	Stores objects of any type with size upto 256 Bytes in contiguous aligned memory. */
-	class ObjectPool {
-	public:
-		ObjectPool(); /*!< Default constructor. */
-		~ObjectPool();/*!< Default destructor. */
+    using PoolTuple = std::tuple<PoolA, PoolB, PoolC, PoolD, PoolE, PoolF>;
 
+    // clang-format off
+    template <typename T>
+    using PoolCond1 =   std::conditional <sizeof(T) <= OBJECT_SIZE_2, PoolA,
+                        typename std::conditional <sizeof(T) <= OBJECT_SIZE_4, PoolB,
+                        typename std::conditional <sizeof(T) <= OBJECT_SIZE_8, PoolC,
+                        typename std::conditional <sizeof(T) <= OBJECT_SIZE_16, PoolD,
+                        typename std::conditional <sizeof(T) <= OBJECT_SIZE_32, PoolE, PoolF>::type>::type>::type>::type>;
+    // clang-format on
+    /*! @endcond */
 
+    /*!	Stores objects of any type with size upto OBJECT_SIZE_64 Bytes in contiguous aligned memory. */
+    class ObjectPool
+    {
+      public:
+        ObjectPool();  /*!< Default constructor. */
+        ~ObjectPool(); /*!< Default destructor. */
 
-		/*!	Moves an object of type T into the ObjectPool.
+        /*!	Moves an object of type T into the ObjectPool.
 		*
 		*	@tparam		T				The type of the object to be moved int o the ObjectPool.
 		*
@@ -53,9 +72,10 @@ namespace razaron::objectpool
 		*	@retval		Handle			On success, a handle for accessing the object.
 		*	@retval		Handle			On failure, an empty handle.
 		*/
-		template<class T> Handle push(T&& p_object);
+        template <class T>
+        Handle push(T &p_object);
 
-		/*!	Constructs an object of type T directly into the ObjectPool.
+        /*!	Constructs an object of type T directly into the ObjectPool.
 		*
 		*	@tparam		T				The type of the object to be moved into the ObjectPool.
 		*	@tparam		Args			The parameter pack used to construct the T object.<sup>[1]</sup>
@@ -69,9 +89,10 @@ namespace razaron::objectpool
 		*
 		*	<small><sup>[1]</sup> Don't enter this. It <a title="cppreference" href="http://en.cppreference.com/w/cpp/language/template_argument_deduction">deduced</a> by the compiler.</small>
 		*/
-		template<class T, class... Args> Handle emplace(Args... p_args);
+        template <class T, class... Args>
+        Handle emplace(Args... p_args);
 
-		/*!	Gets a pointer to an object in the ObjectPool.
+        /*!	Gets a pointer to an object in the ObjectPool.
 		*
 		*	@tparam	T			The type of the object to get from the ObjectPool.
 		*
@@ -79,332 +100,384 @@ namespace razaron::objectpool
 		*
 		*	@retval T*			On success, a pointer to the desired object.
 		*/
-		template<class T> T* getObject(Handle p_handle);
-		//TODO template<class T> T* getObjects(std::vector<Handle> p_handles);
+        template <class T>
+        T &getObject(Handle p_handle);
+        //TODO template<class T> T* getObjects(std::vector<Handle> p_handles);
 
-		/*!	Removes an object from the ObjectPool and free's the space for use.
+        /*!	Removes an object from the ObjectPool and free's the space for use.
 		*	It does not call the objects destructor, it just resets the memory used to store the object in the ObjectPool.
 		*
+        *   @tparam	T			The type of the object to remove from the ObjectPool.
+        *
 		*	@param	p_handle	The handle of the object to remove from the ObjectPool.
 		*/
-		void removeObject(Handle p_handle);
-		//TODO template<class T> void removeObject(Handle p_handle); // for calling the destructor ~T()
-		//TODO void squash(); // Defragments the pools.
-		std::size_t capacity(); // added p_size parameter. Checks how many p_size bytes long object can fit.
+        template <class T>
+        void removeObject(Handle p_handle);
+        //TODO template<class T> void removeObject(Handle p_handle); // for calling the destructor ~T()
+        //TODO void squash(); // Defragments the pools.
+        HandleIndex capacity(); // added p_size parameter. Checks how many p_size bytes long object can fit.
 
-	private:
-		std::tuple<Pool8, Pool16, Pool32, Pool64, Pool128, Pool256> m_pools;
+      private:
+        PoolTuple m_pools;
 
-		template<class T, class Pool, class... Args> Handle allocateConstruct(Args... p_args);
-		template<class T, class Pool> Handle allocateMove(T&& p_object);
-		template <class Pool> void addPage();
-		template<class T, class Pool> T* getObject(Handle p_handle);
-		template<class Pool> void removeObject(Handle p_handle); //TODO only loop through list once
-	};
+        template <class T, class Pool, class... Args>
+        Handle allocateConstruct(Args... p_args);
 
-	/* *************************************************
+        template <class T, class Pool>
+        Handle allocateMove(T &&p_object);
+
+        template <class Pool>
+        void addPage();
+
+        template <class Pool>
+        typename Pool::second_type::value_type getPage(HandleIndex index);
+
+        template <class T, class Pool>
+        T &getObject(Handle p_handle);
+
+        template <class Pool, typename T>
+        typename std::enable_if<std::is_pointer<T>::value, HandleIndex>::type getIndex(T p_ptr);
+
+        template <class T, class Pool>
+        void removeObject(Handle p_handle);
+    };
+
+    /* *************************************************
 					PUBLIC FUNCTIONS
 	****************************************************/
 
-	inline ObjectPool::ObjectPool()
-	{
-		auto p8 = std::get<Pool8>(m_pools);
-		p8.first = nullptr;
+    inline ObjectPool::ObjectPool()
+    {
+        FOR_EACH_TUPLE({
+            element.first = nullptr;
 
-		auto p16 = std::get<Pool16>(m_pools);
-		p16.first = nullptr;
+            return 0;
+        }, m_pools);
+    }
 
-		auto p32 = std::get<Pool32>(m_pools);
-		p32.first = nullptr;
+    inline ObjectPool::~ObjectPool()
+    {
+        FOR_EACH_TUPLE({
+            for (auto arr : element.second)
+                delete arr;
 
-		auto p64 = std::get<Pool64>(m_pools);
-		p64 .first = nullptr;
+            return 0;
+        }, m_pools);
+    }
 
-		auto p128 = std::get<Pool128>(m_pools);
-		p128.first = nullptr;
+    template <class T>
+    inline Handle ObjectPool::push(T &p_object)
+    {
+        // Find the pool that fits T
+        using Pool = typename PoolCond1<T>::type;
 
-		auto p256 = std::get<Pool256>(m_pools);
-		p256.first = nullptr;
-	}
+        if (sizeof(T) <= OBJECT_SIZE_64)
+        {
+            return allocateMove<T, Pool>(std::move(p_object));
+        }
+        else
+        {
+            std::stringstream message;
+            message << typeid(T).name() << " is too large for ObjectPool. sizeof(" << typeid(T).name() << "): "
+                    << ".";
 
-	inline ObjectPool::~ObjectPool()
-	{
-		auto p8 = std::get<Pool8>(m_pools);
-		for(auto arr: p8.second)
-			delete arr;
+            throw std::length_error(message.str());
+        }
+    }
 
-		auto p16 = std::get<Pool16>(m_pools);
-		for (auto arr : p16.second)
-			delete arr;
+    template <class T, class... Args>
+    inline Handle ObjectPool::emplace(Args... p_args)
+    {
+        // Find the pool that fits T
+        using Pool = typename PoolCond1<T>::type;
 
-		auto p32 = std::get<Pool32>(m_pools);
-		for (auto arr : p32.second)
-			delete arr;
+        if (sizeof(T) <= OBJECT_SIZE_64)
+        {
+            return allocateConstruct<T, Pool>(p_args...);
+        }
+        else
+        {
+            std::stringstream message;
+            message << typeid(T).name() << " is too large for ObjectPool. sizeof(" << typeid(T).name() << "): " << sizeof(T) << ".";
 
-		auto p64 = std::get<Pool64>(m_pools);
-		for (auto arr : p64.second)
-			delete arr;
+            throw std::length_error(message.str());
+        }
+    }
 
-		auto p128 = std::get<Pool128>(m_pools);
-		for (auto arr : p128.second)
-			delete arr;
+    template <class T>
+    inline T &ObjectPool::getObject(Handle p_handle)
+    {
+        // Find the pool that fits T
+        using Pool = typename PoolCond1<T>::type;
 
-		auto p256 = std::get<Pool256>(m_pools);
-		for (auto arr : p256.second)
-			delete arr;
-	}
+        if (p_handle.size != sizeof(T))
+        {
+            std::stringstream message;
+            message << "Type mismatch. HandleSize: " << p_handle.size << " != sizeof(T): " << sizeof(T) << ". typeid(T): " << typeid(T).name();
 
-	template<class T>
-	inline Handle ObjectPool::push(T && p_object)
-	{
-		if (sizeof(T) <= 8)
-			return allocateMove<T, Pool8>(p_object);
+            throw std::invalid_argument(message.str());
+        }
+        else if (sizeof(T) <= OBJECT_SIZE_64)
+        {
+            return getObject<T, Pool>(p_handle);
+        }
+        else
+        {
+            std::stringstream message;
+            message << "HandleSize (" << p_handle.size << ") too large for ObjectPool.";
 
-		else if (sizeof(T) <= 16)
-			return allocateMove<T, Pool16>(p_object);
+            throw std::length_error(message.str());
+        }
+    }
 
-		else if (sizeof(T) <= 32)
-			return allocateMove<T, Pool32>(p_object);
+    template <class T>
+    inline void ObjectPool::removeObject(Handle p_handle)
+    {
+        // Find the pool that fits T
+        using Pool = typename PoolCond1<T>::type;
 
-		else if (sizeof(T) <= 64)
-			return allocateMove<T, Pool64>(p_object);
+        if (p_handle.size != sizeof(T))
+        {
+            std::stringstream message;
+            message << "Type mismatch. HandleSize: " << p_handle.size << " != sizeof(T): " << sizeof(T) << ". typeid(T): " << typeid(T).name();
 
-		else if (sizeof(T) <= 128)
-			return allocateMove<T, Pool128>(p_object);
+            throw std::invalid_argument(message.str());
+        }
+        else if (sizeof(T) <= OBJECT_SIZE_64)
+        {
+            return removeObject<T, Pool>(p_handle);
+        }
+        else
+        {
+            std::stringstream message;
+            message << "HandleSize (" << p_handle.size << ") too large for ObjectPool.";
 
-		else if (sizeof(T) <= 256)
-			return allocateMove<T, Pool256>(p_object);
+            throw std::length_error(message.str());
+        }
+    }
 
-		else {
-			std::stringstream message;
-			message << typeid(T).name() << " is too large for ObjectPool. sizeof(" << typeid(T).name() << "): " << sizeof(T);
+    inline HandleIndex ObjectPool::capacity()
+    {
+        auto pA = std::get<PoolA>(m_pools);
+        auto pB = std::get<PoolB>(m_pools);
+        auto pC = std::get<PoolC>(m_pools);
+        auto pD = std::get<PoolD>(m_pools);
+        auto pE = std::get<PoolE>(m_pools);
+        auto pF = std::get<PoolF>(m_pools);
 
-			throw std::length_error(message.str());
-		}
+        return pA.second.size() * sizeof(ArrayA) + pB.second.size() * sizeof(ArrayB) + pC.second.size() * sizeof(ArrayC) + pD.second.size() * sizeof(ArrayD) + pE.second.size() * sizeof(ArrayE) + pF.second.size() * sizeof(ArrayF);
+    }
 
-		return{};
-	}
-
-	template<class T, class... Args>
-	inline Handle ObjectPool::emplace(Args... p_args)
-	{
-		if (sizeof(T) <= 8)
-			return allocateConstruct<T, Pool8>(p_args...);
-
-		else if (sizeof(T) <= 16)
-			return allocateConstruct<T, Pool16>(p_args...);
-
-		else if (sizeof(T) <= 32)
-			return allocateConstruct<T, Pool32>(p_args...);
-
-		else if (sizeof(T) <= 64)
-			return allocateConstruct<T, Pool64>(p_args...);
-
-		else if (sizeof(T) <= 128)
-			return allocateConstruct<T, Pool128>(p_args...);
-
-		else if (sizeof(T) <= 256)
-			return allocateConstruct<T, Pool256>(p_args...);
-
-		else {
-			std::stringstream message;
-			message << typeid(T).name() << " is too large for ObjectPool. sizeof(" << typeid(T).name() << "): " << sizeof(T);
-
-			throw std::length_error(message.str());
-		}
-
-		return {};
-	}
-
-	inline void ObjectPool::removeObject(Handle p_handle)
-	{
-		if (p_handle.size <= 8)
-			removeObject<Pool8>(p_handle);
-		else if (p_handle.size <= 16)
-			removeObject<Pool16>(p_handle);
-		else if (p_handle.size <= 32)
-			removeObject<Pool32>(p_handle);
-		else if (p_handle.size <= 64)
-			removeObject<Pool64>(p_handle);
-		else if (p_handle.size <= 128)
-			removeObject < Pool128 > (p_handle);
-		else if (p_handle.size <= 256)
-			removeObject<Pool256>(p_handle);
-	}
-
-	inline std::size_t ObjectPool::capacity()
-	{
-		auto p8 = std::get<Pool8>(m_pools);
-		auto p16 = std::get<Pool16>(m_pools);
-		auto p32 = std::get<Pool32>(m_pools);
-		auto p64 = std::get<Pool64>(m_pools);
-		auto p128 = std::get<Pool128>(m_pools);
-		auto p256 = std::get<Pool256>(m_pools);
-
-		return p8.second.size() * sizeof(Array8) + p16.second.size() * sizeof(Array16) + p32.second.size() * sizeof(Array32) + p64.second.size() * sizeof(Array64) + p128.second.size() * sizeof(Array128) + p256.second.size() * sizeof(Array256);
-	}
-
-
-	/* *************************************************
+    /* *************************************************
             		PRIVATE FUNCTIONS
 	****************************************************/
-	template<class T>
-	inline T* ObjectPool::getObject(Handle p_handle)
-	{
-		if (sizeof(T) <= 8)
-			return getObject<T, Pool8>(p_handle);
-		else if (sizeof(T) <= 16)
-			return getObject<T, Pool16>(p_handle);
-		else if (sizeof(T) <= 32)
-			return getObject<T, Pool32>(p_handle);
-		else if (sizeof(T) <= 64)
-			return getObject<T, Pool64>(p_handle);
-		else if (sizeof(T) <= 128)
-			return getObject<T, Pool128>(p_handle);
-		else if (sizeof(T) <= 256)
-			return getObject<T, Pool256>(p_handle);
 
-		return nullptr;
-	}
+    template <class T, class Pool, class... Args>
+    inline Handle ObjectPool::allocateConstruct(Args... p_args)
+    {
+        T temp{p_args...};
 
-	template<class T, class Pool, class... Args>
-	inline Handle ObjectPool::allocateConstruct(Args... p_args)
-	{
-		T temp = T(p_args...);
+        return allocateMove<T, Pool>(std::move(temp));
+    }
 
-		return allocateMove<T, Pool>(std::move(temp));
-	}
+    template <class T, class Pool>
+    inline Handle ObjectPool::allocateMove(T &&p_object)
+    {
+        auto pool = &std::get<Pool>(m_pools);
 
-	template<class T, class Pool>
-	inline Handle ObjectPool::allocateMove(T && p_object)
-	{
-		auto pool = &std::get<Pool>(m_pools);
+        // If the next free position pointer points to non-existant page, add a new page
+        int totalPositions = pool->second.size() * OBJECT_POOL_PAGE_LENGTH;
+        if (totalPositions == 0 || totalPositions <= pool->first->index)
+        {
+            addPage<Pool>();
+        }
 
-		int totalChunks = pool->second.size() * OBJECT_POOL_PAGE_LENGTH;
+        // Get pointers to the current and next free elements
+        Handle *curFree = pool->first;
+        Handle *nextFree = &getObject<Handle, Pool>(*curFree);
 
-		if (totalChunks == 0 || totalChunks <= pool->first->index)
-		{
-			addPage<Pool>();
-		}
+        // Copy object data to the location current free pointer
+        std::memcpy(curFree, &p_object, sizeof(T));
 
-		std::div_t d = std::div(pool->first->index, OBJECT_POOL_PAGE_LENGTH);
-		int count = d.quot;
-		for (auto page : pool->second)
-		{
-			if (!count--)
-			{
-				Handle* a = pool->first;
-				Handle* b = reinterpret_cast<Handle*>(page->data());
-				std::ptrdiff_t index = (pool->first->index % OBJECT_POOL_PAGE_LENGTH) ? a - b : 0;
+        // Set the pools first free pointer to the next free pointer
+        pool->first = nextFree;
 
-				int foo = (pool->first->size / (2 * sizeof(a)));
+        // Configure a handle for the newly placed object
+        Handle h{HandleSize{sizeof(T)}, HandleIndex{getIndex<Pool>(curFree)}, false};
 
-				foo = (foo) ? foo : 1;
+        return h;
+    }
 
-				index = index / foo;
+    template <class Pool>
+    inline void ObjectPool::addPage()
+    {
+        typedef typename Pool::second_type::value_type PagePtr;
+        typedef typename std::remove_pointer<PagePtr>::type Page;
 
-				std::memcpy(pool->first, &p_object, sizeof(T));
+        auto pool = &std::get<Pool>(m_pools);
 
-				pool->first = reinterpret_cast<Handle*>(&(page->data()[d.rem * page->size() / OBJECT_POOL_PAGE_LENGTH]));
+        // Create and push a new page onto the pool
+        auto page = new Page{};
+        pool->second.push_back(page);
 
-				return{ sizeof(T), static_cast<unsigned short>(index), false };
-			}
-		}
+        // Initialize the pages positions with free handles pointing to the next free handle
+        auto pageData = pool->second.back()->data();
+        for (auto i = 0; i < OBJECT_POOL_PAGE_LENGTH; i++)
+        {
+            HandleIndex nextFree = static_cast<HandleIndex>(i + 1 + ((pool->second.size() - 1) * OBJECT_POOL_PAGE_LENGTH));
 
-		return{};
-	}
+            Handle h = {static_cast<HandleSize>(page->size() / OBJECT_POOL_PAGE_LENGTH), nextFree, true};
+            std::memcpy(&pageData[i * page->size() / OBJECT_POOL_PAGE_LENGTH], &h, sizeof(h));
+        }
 
-	template<class Pool>
-	inline void ObjectPool::addPage()
-	{
-		typedef typename std::remove_pointer<typename Pool::second_type::value_type>::type Page;
+        // If it's the first page, set the first free position to the beginning of the page
+        if (pool->first == nullptr)
+            pool->first = reinterpret_cast<Handle *>(page->data());
+    }
 
-		auto pool = &std::get<Pool>(m_pools);
+    template <class Pool>
+    inline typename Pool::second_type::value_type ObjectPool::getPage(HandleIndex index)
+    {
+        typedef typename Pool::second_type::value_type PagePtr;
 
-		auto page = new Page{};
+        auto pool = &std::get<Pool>(m_pools);
 
-		pool->second.push_back(page);
+        // Quotient is the page number and remainder is the position in that page
+        std::div_t d = std::div(index, OBJECT_POOL_PAGE_LENGTH);
 
-		auto pagePtr = pool->second.back()->data();
+        // Finds a pointer to the correct page
+        PagePtr page = nullptr;
+        for (auto &p : pool->second)
+        {
+            if (!d.quot)
+            {
+                page = p;
+                break;
+            }
+            d.quot--;
+        }
 
-		for (auto i = 0; i < OBJECT_POOL_PAGE_LENGTH; i++)
-		{
-			unsigned short nextFree = static_cast<unsigned short>( i + 1 + ((pool->second.size() - 1)*OBJECT_POOL_PAGE_LENGTH) );
+        return page;
+    }
 
-			Handle h = { page->size() / OBJECT_POOL_PAGE_LENGTH, nextFree, true };
-			std::memcpy(&pagePtr[i * page->size() / OBJECT_POOL_PAGE_LENGTH], &h, sizeof(h));
-		}
+    template <class T, class Pool>
+    inline T &ObjectPool::getObject(Handle p_handle)
+    {
+        typedef typename Pool::second_type::value_type PagePtr;
 
-		if(pool->first == nullptr)
-			pool->first = reinterpret_cast<Handle*>(page->data());
-	}
+        auto pool = &std::get<Pool>(m_pools);
 
-	template<class T, class Pool>
-	inline T * ObjectPool::getObject(Handle p_handle)
-	{
-		typedef typename Pool::second_type::value_type PagePtr;
+        // Find the page containg p_handle
+        PagePtr page = getPage<Pool>(p_handle.index);
 
-		auto pool = &std::get<Pool>(m_pools);
-		std::div_t d = std::div(p_handle.index, OBJECT_POOL_PAGE_LENGTH);
+        // Quotient is the page number and remainder is the position in that page
+        std::div_t d = std::div(p_handle.index, OBJECT_POOL_PAGE_LENGTH);
 
-		PagePtr page = nullptr;
+        // Find and cast the element refering to objects first byte
+        auto object = reinterpret_cast<T *>(&page->data()[d.rem * pool->first->size]);
 
-		for (auto &p : pool->second)
-		{
-			if (!d.quot)
-			{
-				page = p;
-			}
-			d.quot--;
-		}
+        // dereference and return the pointer to object
+        return *object;
+    }
 
-		int v = p_handle.size;
-		v--;
-		v |= v >> 1;
-		v |= v >> 2;
-		v |= v >> 4;
-		v |= v >> 8;
-		v |= v >> 16;
-		v++;
+    template <class Pool, typename T>
+    inline typename std::enable_if<std::is_pointer<T>::value, HandleIndex>::type ObjectPool::getIndex(T p_ptr)
+    {
+        typedef typename Pool::second_type::value_type PagePtr;
+        typedef typename std::remove_pointer<PagePtr>::type Page;
 
-		T* object = reinterpret_cast<T*>(&page->data()[p_handle.index*v]);
+        auto pool = &std::get<Pool>(m_pools);
 
-		// TODO if p_handle.size != sizeof(T) return nullptr
+        // Find the page that contains p_ptr
+        std::size_t ptrAdr = reinterpret_cast<std::size_t>(p_ptr);
+        std::size_t pageAdr = 0;
+        std::size_t diff = 0;
 
-		return object;
-	}
+        for (auto &p : pool->second)
+        {
+            pageAdr = reinterpret_cast<std::size_t>(p->data());
+            diff = ptrAdr - pageAdr;
 
-	template<class Pool>
-	inline void ObjectPool::removeObject(Handle p_handle)
-	{
-		typedef typename Pool::second_type::value_type PagePtr;
+            if (diff >= 0 && diff < sizeof(Page))
+                break;
+        }
 
-		auto pool = &std::get<Pool>(m_pools);
+        // Throw if no page found
+        if (!(diff >= 0 && diff < sizeof(Page)))
+        {
+            throw std::out_of_range("Pointer is not in any page.");
+        }
 
-		PagePtr page = nullptr;
+        // Calculate position of p_handle using pointer arithmatic
+        std::size_t position = ptrAdr - pageAdr;
 
-		Handle* ptrCurFree = pool->first;
-		Handle* ptrPrevFree = pool->first;
+        position = position / pool->first->size;
 
-		std::div_t divToRemove = std::div(p_handle.index, OBJECT_POOL_PAGE_LENGTH);
-		std::div_t divCurFree = std::div(ptrCurFree->index, OBJECT_POOL_PAGE_LENGTH);
-		std::div_t divPrevFree = std::div(ptrCurFree->index, OBJECT_POOL_PAGE_LENGTH);
+        // If position is in valid range, return. Else, throw.
+        if (position <= std::numeric_limits<HandleIndex>::max())
+        {
+            return position;
+        }
+        else
+        {
+            std::stringstream message;
+            message << "Calculated position too large for HandleIndex max value. std::numeric_limits<HandleIndex>::max()" << std::numeric_limits<HandleIndex>::max();
 
-		while (divToRemove.quot < divCurFree.quot && divToRemove.rem < divCurFree.rem)
-		{
-			for (auto &p : pool->second)
-			{
-				if (!divCurFree.quot)
-				{
-					page = p;
-					ptrPrevFree = ptrCurFree;
-					ptrCurFree = reinterpret_cast<Handle*>(&page->data()[divCurFree.rem*p_handle.size]);
+            throw std::overflow_error(message.str());
+        }
+    }
 
-					divPrevFree = std::div(ptrPrevFree->index, OBJECT_POOL_PAGE_LENGTH);
-					divCurFree = std::div(ptrCurFree->index, OBJECT_POOL_PAGE_LENGTH);
-				}
-				divCurFree.quot--;
-			}
-		}
-	}
+    template <class T, class Pool>
+    inline void ObjectPool::removeObject(Handle p_handle)
+    {
+        auto pool = &std::get<Pool>(m_pools);
+
+        // Get index of first free position
+        auto posCurFree = getIndex<Pool>(pool->first);
+
+        // Fail if first free position and object being removed are the same
+        if (p_handle.index == posCurFree) return;
+
+        // If the object being removed is located BEFORE the first free position
+        if (p_handle.index < posCurFree)
+        {
+            Handle *ptrToRemove = &getObject<Handle, Pool>(p_handle);
+
+            // Setup the object being removed to become the next firstFree pointer
+            ptrToRemove->free = true;
+            ptrToRemove->size = pool->first->size;
+            ptrToRemove->index = posCurFree;
+
+            pool->first = ptrToRemove;
+
+            return;
+        }
+
+        // If the object being removed is located AFTER the first free position
+        Handle *ptrToRemove = &getObject<Handle, Pool>(p_handle);
+
+        Handle *ptrPrevFree = nullptr;
+        Handle *ptrNextFree = pool->first;
+
+        std::size_t posNextFree = getIndex<Pool>(ptrNextFree);
+
+        // Loop through free positions until p_handle is inbetween prevFree and nextFree
+        while (posNextFree < p_handle.index)
+        {
+            ptrPrevFree = ptrNextFree;
+
+            ptrNextFree = &getObject<Handle, Pool>(*ptrNextFree);
+            posNextFree = getIndex<Pool>(ptrNextFree);
+        }
+
+        // Currently, ptrToRemove is set to some value (e.g. "hello"), so I have to use p_handle
+        ptrPrevFree->index = p_handle.index;
+
+        // Setup the object being removed to become the next firstFree pointer
+        ptrToRemove->free = true;
+        ptrToRemove->size = ptrNextFree->size;
+        ptrToRemove->index = posNextFree;
+
+        return;
+    }
 }

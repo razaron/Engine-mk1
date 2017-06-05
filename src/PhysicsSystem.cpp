@@ -16,7 +16,7 @@ Graph<Task, char, TaskGraphData>* PhysicsSystem::update(std::vector<Entity>* p_e
 	while (e != eNull)
 	{
 		Entity entity = entityMap[e.recipient];
-		TransformComponent* r = m_pool.getObject<TransformComponent>(entity[ComponentType::TRANSFORM]);
+		auto r = m_pool.getObject<TransformComponent>(entity[ComponentType::TRANSFORM]);
 
 		UNUSED(r);
 
@@ -27,12 +27,12 @@ Graph<Task, char, TaskGraphData>* PhysicsSystem::update(std::vector<Entity>* p_e
 
 	for (auto& e : entityMap)
 	{
-		TransformComponent* t = m_pool.getObject<TransformComponent>(e.second[ComponentType::TRANSFORM]);
+		auto t = m_pool.getObject<TransformComponent>(e.second[ComponentType::TRANSFORM]);
 		float angle = glm::radians(static_cast<float>(36.0*delta));
 		glm::quat q = glm::angleAxis(angle, glm::vec3(0.f, 0.f, 1.f));
-		t->rotate(q);
+		t.rotate(q);
 
-		glm::mat4 *model = new glm::mat4(t->getModel());
+		glm::mat4 *model = new glm::mat4(t.getModel());
 
 
 		Event ev = {};

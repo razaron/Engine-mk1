@@ -45,46 +45,29 @@ SCENARIO("You can push/pop Events from an EventStream")
     }
 }
 
-SCENARIO("EventStream objects can bubble/capture Events from eachother")
+SCENARIO("EventStreams can propogate Events to eachother")
 {
-    GIVEN("Two EventStreams, a and b, with some outgoing Events")
+    GIVEN("An EventStream with outgoing events and an empty EventStream")
     {
         EventStream a;
         EventStream b;
 
         a.pushEvent({0, EventType::TYPE_1, new std::string{"lolwut"}}, StreamType::OUTGOING);
-        b.pushEvent({0, EventType::TYPE_2, new std::string{"lolwut"}}, StreamType::OUTGOING);
 
-        std::vector<Event> eventsA;
-        std::vector<Event> eventsB;
+        std::vector<Event> events;
         for (unsigned int i = 1; i < 5; i++)
         {
-            Event eA{i, EventType::TYPE_1, new std::string{"dis gun be gud"}};
-            eventsA.push_back(eA);
-
-            Event eB{i, EventType::TYPE_2, new std::string{"dis gun be gud"}};
-            eventsB.push_back(eB);
+            Event e{i, EventType::TYPE_1, new std::string{"dis gun be gud"}};
+            events.push_back(e);
         }
 
-        a.pushEvents(eventsA, StreamType::OUTGOING);
-        b.pushEvents(eventsB, StreamType::OUTGOING);
+        a.pushEvents(events, StreamType::OUTGOING);
 
         WHEN("a bubbles Events to b")
         {
-            a.bubbleEvents(&b);
+            a.propogateEvents(&b);
 
             std::vector<Event> events = b.popEvents(StreamType::INCOMING);
-
-            REQUIRE(events.size() == 5);
-            REQUIRE(*(static_cast<std::string *>(events[0].data)) == "lolwut");
-            REQUIRE(*(static_cast<std::string *>(events[1].data)) == "dis gun be gud");
-        }
-
-        WHEN("a captures events from b")
-        {
-            a.captureEvents(&b);
-
-            std::vector<Event> events = a.popEvents(StreamType::INCOMING);
 
             REQUIRE(events.size() == 5);
             REQUIRE(*(static_cast<std::string *>(events[0].data)) == "lolwut");

@@ -11,11 +11,22 @@ Space::Space(SystemGraph p_systemGraph)
 
 Space::~Space()
 {
-	m_systemGraph.onVertexDiscoverFunc = [](SystemGraphVertex& v, SystemGraph& g) {
+	m_systemGraph.reset();
+
+	m_systemGraph.vertexFuncs[State::WHITE] = [](SystemGraphVertex& v, SystemGraph& g) {
 		UNUSED(g);
 
 		delete v.data;
 	};
+
+	m_systemGraph.edgeFuncs[State::WHITE] = [](SystemGraphEdge& e, SystemGraph& g) {
+		UNUSED(g);
+
+		UNUSED(e); // delete e if necessary
+	};
+
+	UNUSED(m_systemGraph.data); // delete data if necessary
+
 	m_systemGraph.breadthFirstTraversal(0);
 
 	std::clog << "Space Destructor" << std::endl;
@@ -31,46 +42,7 @@ void Space::update(double delta)
 
 	m_systemGraph.reset();
 
-	//Creates a breadth first ordered vector of {*system, parent *system} pairs
-	m_systemGraph.data.orderedSystems.clear();
-	m_systemGraph.onEdgeDiscoverFunc = [](SystemGraphEdge& e, SystemGraph& g) {
-		g.data.orderedSystems.push_back({ g[e.target].data, g[e.source].data });
-	};
-	m_systemGraph.breadthFirstTraversal(0);
-
-	//Bubble events up the graph to the root system
-	auto vec = m_systemGraph.data.orderedSystems;
-	for (auto sPair : reverse(vec))
-	{
-		sPair.first->bubbleEvents(sPair.second);
-	}
-
-	std::vector<System*> closedList{};
-
-	//Systems capture events from root system
-	for (auto sPair : vec)
-	{
-		if (std::find(closedList.begin(), closedList.end(), sPair.first) != closedList.end()) continue;
-
-		closedList.push_back(sPair.first);
-
-		sPair.first->popEvents(StreamType::OUTGOING);
-		sPair.first->captureEvents(m_systemGraph[0].data);
-	}
-
-	m_systemGraph[0].data->popEvents(StreamType::OUTGOING);
-
-	//call system->update(...)
-	m_systemGraph.reset();
-
-	std::vector<Entity>* vE = &m_entities;
-	m_systemGraph.onVertexDiscoverFunc = [vE, delta](SystemGraphVertex& v, SystemGraph& g) {
-		UNUSED(g);
-
-		v.data->update(vE, (delta <= 0) ? 0 : delta);
-	};
-
-	m_systemGraph.breadthFirstTraversal(0);
+	UNUSED(delta);
 }
 
 void razaron::core::space::Space::addEntity(Entity && p_entity)

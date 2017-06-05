@@ -4,7 +4,9 @@ project (engine-mk1)
 SET(MY_COMPILE_FLAGS "fail" CACHE STRING "Build option. 32 or 64")
 SET(MY_LINKER_FLAGS "fail" CACHE STRING "Build option. 32 or 64")
 SET(MY_INCLUDES "fail" CACHE STRING "Build option. 32 or 64")
+
 SET(TEST_NAME "fail" CACHE STRING "Build option. 32 or 64")
+SET(TEST_SOURCES "fail" CACHE STRING "Build option. 32 or 64")
 
 # Setup includes
 include_directories (${MY_INCLUDES} ${PROJECT_SOURCE_DIR}/src)

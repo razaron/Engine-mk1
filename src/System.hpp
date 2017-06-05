@@ -57,7 +57,8 @@ namespace razaron::core::system
 		*	@returns	Returns the TaskGraph needed to run update logic for the Component objects.
 		*	<small><sup>[1]</sup> Don't enter this. It <a title="cppreference" href="http://en.cppreference.com/w/cpp/language/template_argument_deduction">deduced</a> by the compiler.</small>
 		*/
-		template <class C, typename... Args> Handle constructComponent(Args... p_args) { return m_pool.emplace<C>(p_args...); }
+		template <class T, typename... Args>
+		Handle constructComponent(Args... p_args) { return m_pool.emplace<T>(p_args...); }
 
 		/*! Constructs a Component into System managed memory.
 		*
@@ -69,16 +70,18 @@ namespace razaron::core::system
 		*	@retval	C*		On success, a pointer to the desired Component.
 		*	@retval	nullptr	On failure, a nullptr.
 		*/
-		template<class C> C* getComponent(Handle p_handle) { return m_pool.getObject<C>(p_handle); }
+		template <class T>
+		T* getComponent(Handle p_handle) { return m_pool.getObject<T>(p_handle); }
 
-		/*! Deletes the desired Component from System managed memory. */
-		void removeComponent(Handle p_handle) { m_pool.removeObject(p_handle); };
+		/*! Deletes the desired Component from System managed memory.
+		*
+		*	@tparam	T	The type of the component to remove.
+		*/
+		template <class T>
+		void removeComponent(Handle p_handle) { m_pool.removeObject<T>(p_handle); };
 
 		/*! Moves queued up Event objects to the dst System. */
-		void bubbleEvents(System* dst);
-
-		/*! Copies queued up Event objects from the src System. */
-		void captureEvents(System* src);
+		void propogateEvents(System* dst);
 
 		/*! Pops all Event objects from the desired StreamType of this System. */
 		std::vector<Event> popEvents(StreamType p_type);
@@ -102,14 +105,9 @@ namespace razaron::core::system
 
 	}
 
-	inline void System::bubbleEvents(System* dst)
+	inline void System::propogateEvents(System* dst)
 	{
-		m_eventStream.bubbleEvents(&dst->m_eventStream);
-	}
-
-	inline void System::captureEvents(System* src)
-	{
-		m_eventStream.captureEvents(&src->m_eventStream);
+		m_eventStream.propogateEvents(&dst->m_eventStream);
 	}
 
 	inline std::vector<Event> System::popEvents(StreamType p_type)

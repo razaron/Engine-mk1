@@ -28,10 +28,38 @@
 // For removing unused parameter warnings
 #define UNUSED(x) (void)(x)
 
+/* PATTERN is in with the form:
+	function(args)
+	or
+	(lambda)(args)
+*/
+#define VARIADIC_EXPANDER(PATTERN) 				\
+    expand_type { 0, ((PATTERN), void(), 0)... }
+
+// EXPRESSION is a brace enclosed function body
+#define FOR_EACH_TUPLE(EXPRESSION, TUPLE) \
+    std::apply([](auto... x) {            \
+        return std::make_tuple(           \
+            ([](auto element)      	      \
+                EXPRESSION                \
+    		)(x)...);          	     	  \
+    }, TUPLE);
+
+// EXPRESSION is a brace enclosed function body
+#define FOR_EACH_TUPLE_ORDERED_VOID(EXPRESSION, TUPLE) 	\
+    std::apply([](auto... x) {					 		\
+        VARIADIC_EXPANDER( 								\
+            ([](auto element)							\
+                EXPRESSION 								\
+            )(x)); 										\
+    }, TUPLE);
+
+using HandleSize = std::size_t;
+using HandleIndex = unsigned short;
 struct Handle
 {
-	size_t size;
-	unsigned short index;
+	HandleSize size;
+	HandleIndex index;
 	bool free;
 };
 

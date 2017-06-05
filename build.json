@@ -1,33 +1,46 @@
 {
-    "default":{
-        "includes":[
-            {
-                "fullpath": "lol",
-                "description": "lol description"
-            }
-        ],
-        "build_opts":{
+    "default": {
+        "includes": [{
+            "fullpath": "lol",
+            "description": "lol description"
+        }],
+        "build_opts": {
             "environment": "32"
         },
-        "compiler_opts":[
+        "compiler_opts": [
+            "-std=c++1z",
             "-Wall",
             "-Wextra"
         ],
-        "cmake_opts":{
+        "cmake_opts": {
             "CMAKE_BUILD_TYPE": "Debug"
-        }
-    },
-    "linux":{
-        "includes":[
+        },
+        "testSrc": [{
+                "fullpath": "tests/testComponent.cpp",
+                "description": "lol description"
+            },
             {
-                "fullpath": "./usr/include",
-                "description": "General include directory. Should contain 'catch.hpp'."
+                "fullpath": "tests/testObjectPool.cpp",
+                "description": "lol description"
+            },
+            {
+                "fullpath": "tests/testGraph.cpp",
+                "description": "lol description"
+            },
+            {
+                "fullpath": "tests/testEventStream.cpp",
+                "description": "lol description"
             }
         ]
     },
+    "linux": {
+        "includes": [{
+            "fullpath": "./usr/include",
+            "description": "General include directory. Should contain 'catch.hpp'."
+        }]
+    },
     "windows": {
-        "includes":[
-            {
+        "includes": [{
                 "fullpath": "C:/Libraries/C_C++/glm",
                 "description": "GLM include directory"
             },

@@ -39,7 +39,7 @@ SCENARIO("Graphs can be traversed in several ways", "[graph]")
     {
         WHEN("Performing depth first search")
         {
-            g.onVertexDiscoverFunc = [](TestVertex &v, TestGraph &g) {
+            g.vertexFuncs[State::WHITE] = [](TestVertex &v, TestGraph &g) {
                 g.data.v.push_back(v.data);
             };
 
@@ -74,13 +74,13 @@ SCENARIO("Graphs can call user defined functions on Vertex and Edge discovery", 
     {
         WHEN("Passing discovery functions")
         {
-            g.onVertexDiscoverFunc = [](TestVertex &v, TestGraph &g) {
+            g.vertexFuncs[State::WHITE] = [](TestVertex &v, TestGraph &g) {
                 UNUSED(v);
 
                 g.data.numVertices++;
             };
 
-            g.onEdgeDiscoverFunc = [](TestEdge &v, TestGraph &g) {
+            g.edgeFuncs[State::WHITE] = [](TestEdge &v, TestGraph &g) {
                 UNUSED(v);
 
                 g.data.numEdges++;

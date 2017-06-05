@@ -4,119 +4,129 @@ using namespace razaron::eventstream;
 
 EventStream::EventStream()
 {
-	std::clog << "EventStream Constructed" << std::endl;
+    std::clog << "EventStream Constructed" << std::endl;
 }
 
 EventStream::~EventStream()
 {
-	std::clog << "EventStream Destroyed" << std::endl;
+    std::clog << "EventStream Destroyed" << std::endl;
 }
 
 void EventStream::pushEvent(Event p_event, StreamType p_streamType)
 {
-	switch (p_streamType)
-	{
-	case StreamType::INCOMING:
-	{
-		m_incomingEvents.push_back(p_event);
-		break;
-	}
-	case StreamType::OUTGOING:
-	{
-		m_outgoingEvents.push_back(p_event);
-		break;
-	}
-	}
+    switch (p_streamType)
+    {
+    case StreamType::INCOMING:
+    {
+        m_incomingEvents.push(p_event);
+        break;
+    }
+    case StreamType::OUTGOING:
+    {
+        m_outgoingEvents.push(p_event);
+        break;
+    }
+    }
 }
 
-void EventStream::pushEvents(std::vector<Event>& p_events, StreamType p_streamType)
+void EventStream::pushEvents(std::vector<Event> &p_events, StreamType p_streamType)
 {
-	switch (p_streamType)
-	{
-	case StreamType::INCOMING:
-	{
-		m_incomingEvents.reserve(m_incomingEvents.size() + p_events.size());
-		m_incomingEvents.insert(m_incomingEvents.end(), p_events.begin(), p_events.end());
+    switch (p_streamType)
+    {
+    case StreamType::INCOMING:
+    {
+        for (auto e : p_events)
+        {
+            m_incomingEvents.push(e);
+        }
 
-		break;
-	}
-	case StreamType::OUTGOING:
-	{
-		m_outgoingEvents.reserve(m_outgoingEvents.size() + p_events.size());
-		m_outgoingEvents.insert(m_outgoingEvents.end(), p_events.begin(), p_events.end());
+        break;
+    }
+    case StreamType::OUTGOING:
+    {
+        for (auto e : p_events)
+        {
+            m_outgoingEvents.push(e);
+        }
 
-		break;
-	}
-	}
+        break;
+    }
+    }
 }
 
 Event EventStream::popEvent(StreamType p_streamType)
 {
-	switch (p_streamType)
-	{
-	case StreamType::INCOMING:
-	{
-		if (m_incomingEvents.size() == 0)
-			return Event{};
-		else
-		{
-			Event e = m_incomingEvents.back();
-			m_incomingEvents.pop_back();
+    switch (p_streamType)
+    {
+    case StreamType::INCOMING:
+    {
+        if (m_incomingEvents.size() == 0)
+            return Event{};
+        else
+        {
+            Event e = m_incomingEvents.front();
+            m_incomingEvents.pop();
 
-			return e;
-		}
-	}
-	case StreamType::OUTGOING:
-	{
-		if (m_outgoingEvents.size() == 0)
-			return Event{};
-		else
-		{
-			Event e = m_outgoingEvents.back();
-			m_outgoingEvents.pop_back();
+            return e;
+        }
+    }
+    case StreamType::OUTGOING:
+    {
+        if (m_outgoingEvents.size() == 0)
+            return Event{};
+        else
+        {
+            Event e = m_outgoingEvents.front();
+            m_outgoingEvents.pop();
 
-			return e;
-		}
-	}
-	default:
-		return Event{};
-	}
+            return e;
+        }
+    }
+    default:
+        return Event{};
+    }
 }
 
 std::vector<Event> EventStream::popEvents(StreamType p_streamType)
 {
-	switch (p_streamType)
-	{
-	case StreamType::INCOMING:
-	{
-		std::vector<Event> e = {};
-		e.swap(m_incomingEvents);
+    switch (p_streamType)
+    {
+    case StreamType::INCOMING:
+    {
+        std::vector<Event> events = {};
 
-		return e;
-	}
-	case StreamType::OUTGOING:
-	{
-		std::vector<Event> e = {};
-		e.swap(m_outgoingEvents);
+        for (std::size_t i = 0, max = m_incomingEvents.size(); i < max; i++)
+        {
+            Event e = m_incomingEvents.front();
+            m_incomingEvents.pop();
 
-		return e;
-	}
-	default:
-		return std::vector<Event>{};
-	}
+            events.push_back(e);
+        }
+
+        return events;
+    }
+    case StreamType::OUTGOING:
+    {
+        std::vector<Event> events = {};
+
+        for (std::size_t i = 0, max = m_outgoingEvents.size(); i < max; i++)
+        {
+            Event e = m_outgoingEvents.front();
+            m_outgoingEvents.pop();
+
+            events.push_back(e);
+        }
+
+        return events;
+    }
+    default:
+        return std::vector<Event>{};
+    }
 }
 
-void EventStream::bubbleEvents(EventStream * dst)
+void EventStream::propogateEvents(EventStream *dst)
 {
-	std::vector<Event> events = popEvents(StreamType::OUTGOING);
+    std::vector<Event> events = popEvents(StreamType::OUTGOING);
 
-	dst->pushEvents(events, StreamType::INCOMING);
-	dst->pushEvents(events, StreamType::OUTGOING);
-}
-
-void EventStream::captureEvents(EventStream * src)
-{
-	std::vector<Event> events = src->m_outgoingEvents;
-
-	pushEvents(events, StreamType::INCOMING);
+    dst->pushEvents(events, StreamType::INCOMING);
 }

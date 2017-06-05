@@ -1,8 +1,9 @@
 #pragma once
 
 #include <vector>
+#include <queue>
 
-#include "ObjectPool.hpp"
+#include "Misc.hpp"
 
 /*! %Event streams are used to queue up events to be consumed at a later time. */
 namespace razaron::eventstream
@@ -42,14 +43,11 @@ namespace razaron::eventstream
         }
     };
 
-    using namespace objectpool;
-
     /*! Handles receiving and sending Event%s to and from EventStream%s. */
     class EventStream
     {
       public:
         EventStream();                  /*!< Default constructor. */
-        EventStream(ObjectPool p_pool); /*!< Default constructor. */
         ~EventStream();                 /*!< Default destructor. */
 
         void pushEvent(Event p_event, StreamType p_streamType);                 /*!< Pushes an Event onto this EventStream. */
@@ -57,11 +55,10 @@ namespace razaron::eventstream
         Event popEvent(StreamType p_streamType);                                /*!< Pops an Event from this EventStream. */
         std::vector<Event> popEvents(StreamType p_streamType);                  /*!< Pops a std::vector of Event%s from this EventStream. */
 
-        void bubbleEvents(EventStream *p_dst);  /*!< Moves all of this EventStream%s outgoing Event%s to another EventStream. */
-        void captureEvents(EventStream *p_src); /*!< Copies all of another EventStream%s outgoing Event%s into this EventStream. */
+        void propogateEvents(EventStream *p_dst);  /*!< Moves all of this EventStream%s outgoing Event%s to another EventStream. */
 
       private:
-        std::vector<Event> m_incomingEvents;
-        std::vector<Event> m_outgoingEvents;
+        std::queue<Event> m_incomingEvents;
+        std::queue<Event> m_outgoingEvents;
     };
 }
