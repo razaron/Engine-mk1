@@ -63,29 +63,29 @@ namespace razaron::objectpool
 
         /*!	Moves an object of type T into the ObjectPool.
 		*
-		*	@tparam		T				The type of the object to be moved int o the ObjectPool.
+		*	@tparam		T				   The type of the object to be moved int o the ObjectPool.
 		*
-		*	@param		p_object		The object to move into the ObjectPool.
+		*	@param		p_object		   The object to move into the ObjectPool.
 		*
-		*	@exception	std::exception	T is too large for ObjectPool.
+		*	@exception	std::length_error  T is too large for ObjectPool.
 		*
-		*	@retval		Handle			On success, a handle for accessing the object.
-		*	@retval		Handle			On failure, an empty handle.
+		*	@retval		Handle             On success, a handle for accessing the object.
+		*	@retval		Handle             On failure, an empty handle.
 		*/
         template <class T>
         Handle push(T &p_object);
 
         /*!	Constructs an object of type T directly into the ObjectPool.
 		*
-		*	@tparam		T				The type of the object to be moved into the ObjectPool.
-		*	@tparam		Args			The parameter pack used to construct the T object.<sup>[1]</sup>
+		*	@tparam		T				   The type of the object to be moved into the ObjectPool.
+		*	@tparam		Args			   The parameter pack used to construct the T object.<sup>[1]</sup>
 		*
-		*	@param		p_args			Constructor arguments to pass to the constructor of T.
+		*	@param		p_args			   Constructor arguments to pass to the constructor of T.
 		*
-		*	@exception	std::exception	T is too large for ObjectPool.
+		*	@exception	std::length_error  T is too large for ObjectPool.
 		*
-		*	@retval		Handle			On success, a handle for accessing the object.
-		*	@retval		Handle			On failure, an empty handle.
+		*	@retval		Handle		       On success, a handle for accessing the object.
+		*	@retval		Handle			   On failure, an empty handle.
 		*
 		*	<small><sup>[1]</sup> Don't enter this. It <a title="cppreference" href="http://en.cppreference.com/w/cpp/language/template_argument_deduction">deduced</a> by the compiler.</small>
 		*/
@@ -94,14 +94,19 @@ namespace razaron::objectpool
 
         /*!	Gets a pointer to an object in the ObjectPool.
 		*
-		*	@tparam	T			The type of the object to get from the ObjectPool.
+		*	@tparam	T			               The type of the object to get from the ObjectPool.
 		*
-		*	@param	p_handle	The handle used to search for the object in the ObjectPool.
+        *	@param	p_handle	               The handle used to search for the object in the ObjectPool.
+		*	@param	p_isNaive	               If true, check if p_handle belongs to a free position.
 		*
-		*	@retval T*			On success, a pointer to the desired object.
+        *	@exception	std::invalid_argument  T and p_handle are mismatched.
+		*	@exception	std::length_error      T is too large for ObjectPool.
+        *
+        *	@retval T*                         On success, a pointer to the desired object.
+		*	@retval nullptr                    On failure, a nullptr.
 		*/
         template <class T>
-        T &getObject(Handle p_handle);
+        T *getObject(Handle p_handle, bool p_isNaive = false);
         //TODO template<class T> T* getObjects(std::vector<Handle> p_handles);
 
         /*!	Removes an object from the ObjectPool and free's the space for use.
@@ -130,10 +135,10 @@ namespace razaron::objectpool
         void addPage();
 
         template <class Pool>
-        typename Pool::second_type::value_type getPage(HandleIndex index);
+        typename Pool::second_type::value_type getPage(HandleIndex p_index);
 
         template <class T, class Pool>
-        T &getObject(Handle p_handle);
+        T *getObject(Handle p_handle, bool p_isNaive = false);
 
         template <class Pool, typename T>
         typename std::enable_if<std::is_pointer<T>::value, HandleIndex>::type getIndex(T p_ptr);
@@ -152,7 +157,8 @@ namespace razaron::objectpool
             element.first = nullptr;
 
             return 0;
-        }, m_pools);
+        },
+            m_pools);
     }
 
     inline ObjectPool::~ObjectPool()
@@ -162,7 +168,8 @@ namespace razaron::objectpool
                 delete arr;
 
             return 0;
-        }, m_pools);
+        },
+            m_pools);
     }
 
     template <class T>
@@ -205,7 +212,7 @@ namespace razaron::objectpool
     }
 
     template <class T>
-    inline T &ObjectPool::getObject(Handle p_handle)
+    inline T *ObjectPool::getObject(Handle p_handle, bool p_isNaive)
     {
         // Find the pool that fits T
         using Pool = typename PoolCond1<T>::type;
@@ -219,7 +226,7 @@ namespace razaron::objectpool
         }
         else if (sizeof(T) <= OBJECT_SIZE_64)
         {
-            return getObject<T, Pool>(p_handle);
+            return getObject<T, Pool>(p_handle, p_isNaive);
         }
         else
         {
@@ -294,7 +301,7 @@ namespace razaron::objectpool
 
         // Get pointers to the current and next free elements
         Handle *curFree = pool->first;
-        Handle *nextFree = &getObject<Handle, Pool>(*curFree);
+        Handle *nextFree = getObject<Handle, Pool>(*curFree, true);
 
         // Copy object data to the location current free pointer
         std::memcpy(curFree, &p_object, sizeof(T));
@@ -336,14 +343,14 @@ namespace razaron::objectpool
     }
 
     template <class Pool>
-    inline typename Pool::second_type::value_type ObjectPool::getPage(HandleIndex index)
+    inline typename Pool::second_type::value_type ObjectPool::getPage(HandleIndex p_index)
     {
         typedef typename Pool::second_type::value_type PagePtr;
 
         auto pool = &std::get<Pool>(m_pools);
 
         // Quotient is the page number and remainder is the position in that page
-        std::div_t d = std::div(index, OBJECT_POOL_PAGE_LENGTH);
+        std::div_t d = std::div(p_index, OBJECT_POOL_PAGE_LENGTH);
 
         // Finds a pointer to the correct page
         PagePtr page = nullptr;
@@ -361,7 +368,7 @@ namespace razaron::objectpool
     }
 
     template <class T, class Pool>
-    inline T &ObjectPool::getObject(Handle p_handle)
+    inline T *ObjectPool::getObject(Handle p_handle, bool p_isNaive)
     {
         typedef typename Pool::second_type::value_type PagePtr;
 
@@ -374,10 +381,29 @@ namespace razaron::objectpool
         std::div_t d = std::div(p_handle.index, OBJECT_POOL_PAGE_LENGTH);
 
         // Find and cast the element refering to objects first byte
-        auto object = reinterpret_cast<T *>(&page->data()[d.rem * pool->first->size]);
+        auto objectPtr = reinterpret_cast<T *>(&page->data()[d.rem * pool->first->size]);
 
-        // dereference and return the pointer to object
-        return *object;
+        // Loop through free pointers to see if objectPtr is one of them
+        if (!p_isNaive && pool->first->index <= p_handle.index)
+        {
+            Handle *freePtr = pool->first;
+            while (freePtr->index <= p_handle.index)
+            {
+                freePtr = getObject<Handle, Pool>(
+                    Handle{
+                        HandleSize{freePtr->size},
+                        HandleIndex{freePtr->index},
+                        true},
+                    true);
+            }
+
+            if (freePtr != reinterpret_cast<Handle *>(objectPtr))
+                return objectPtr;
+            else
+                return nullptr;
+        }
+        else
+            return objectPtr;
     }
 
     template <class Pool, typename T>
@@ -438,10 +464,14 @@ namespace razaron::objectpool
         // Fail if first free position and object being removed are the same
         if (p_handle.index == posCurFree) return;
 
+        Handle *ptrToRemove = getObject<Handle, Pool>(p_handle, true);
+
+        // Resets the data back to zero
+        std::memset(ptrToRemove, 0, pool->first->size);
+
         // If the object being removed is located BEFORE the first free position
         if (p_handle.index < posCurFree)
         {
-            Handle *ptrToRemove = &getObject<Handle, Pool>(p_handle);
 
             // Setup the object being removed to become the next firstFree pointer
             ptrToRemove->isFree = true;
@@ -454,8 +484,6 @@ namespace razaron::objectpool
         }
 
         // If the object being removed is located AFTER the first free position
-        Handle *ptrToRemove = &getObject<Handle, Pool>(p_handle);
-
         Handle *ptrPrevFree = nullptr;
         Handle *ptrNextFree = pool->first;
 
@@ -466,7 +494,7 @@ namespace razaron::objectpool
         {
             ptrPrevFree = ptrNextFree;
 
-            ptrNextFree = &getObject<Handle, Pool>(*ptrNextFree);
+            ptrNextFree = getObject<Handle, Pool>(*ptrNextFree, true);
             posNextFree = getIndex<Pool>(ptrNextFree);
         }
 

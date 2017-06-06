@@ -13,10 +13,10 @@ include_directories (${MY_INCLUDES} ${PROJECT_SOURCE_DIR}/src)
 add_subdirectory (src)
 
 # connect all libs
-set (EXTRA_LIBS ${EXTRA_LIBS} engine-mk1-lib)
+set (EXTRA_LIBS ${EXTRA_LIBS} engine-mk1)
 
 # connect all sources for the test suite
-set (TEST_SOURCES ${TEST_SOURCES} tests/main.cpp tests/testComponent.cpp tests/testObjectPool.cpp tests/testGraph.cpp tests/testEventStream.cpp)
+set (TEST_SOURCES tests/main.cpp ${TEST_SOURCES})
 
 add_executable (${TEST_NAME} ${TEST_SOURCES})
 set_target_properties(${TEST_NAME} PROPERTIES COMPILE_FLAGS ${MY_COMPILE_FLAGS} LINK_FLAGS ${MY_LINKER_FLAGS})

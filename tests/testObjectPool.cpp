@@ -177,12 +177,12 @@ SCENARIO("ObjectPools can retrieve objects from Handles", "[objectpool]")
 
         THEN("the handles can be converted to objects")
         {
-            auto p2 = p.getObject<std::array<char, OBJECT_SIZE_2>>(h2);
-            auto p4 = p.getObject<std::array<char, OBJECT_SIZE_4>>(h4);
-            auto p8 = p.getObject<std::array<char, OBJECT_SIZE_8>>(h8);
-            auto p16 = p.getObject<std::array<char, OBJECT_SIZE_16>>(h16);
-            auto p32 = p.getObject<std::array<char, OBJECT_SIZE_32>>(h32);
-            auto p64 = p.getObject<std::array<char, OBJECT_SIZE_64>>(h64);
+            auto p2 = *p.getObject<std::array<char, OBJECT_SIZE_2>>(h2);
+            auto p4 = *p.getObject<std::array<char, OBJECT_SIZE_4>>(h4);
+            auto p8 = *p.getObject<std::array<char, OBJECT_SIZE_8>>(h8);
+            auto p16 = *p.getObject<std::array<char, OBJECT_SIZE_16>>(h16);
+            auto p32 = *p.getObject<std::array<char, OBJECT_SIZE_32>>(h32);
+            auto p64 = *p.getObject<std::array<char, OBJECT_SIZE_64>>(h64);
 
             REQUIRE(p2[4] == 't');
             REQUIRE(p4[4] == 'n');
@@ -210,12 +210,12 @@ SCENARIO("ObjectPools can retrieve objects from Handles", "[objectpool]")
             for (HandleIndex i = 0; i < 100; i++)
             {
 
-                auto p2 = p.getObject<std::array<int, OBJECT_SIZE_2 / sizeof(int)>>({OBJECT_SIZE_2, i, false});
-                auto p4 = p.getObject<std::array<int, OBJECT_SIZE_4 / sizeof(int)>>({OBJECT_SIZE_4, i, false});
-                auto p8 = p.getObject<std::array<int, OBJECT_SIZE_8 / sizeof(int)>>({OBJECT_SIZE_8, i, false});
-                auto p16 = p.getObject<std::array<int, OBJECT_SIZE_16 / sizeof(int)>>({OBJECT_SIZE_16, i, false});
-                auto p32 = p.getObject<std::array<int, OBJECT_SIZE_32 / sizeof(int)>>({OBJECT_SIZE_32, i, false});
-                auto p64 = p.getObject<std::array<int, OBJECT_SIZE_64 / sizeof(int)>>({OBJECT_SIZE_64, i, false});
+                auto p2 = *p.getObject<std::array<int, OBJECT_SIZE_2 / sizeof(int)>>({OBJECT_SIZE_2, i, false});
+                auto p4 = *p.getObject<std::array<int, OBJECT_SIZE_4 / sizeof(int)>>({OBJECT_SIZE_4, i, false});
+                auto p8 = *p.getObject<std::array<int, OBJECT_SIZE_8 / sizeof(int)>>({OBJECT_SIZE_8, i, false});
+                auto p16 = *p.getObject<std::array<int, OBJECT_SIZE_16 / sizeof(int)>>({OBJECT_SIZE_16, i, false});
+                auto p32 = *p.getObject<std::array<int, OBJECT_SIZE_32 / sizeof(int)>>({OBJECT_SIZE_32, i, false});
+                auto p64 = *p.getObject<std::array<int, OBJECT_SIZE_64 / sizeof(int)>>({OBJECT_SIZE_64, i, false});
 
                 REQUIRE(p2[0] == 2);
                 REQUIRE(p2[1] == 0);
@@ -247,15 +247,15 @@ SCENARIO("You removes objects from anywhere in the ObjectPool")
 
         // Pushed into OBJECT_SIZE_2-byte pool
         auto first = pool.emplace<Arr>('f', 'i', 'r', 's', 't', '\0');
-        auto p1 = &pool.getObject<Arr>(first);
+        auto p1 = pool.getObject<Arr>(first);
 
         // Pushed into OBJECT_SIZE_2-byte pool
         auto second = pool.emplace<Arr>('s', 'e', 'c', 'o', 'n', 'd', '\0');
-        auto p2 = &pool.getObject<Arr>(second);
+        auto p2 = pool.getObject<Arr>(second);
 
         // Pushed into OBJECT_SIZE_2-byte pool
         auto third = pool.emplace<Arr>('t', 'h', 'i', 'r', 'd', '\0');
-        auto p3 = &pool.getObject<Arr>(third);
+        auto p3 = pool.getObject<Arr>(third);
 
         REQUIRE(std::string{p1->data()} == std::string{"first"});
         REQUIRE(std::string{p2->data()} == std::string{"second"});
@@ -276,12 +276,17 @@ SCENARIO("You removes objects from anywhere in the ObjectPool")
             {
                 pool.removeObject<Arr>(third);
 
+                // Re-use p3 to see what the position looks like now
                 auto ptr = reinterpret_cast<Handle *>(p3);
 
                 // The pointer for third has become a free pointer at position 2 pointing to position 3
                 REQUIRE(ptr->isFree == true);
                 REQUIRE(ptr->size == OBJECT_SIZE_2);
                 REQUIRE(ptr->index == 3);
+
+                // Calling getObject again fails, returning a nullptr
+                auto nullPointer = pool.getObject<Arr>(third);
+                REQUIRE(nullPointer == nullptr);
 
                 pool.emplace<Arr>('a', 'l', 'p', 'h', 'a', '\0');
                 pool.emplace<Arr>('g', 'a', 'm', 'm', 'a', '\0');

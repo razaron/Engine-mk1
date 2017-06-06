@@ -1,9 +1,9 @@
-#include "Component.hpp"
+#include <set>
+#include <vector>
 
 #include <catch.hpp>
 
-#include <set>
-#include <vector>
+#include "Component.hpp"
 
 using namespace razaron::core::component;
 

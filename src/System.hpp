@@ -8,7 +8,7 @@
 #include "Entity.hpp"
 #include "TaskScheduler.hpp"
 
-/*! Systems manage the memory and events for related components, as well as run logic on their data. */
+/*! Systems manage the memory, events and logic for related components. */
 namespace razaron::core::system
 {
 	using namespace razaron::eventstream;
@@ -17,20 +17,8 @@ namespace razaron::core::system
 	using namespace razaron::graph;
 	using namespace razaron::core::entity;
 
-	struct TaskGraphData;
-
-	using TaskGraph = Graph<Task, char, TaskGraphData>;
-	using TaskGraphVertex = Vertex<Task, char>;
-	using TaskGraphEdge = Edge<char>;
-
 	/*! Denotes the type of a derived System. */
 	enum class SystemType { CONSOLE, RENDER, PHYSICS, AI, UI, CONTROLLER, GAMEPLAY, ENUM_SIZE };
-
-	/*! The data to be held by the TaskGraph. */
-	struct TaskGraphData
-	{
-
-	};
 
 	/*! The abstract base class for a System. */
 	class System
@@ -45,40 +33,40 @@ namespace razaron::core::system
 		*
 		*	@returns	Returns the TaskGraph needed to run update logic for the Component objects.
 		*/
-		virtual TaskGraph* update(std::vector<Entity>* p_entities, double delta) = 0;
+		virtual TaskGraph& update(std::vector<Entity>* p_entities, double delta) = 0;
 
-		/*! Constructs a Component into System managed memory.
+		/*! Constructs a object into System managed memory.
 		*
-		*	@tparam		C		The class of the Component to construct.
+		*	@tparam		C		The class of the object to construct.
 		*	@tparam		Args	The parameter pack for the constructor arguments of C.<sup>[1]</sup>
 		*
 		*	@param		p_args	The constructor arguments for C.
 		*
-		*	@returns	Returns the TaskGraph needed to run update logic for the Component objects.
+		*	@returns	Returns the TaskGraph needed to run update logic for the object objects.
 		*	<small><sup>[1]</sup> Don't enter this. It <a title="cppreference" href="http://en.cppreference.com/w/cpp/language/template_argument_deduction">deduced</a> by the compiler.</small>
 		*/
 		template <class T, typename... Args>
-		Handle emplaceComponent(Args... p_args) { return m_pool.emplace<T>(p_args...); }
+		Handle emplaceobject(Args... p_args) { return m_pool.emplace<T>(p_args...); }
 
-		/*! Constructs a Component into System managed memory.
+		/*! Constructs a object into System managed memory.
 		*
-		*	@tparam	C		The class of the Component to construct.
+		*	@tparam	C		The class of the object to construct.
 		*	@tparam	Args	The parameter pack for the constructor arguments of C.<sup>[1]</sup>
 		*
 		*	@param	p_args	The constructor arguments for C.
 		*
-		*	@retval	C*		On success, a pointer to the desired Component.
+		*	@retval	C*		On success, a pointer to the desired object.
 		*	@retval	nullptr	On failure, a nullptr.
 		*/
 		template <class T>
-		T* getComponent(Handle p_handle) { return m_pool.getObject<T>(p_handle); }
+		T* getobject(Handle p_handle) { return m_pool.getObject<T>(p_handle); }
 
-		/*! Deletes the desired Component from System managed memory.
+		/*! Deletes the desired object from System managed memory.
 		*
-		*	@tparam	T	The type of the component to remove.
+		*	@tparam	T	The type of the object to remove.
 		*/
 		template <class T>
-		void removeComponent(Handle p_handle) { m_pool.removeObject<T>(p_handle); };
+		void removeObject(Handle p_handle) { m_pool.removeObject<T>(p_handle); };
 
 		/*! Moves queued up Event objects to the dst System. */
 		void propogateEvents(System &dst);
