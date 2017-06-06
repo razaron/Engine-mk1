@@ -34,7 +34,7 @@ namespace razaron::core::space
 
 		//TODO Entity* createEntity(std::vector<ComponentHandle> p_handles); /*! Constructs an Entity from the passed ComponentHandle%s. */
 		void addEntity(Entity&& p_entity); /*!< Moves a pre-constructed Entity into the Space. */
-		//TODO Entity* popEntity(); /*!< Deletes an Entity from the Space. */
+		//TODO Entity* removeEntity(); /*!< Deletes an Entity from the Space. */
 		//TODO Entity* moveEntity(); /*!< Moves an Entity into another Space. */
 		//TODO std::vector<Entity>* getEntities() { return &m_entities; } /*!<  */
 

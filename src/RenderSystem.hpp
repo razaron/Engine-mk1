@@ -1,18 +1,7 @@
 #pragma once
 
 #include "System.hpp"
-#include "RenderComponent.h"
-
-#include <chrono>
-#include <iostream>
-#include <stdexcept>
-#include <functional>
-#include <vector>
-#include <unordered_map>
-#include <algorithm>
-#include <set>
-#include <fstream>
-#include <array>
+#include "RenderComponent.hpp"
 
 namespace razaron::render
 {
@@ -63,6 +52,6 @@ namespace razaron::render
 		}
 
 	private:
-		char* m_name{ "Render System" };
+		std::string m_name{ "Render System" };
 	};
 }

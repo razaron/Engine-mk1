@@ -105,7 +105,7 @@ namespace razaron::graph
 		*
 		*	@exception	std::out_of_range	p_index out of range for m_vertices.
 		*
-		*	@return	The Vertex object.
+		*	@return	A reference to Vertex object.
 		*/
         Vertex<V, E> &operator[](unsigned short p_index);
 

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <vector>
-
 #include "Component.hpp"
 
 /*!	Entities are a way of organizing related components into groups. */
@@ -23,16 +21,26 @@ namespace razaron::core::entity
 
 		~Entity() {} /*! Default destructor */
 
-		/*!	Adds a ComponentHandle to the ComponentMap of Entity
+		/*!	Adds a ComponentHandle to the ComponentMap of Entity.
 		*
-		*	@param	p_component		The ComponentHandle to add
+		*	@param	p_component		The ComponentHandle to add.
 		*
-		*	@retval	ComponentHandle	The passed ComponentHandle on success
+		*	@retval	ComponentHandle	The passed ComponentHandle on success.
 		*/
 		ComponentHandle addComponent(ComponentHandle p_component)
 		{
 			m_components[p_component.first] = p_component.second;
 			return p_component;
+		}
+
+		/*!	Removes a ComponentHandle from the ComponentMap of Entity.
+		*
+		*	@param	p_component		The ComponentHandle to remove.
+		*/
+		void removeComponent(ComponentHandle p_component)
+		{
+			if(m_components[p_component.first] == p_component.second)
+				m_components.erase(p_component.first);
 		}
 
 		/*!	Gets the current ComponentMap of the Entity.
@@ -50,15 +58,19 @@ namespace razaron::core::entity
 		*/
 		unsigned int getID() { return m_id; }
 
-		/*!	Gets the Handle mapped to the passed ComponentType
+		/*!	Gets the Handle mapped to the passed ComponentType.
 		*
-		*	@param	p_type	The ComponentType to search for
+		*	@param	p_type	The ComponentType to search for.
 		*
-		*	@retval	Handle	The passed ComponentHandle on success
+		*	@retval	Handle	On success, the matching ComponentHandle.
+		*	@retval	Handle	On failure, an empty Handle object.
 		*/
-		Handle& operator[](ComponentType p_type)
+		Handle operator[](ComponentType p_type)
 		{
-			return m_components[p_type];
+			if(m_components.find(p_type) != m_components.end())
+				return m_components[p_type];
+			else
+				return Handle{};
 		}
 
 	private:

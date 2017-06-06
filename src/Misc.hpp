@@ -2,10 +2,8 @@
 
 #include <array>
 #include <atomic>
-#include <iostream>
 #include <type_traits>
 #include <cstdlib>
-#include <string>
 
 // Check windows
 #if _WIN32 || _WIN64
@@ -30,7 +28,7 @@
 
 using expand_type = int[];
 
-/* PATTERN is in with the form:
+/* PATTERN is with the form:
 	function(args)
 	or
 	(lambda)(args)
@@ -56,13 +54,19 @@ using expand_type = int[];
             )(x)); 										\
     }, TUPLE);
 
+// Handling for pointers etc.
 using HandleSize = std::size_t;
 using HandleIndex = unsigned short;
 struct Handle
 {
 	HandleSize size;
 	HandleIndex index;
-	bool free;
+	bool isFree;
+
+    bool operator==(const Handle &rhs)
+    {
+        return (size == rhs.size && index == rhs.index && isFree == rhs.isFree);
+    }
 };
 
 template<typename T>

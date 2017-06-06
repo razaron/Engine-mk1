@@ -1,6 +1,6 @@
-#include "EventStream.hpp"
-
 #include <catch.hpp>
+
+#include "EventStream.hpp"
 
 using namespace razaron::eventstream;
 
@@ -65,7 +65,7 @@ SCENARIO("EventStreams can propogate Events to eachother")
 
         WHEN("a bubbles Events to b")
         {
-            a.propogateEvents(&b);
+            a.propogateEvents(b);
 
             std::vector<Event> events = b.popEvents(StreamType::INCOMING);
 

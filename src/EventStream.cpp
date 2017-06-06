@@ -124,9 +124,9 @@ std::vector<Event> EventStream::popEvents(StreamType p_streamType)
     }
 }
 
-void EventStream::propogateEvents(EventStream *dst)
+void EventStream::propogateEvents(EventStream &dst)
 {
     std::vector<Event> events = popEvents(StreamType::OUTGOING);
 
-    dst->pushEvents(events, StreamType::INCOMING);
+    dst.pushEvents(events, StreamType::INCOMING);
 }
