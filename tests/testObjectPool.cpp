@@ -1,6 +1,6 @@
-#include "ObjectPool.hpp"
-
 #include <catch.hpp>
+
+#include "ObjectPool.hpp"
 
 using namespace razaron::objectpool;
 
@@ -268,7 +268,7 @@ SCENARIO("You removes objects from anywhere in the ObjectPool")
             auto ptr = reinterpret_cast<Handle *>(p1);
 
             // The pointer for first has become a free pointer at position 0 pointing to position 3
-            REQUIRE(ptr->free == true);
+            REQUIRE(ptr->isFree == true);
             REQUIRE(ptr->size == OBJECT_SIZE_2);
             REQUIRE(ptr->index == 3);
 
@@ -279,7 +279,7 @@ SCENARIO("You removes objects from anywhere in the ObjectPool")
                 auto ptr = reinterpret_cast<Handle *>(p3);
 
                 // The pointer for third has become a free pointer at position 2 pointing to position 3
-                REQUIRE(ptr->free == true);
+                REQUIRE(ptr->isFree == true);
                 REQUIRE(ptr->size == OBJECT_SIZE_2);
                 REQUIRE(ptr->index == 3);
 

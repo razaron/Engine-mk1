@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <queue>
+#include <iostream>
 
 #include "Misc.hpp"
 
@@ -55,7 +56,7 @@ namespace razaron::eventstream
         Event popEvent(StreamType p_streamType);                                /*!< Pops an Event from this EventStream. */
         std::vector<Event> popEvents(StreamType p_streamType);                  /*!< Pops a std::vector of Event%s from this EventStream. */
 
-        void propogateEvents(EventStream *p_dst);  /*!< Moves all of this EventStream%s outgoing Event%s to another EventStream. */
+        void propogateEvents(EventStream &p_dst);  /*!< Moves all of this EventStream%s outgoing Event%s to another EventStream. */
 
       private:
         std::queue<Event> m_incomingEvents;

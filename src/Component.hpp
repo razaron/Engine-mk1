@@ -2,6 +2,7 @@
 
 #include <map>
 #include <limits>
+#include <iostream>
 
 #include "Misc.hpp"
 

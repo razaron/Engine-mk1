@@ -30,6 +30,10 @@
             {
                 "fullpath": "tests/testEventStream.cpp",
                 "description": "lol description"
+            },
+            {
+                "fullpath": "tests/testEntity.cpp",
+                "description": "lol description"
             }
         ]
     },

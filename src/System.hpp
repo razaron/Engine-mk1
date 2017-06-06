@@ -1,12 +1,12 @@
 #pragma once
 
+#include <vector>
+#include <set>
+
 #include "ObjectPool.hpp"
 #include "EventStream.hpp"
 #include "Entity.hpp"
 #include "TaskScheduler.hpp"
-
-#include <vector>
-#include <set>
 
 /*! Systems manage the memory and events for related components, as well as run logic on their data. */
 namespace razaron::core::system
@@ -58,7 +58,7 @@ namespace razaron::core::system
 		*	<small><sup>[1]</sup> Don't enter this. It <a title="cppreference" href="http://en.cppreference.com/w/cpp/language/template_argument_deduction">deduced</a> by the compiler.</small>
 		*/
 		template <class T, typename... Args>
-		Handle constructComponent(Args... p_args) { return m_pool.emplace<T>(p_args...); }
+		Handle emplaceComponent(Args... p_args) { return m_pool.emplace<T>(p_args...); }
 
 		/*! Constructs a Component into System managed memory.
 		*
@@ -81,7 +81,7 @@ namespace razaron::core::system
 		void removeComponent(Handle p_handle) { m_pool.removeObject<T>(p_handle); };
 
 		/*! Moves queued up Event objects to the dst System. */
-		void propogateEvents(System* dst);
+		void propogateEvents(System &dst);
 
 		/*! Pops all Event objects from the desired StreamType of this System. */
 		std::vector<Event> popEvents(StreamType p_type);
@@ -105,9 +105,9 @@ namespace razaron::core::system
 
 	}
 
-	inline void System::propogateEvents(System* dst)
+	inline void System::propogateEvents(System &dst)
 	{
-		m_eventStream.propogateEvents(&dst->m_eventStream);
+		m_eventStream.propogateEvents(dst.m_eventStream);
 	}
 
 	inline std::vector<Event> System::popEvents(StreamType p_type)

@@ -16,13 +16,13 @@
 #define OBJECT_SIZE_32 sizeof(std::size_t) * 32
 #define OBJECT_SIZE_64 sizeof(std::size_t) * 64
 
-#include "Misc.hpp"
-
 #include <cstring>
 #include <list>
 #include <sstream>
 #include <tuple>
 #include <typeinfo>
+
+#include "Misc.hpp"
 
 /*! Things related to an aligned generic object pool implementation. */
 namespace razaron::objectpool
@@ -444,7 +444,7 @@ namespace razaron::objectpool
             Handle *ptrToRemove = &getObject<Handle, Pool>(p_handle);
 
             // Setup the object being removed to become the next firstFree pointer
-            ptrToRemove->free = true;
+            ptrToRemove->isFree = true;
             ptrToRemove->size = pool->first->size;
             ptrToRemove->index = posCurFree;
 
@@ -474,7 +474,7 @@ namespace razaron::objectpool
         ptrPrevFree->index = p_handle.index;
 
         // Setup the object being removed to become the next firstFree pointer
-        ptrToRemove->free = true;
+        ptrToRemove->isFree = true;
         ptrToRemove->size = ptrNextFree->size;
         ptrToRemove->index = posNextFree;
 
