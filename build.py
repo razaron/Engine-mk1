@@ -66,7 +66,7 @@ options = (cmakeOpts +
 '" -DTEST_SOURCES="' + testSrc + '"')
 
 if targetPlatform == 'windows':
-    options += ' -G "Unix Makefiles"'
+    options += ' -G "MinGW Makefiles"'
 
 # cd to correct folder
 if config['cmake_opts']['CMAKE_BUILD_TYPE'] == 'Debug':
@@ -104,6 +104,10 @@ cmakeCmd = 'cmake '+options+' ..'
 print(cmakeCmd)
 
 os.system(cmakeCmd)
-os.system('make')
+if targetPlatform == 'windows':
+    os.system('mingw32-make')
+else:
+    os.system('make')
+options += ' -G "MinGW Makefiles"'
 
 exit(0)

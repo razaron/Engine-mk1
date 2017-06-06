@@ -9,7 +9,7 @@ Click here for [documentation](https://razaron.github.io/engine-mk1/ "Documentat
 - python
 
 #### Instructions
-You can get a Windows binary for gcc-7 [here](http://www.equation.com/servlet/equation.cmd?fa=fortran)
+You can get a Windows binary for gcc-7 [here](https://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win32/Personal%20Builds/mingw-builds/7.1.0/)
 
 Configure build.json by setting your include paths. Adding "includes", "build_opts", "compiler_opts" or "cmake_opts" to the "linux"/"windows" sections will override the defaults.
 

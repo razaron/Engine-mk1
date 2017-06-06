@@ -5,7 +5,7 @@
             "description": "lol description"
         }],
         "build_opts": {
-            "environment": "32"
+            "environment": "64"
         },
         "compiler_opts": [
             "-std=c++1z",

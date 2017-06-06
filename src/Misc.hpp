@@ -28,6 +28,8 @@
 // For removing unused parameter warnings
 #define UNUSED(x) (void)(x)
 
+using expand_type = int[];
+
 /* PATTERN is in with the form:
 	function(args)
 	or
