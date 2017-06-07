@@ -71,8 +71,11 @@ namespace razaron::core::system
 		/*! Moves queued up Event objects to the dst System. */
 		void propogateEvents(System &dst);
 
-		/*! Pops all Event objects from the desired StreamType of this System. */
-		std::vector<Event> popEvents(StreamType p_type);
+		/*! Pushes an Event onto the outgoing stream. */
+		void pushEvent(Event p_event);
+
+		/*! Pops all Event objects from the incoming stream. */
+		std::vector<Event> popEvents();
 
 		/*! Gets the set interval (in ms) between updates for this System. */
 		double getInterval() { return static_cast<double>(m_interval) / 1000; }
@@ -98,8 +101,13 @@ namespace razaron::core::system
 		m_eventStream.propogateEvents(dst.m_eventStream);
 	}
 
-	inline std::vector<Event> System::popEvents(StreamType p_type)
+	inline void System::pushEvent(Event p_event)
 	{
-		return m_eventStream.popEvents(p_type);
+		m_eventStream.pushEvent(p_event, StreamType::OUTGOING);
+	}
+
+	inline std::vector<Event> System::popEvents()
+	{
+		return m_eventStream.popEvents(StreamType::INCOMING);
 	}
 }

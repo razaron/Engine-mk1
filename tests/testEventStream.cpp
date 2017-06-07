@@ -4,7 +4,7 @@
 
 using namespace razaron::eventstream;
 
-SCENARIO("You can push/pop Events from an EventStream")
+SCENARIO("You can push/pop Events from an EventStream", "[eventstream]")
 {
     GIVEN("An EventStream with no incoming and some outgoing events")
     {
@@ -45,7 +45,7 @@ SCENARIO("You can push/pop Events from an EventStream")
     }
 }
 
-SCENARIO("EventStreams can propogate Events to eachother")
+SCENARIO("EventStreams can propogate Events to eachother", "[eventstream]")
 {
     GIVEN("An EventStream with outgoing events and an empty EventStream")
     {

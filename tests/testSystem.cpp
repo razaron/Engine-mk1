@@ -17,10 +17,46 @@ class FooSystem : public System
         UNUSED(p_entities);
         UNUSED(delta);
 
+        auto events = popEvents();
+
+        for(auto &e : events)
+        {
+            if(e.type == EventType::TYPE_1)
+            {
+                int *data = static_cast<int*>(e.data);
+
+                count += *data;
+
+                delete data;
+            }
+        }
+
         return m_taskGraph;
     }
 
+    int count{};
     std::string name { "FooSystem" };
+};
+
+class BarSystem : public System
+{
+  public:
+    BarSystem() {}
+    ~BarSystem() {}
+
+    TaskGraph& update(std::vector<Entity> *p_entities, double delta){
+        UNUSED(p_entities);
+        UNUSED(delta);
+
+        for(auto i=0;i<5;i++)
+        {
+            pushEvent(Event{0, EventType::TYPE_1, new int{i}});
+        }
+
+        return m_taskGraph;
+    }
+
+    std::string name { "BarSystem" };
 };
 
 SCENARIO("Systems can manage their memory via their ObjectPool", "[system][objectpool]")
@@ -51,6 +87,35 @@ SCENARIO("Systems can manage their memory via their ObjectPool", "[system][objec
                 REQUIRE(ptr->isFree == true);
                 REQUIRE(ptr->size == OBJECT_SIZE_64);
                 REQUIRE(ptr->index == 1);
+            }
+        }
+    }
+}
+
+SCENARIO("Systems can send and process Events from eachother", "[system][eventstream]")
+{
+    GIVEN("Two systems, FooSystem and BarSystem, with an empty initial state")
+    {
+        FooSystem foo{};
+        BarSystem bar{};
+
+        REQUIRE(foo.count == 0);
+
+        WHEN("Running update loop 1, generating Events in BarSystem")
+        {
+            foo.update(nullptr, 0);
+            bar.update(nullptr, 0);
+
+            REQUIRE(foo.count == 0);
+
+            THEN("Running update loop 2, propogating those events to FooSystem and processing them")
+            {
+                bar.propogateEvents(foo);
+
+                foo.update(nullptr, 0);
+                bar.update(nullptr, 0);
+
+                REQUIRE(foo.count == 0+1+2+3+4);
             }
         }
     }
