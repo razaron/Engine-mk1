@@ -7,10 +7,15 @@ namespace razaron::core::entity
 {
 	using namespace razaron::core::component;
 
+	class Entity;
+
+	using EntityMap = std::map<unsigned short, Entity>;
+
 	/*!	The Entity class used for storing and getting Component Handle%s. */
 	class Entity {
 	public:
-		Entity() {} /*! Default constructor. */
+		Entity() /*! Default constructor. */
+			:m_id{g_nextID++}, m_components{} {}
 
 		/*!	Constructs an Entity object from a pre-constructed map of Component objects.
 		*

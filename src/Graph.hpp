@@ -35,12 +35,13 @@ namespace razaron::graph
     struct Vertex
     {
         V data;                           /*!< The data held by this Vertex. */
+        Vertex<V,E> *parent;
         std::list<Edge<E>> adjacencyList; /*!< An std::list of connected Edge%s. */
         unsigned short id;                /*!< An ID that doubles as an index value. */
-        State state;                       /*!< The current state of the Vertex, represented by a bitfield. */
+        State state;;                       /*!< The current state of the Vertex, represented by a bitfield. */
 
         /*! Constructs an empty Vertex with the ID <tt>p_index</tt>. */
-        Vertex(unsigned short p_index) : data(V{}), id(p_index), state(State::WHITE) {}
+        Vertex(unsigned short p_index) : data(V{}), parent(nullptr), id(p_index), state(State::WHITE) {}
     };
 
     /*!	A template struct for representing Edge objects.
@@ -93,7 +94,7 @@ namespace razaron::graph
 		*	@param	p_source	The ID of the source Vertex.
 		*	@param	p_target	The ID of the target Vertex.
 		*/
-        void addEdge(E p_data, unsigned short p_source, unsigned short p_target);
+        void addEdge(unsigned short source, unsigned short target, E data = E{});
 
         /*! Resets the state of all Edge and Vertex objects belonging to the Graph to State::WHITE. */
         void reset();
@@ -206,7 +207,7 @@ namespace razaron::graph
     }
 
     template <class V, class E, class G>
-    inline void Graph<V, E, G>::addEdge(E data, unsigned short source, unsigned short target)
+    inline void Graph<V, E, G>::addEdge(unsigned short source, unsigned short target, E data)
     {
         // look for vertex with ID source
         try
@@ -236,6 +237,7 @@ namespace razaron::graph
         }
 
         (*this)[source].adjacencyList.push_back({data, source, target, State::WHITE});
+        (*this)[target].parent = &(*this)[source];
     }
 
     template <class V, class E, class G>
