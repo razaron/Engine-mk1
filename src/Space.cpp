@@ -52,7 +52,7 @@ void Space::update(double delta)
 		double elapsed = std::min(remaining, m_intervalMax);
 
 		m_eventStream.processEvents();
-		
+
 		updateSystems(elapsed);
 
 		propagateEvents();
@@ -111,4 +111,11 @@ Entity &Space::createEntity()
 {
 	Entity e{};
 	return m_entities[e.getID()] = e;
+}
+
+std::size_t Space::removeEntity(unsigned int p_id)
+{
+	m_entities.erase(p_id);
+	
+	return m_entities.size();
 }

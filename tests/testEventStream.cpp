@@ -10,12 +10,12 @@ SCENARIO("You can push/pop Events from an EventStream", "[eventstream]")
     {
         EventStream stream;
 
-        stream.pushEvent({0, EventType::TYPE_1, new std::string{"lolwut"}}, StreamType::OUTGOING);
+        stream.pushEvent({0, EventType::ADD_COMPONENT, std::make_shared<std::string>("lolwut")}, StreamType::OUTGOING);
 
         std::vector<Event> events;
         for (unsigned int i = 1; i < 5; i++)
         {
-            Event e{i, EventType::TYPE_2, new std::string{"dis gun be gud"}};
+            Event e{i, EventType::CREATE_COMPONENT, std::make_shared<std::string>("dis gun be gud")};
             events.push_back(e);
         }
 
@@ -26,21 +26,21 @@ SCENARIO("You can push/pop Events from an EventStream", "[eventstream]")
             std::vector<Event> events = stream.popEvents(StreamType::OUTGOING);
 
             REQUIRE(events.size() == 5);
-            REQUIRE(*(static_cast<std::string *>(events[0].data)) == "lolwut");
-            REQUIRE(*(static_cast<std::string *>(events[1].data)) == "dis gun be gud");
+            REQUIRE(*(std::static_pointer_cast<std::string>(events[0].data)) == "lolwut");
+            REQUIRE(*(std::static_pointer_cast<std::string>(events[1].data)) == "dis gun be gud");
         }
 
         WHEN("Events are pushed onto the incoming stream")
         {
             for (unsigned int i = 1; i < 5; i++)
             {
-                stream.pushEvent({i, EventType::TYPE_2, new std::string{"get in dere"}}, StreamType::INCOMING);
+                stream.pushEvent({i, EventType::CREATE_COMPONENT, std::make_shared<std::string>("get in dere")}, StreamType::INCOMING);
             }
 
             std::vector<Event> events = stream.popEvents(StreamType::INCOMING);
 
             REQUIRE(events.size() == 4);
-            REQUIRE(*(static_cast<std::string *>(events[0].data)) == "get in dere");
+            REQUIRE(*(std::static_pointer_cast<std::string>(events[0].data)) == "get in dere");
         }
     }
 }
@@ -52,12 +52,12 @@ SCENARIO("EventStreams can propogate Events to eachother", "[eventstream]")
         EventStream a;
         EventStream b;
 
-        a.pushEvent({0, EventType::TYPE_1, new std::string{"lolwut"}}, StreamType::OUTGOING);
+        a.pushEvent({0, EventType::ADD_COMPONENT, std::make_shared<std::string>("lolwut")}, StreamType::OUTGOING);
 
         std::vector<Event> events;
         for (unsigned int i = 1; i < 5; i++)
         {
-            Event e{i, EventType::TYPE_1, new std::string{"dis gun be gud"}};
+            Event e{i, EventType::CREATE_COMPONENT, std::make_shared<std::string>("dis gun be gud")};
             events.push_back(e);
         }
 
@@ -70,8 +70,8 @@ SCENARIO("EventStreams can propogate Events to eachother", "[eventstream]")
             std::vector<Event> events = b.popEvents(StreamType::INCOMING);
 
             REQUIRE(events.size() == 5);
-            REQUIRE(*(static_cast<std::string *>(events[0].data)) == "lolwut");
-            REQUIRE(*(static_cast<std::string *>(events[1].data)) == "dis gun be gud");
+            REQUIRE(*(std::static_pointer_cast<std::string>(events[0].data)) == "lolwut");
+            REQUIRE(*(std::static_pointer_cast<std::string>(events[1].data)) == "dis gun be gud");
         }
     }
 }
