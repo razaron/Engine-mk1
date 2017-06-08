@@ -38,6 +38,10 @@
             {
                 "fullpath": "tests/testSystem.cpp",
                 "description": "lol description"
+            },
+            {
+                "fullpath": "tests/testSpace.cpp",
+                "description": "lol description"
             }
         ]
     },

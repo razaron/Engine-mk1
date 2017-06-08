@@ -124,9 +124,28 @@ std::vector<Event> EventStream::popEvents(StreamType p_streamType)
     }
 }
 
+void EventStream::registerHandler(EventType p_type, EventHandler p_handler)
+{
+    m_eventHandlers[p_type] = p_handler;
+}
+
+void EventStream::processEvents()
+{
+	auto events = popEvents(StreamType::INCOMING);
+
+	for(auto &e: events)
+	{
+        auto it = m_eventHandlers.find(e.type);
+
+        if(it != m_eventHandlers.end())
+		      it->second(e);
+	}
+}
+
 void EventStream::propogateEvents(EventStream &dst)
 {
     std::vector<Event> events = popEvents(StreamType::OUTGOING);
 
     dst.pushEvents(events, StreamType::INCOMING);
+    dst.pushEvents(events, StreamType::OUTGOING);
 }

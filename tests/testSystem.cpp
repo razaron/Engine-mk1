@@ -1,27 +1,6 @@
 #include <catch.hpp>
 
-#include "System.hpp"
-
-using namespace razaron::core::system;
-using namespace razaron::core::component;
-using namespace razaron::core::entity;
-using namespace razaron::graph;
-
-class FooSystem : public System
-{
-  public:
-    FooSystem() {}
-    ~FooSystem() {}
-
-    TaskGraph& update(std::vector<Entity> *p_entities, double delta){
-        UNUSED(p_entities);
-        UNUSED(delta);
-
-        return m_taskGraph;
-    }
-
-    std::string name { "FooSystem" };
-};
+#include "testSystem.hpp"
 
 SCENARIO("Systems can manage their memory via their ObjectPool", "[system][objectpool]")
 {
@@ -33,8 +12,8 @@ SCENARIO("Systems can manage their memory via their ObjectPool", "[system][objec
 
         WHEN("Adding objects to the System")
         {
-            Handle i = sys.emplaceobject<int>(420);
-            Handle a = sys.emplaceobject<std::array<std::size_t, 64>>(1u,2u,3u,4u,5u,6u,7u,8u,9u,10u);
+            Handle i = sys.emplaceObject<int>(420);
+            Handle a = sys.emplaceObject<std::array<std::size_t, 64>>(1u,2u,3u,4u,5u,6u,7u,8u,9u,10u);
 
             auto iPtr = sys.getobject<int>(i);
             auto aPtr = sys.getobject<std::array<std::size_t, 64>>(a);
@@ -51,6 +30,37 @@ SCENARIO("Systems can manage their memory via their ObjectPool", "[system][objec
                 REQUIRE(ptr->isFree == true);
                 REQUIRE(ptr->size == OBJECT_SIZE_64);
                 REQUIRE(ptr->index == 1);
+            }
+        }
+    }
+}
+
+SCENARIO("Systems can send and process Events from eachother", "[system][eventstream]")
+{
+    GIVEN("Two systems, FooSystem and BarSystem, with an empty initial state")
+    {
+        FooSystem foo{};
+        BarSystem bar{};
+
+        REQUIRE(foo.count == 0);
+
+        EntityMap eMap{};
+
+        WHEN("Running update loop 1, generating Events in BarSystem")
+        {
+            foo.update(eMap, 0);
+            bar.update(eMap, 0);
+
+            REQUIRE(foo.count == 0);
+
+            THEN("Running update loop 2, propogating those events to FooSystem and processing them")
+            {
+                bar.propogateEvents(foo);
+
+                foo.update(eMap, 0);
+                bar.update(eMap, 0);
+
+                REQUIRE(foo.count == 0+1+2+3+4);
             }
         }
     }

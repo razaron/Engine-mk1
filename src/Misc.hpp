@@ -3,7 +3,6 @@
 #include <array>
 #include <atomic>
 #include <type_traits>
-#include <cstdlib>
 
 // Check windows
 #if _WIN32 || _WIN64
@@ -61,7 +60,7 @@ struct Handle
 {
 	HandleSize size;
 	HandleIndex index;
-	bool isFree;
+	bool isFree{true};
 
     bool operator==(const Handle &rhs)
     {
@@ -307,6 +306,25 @@ struct TypeTraits {
 	}
 };
 
+inline void* aligned_malloc(size_t size, size_t align) {
+    void *result;
+    #ifdef _WIN32
+    result = _aligned_malloc(size, align);
+    #else
+    if(posix_memalign(&result, align, size)) result = 0;
+    #endif
+    return result;
+}
+
+inline void aligned_free(void *ptr) {
+    #ifdef _WIN32
+    _aligned_free(ptr);
+    #else
+    free(ptr);
+    #endif
+
+}
+
 template <class T, std::size_t S, std::size_t A>
 struct alignas(A) alignedArray
 {
@@ -316,8 +334,8 @@ public:
 	std::size_t alignment() { return A; }
 
 	T& operator [](std::size_t i) { return m_array[i]; }
-	void* operator new(std::size_t sz) { return std::malloc(sz); }
-	void operator delete(void* ptr) { return std::free(ptr); }
+	void* operator new(std::size_t sz) { return aligned_malloc(sz, A); }
+	void operator delete(void* ptr) { return aligned_free(ptr); }
 
 private:
 	std::array<T, S> m_array{};
