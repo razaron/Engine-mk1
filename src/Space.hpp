@@ -41,19 +41,20 @@ namespace razaron::core::space
         //TODO System* addSystem(System* p_system, System* p_root); /*!< Adds a System to the Space. */
 
         Entity &createEntity(); /*! Constructs an a new empty Entity. */
-        //TODO Entity* removeEntity(); /*!< Deletes an Entity from the Space. */
+        std::size_t removeEntity(unsigned int p_id); /*!< Deletes an Entity from the Space. */
         //TODO Entity* moveEntity(); /*!< Moves an Entity into another Space. */
         //TODO std::vector<Entity>* getEntities() { return &m_entities; } /*!<  */
 
         void registerHandler(EventType p_type, EventHandler p_handler);
         void pushEvents(std::vector<Event> &p_events, StreamType p_streamType);
 
-        Entity &operator[](unsigned short p_id){ return m_entities[p_id]; }
+        Entity &operator[](unsigned short p_id);
 
       private:
 		void updateSystems(double delta);
 		void propagateEvents();
 
+        unsigned m_id;
 		SystemGraph m_systemGraph;
         double m_intervalMax{};
         EntityMap m_entities;

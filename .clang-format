@@ -6,4 +6,3 @@ IndentCaseLabels: false
 ColumnLimit: 0
 NamespaceIndentation: All
 AccessModifierOffset: -2
-AlignAfterOpenBracket: DontAlign

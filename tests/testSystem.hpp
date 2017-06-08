@@ -21,13 +21,11 @@ class FooSystem : public System
 
         for(auto &e : events)
         {
-            if(e.type == EventType::TYPE_1)
+            if(e.type == EventType::ADD_COMPONENT)
             {
-                int *data = static_cast<int*>(e.data);
+                auto data = std::static_pointer_cast<int>(e.data);
 
                 count += *data;
-
-                delete data;
             }
         }
 
@@ -50,7 +48,7 @@ class BarSystem : public System
 
         for(auto i=0;i<5;i++)
         {
-            pushEvent(Event{0, EventType::TYPE_1, new int{i}});
+            pushEvent(Event{0, EventType::ADD_COMPONENT, std::make_shared<int>(i)});
         }
 
         return m_taskGraph;

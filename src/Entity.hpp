@@ -79,7 +79,7 @@ namespace razaron::core::entity
 		}
 
 	private:
-		unsigned int m_id;
+		unsigned m_id;
 		ComponentMap m_components;
 	};
 }
