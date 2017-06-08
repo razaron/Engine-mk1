@@ -48,15 +48,16 @@ namespace razaron::core::space
         void registerHandler(EventType p_type, EventHandler p_handler);
         void pushEvents(std::vector<Event> &p_events, StreamType p_streamType);
 
-        Entity &operator[](unsigned short p_id){ if(m_entities.count(p_id)) return m_entities[p_id]; }
+        Entity &operator[](unsigned short p_id);
 
-        EntityMap m_entities;
       private:
 		void updateSystems(double delta);
 		void propagateEvents();
 
+        unsigned m_id;
 		SystemGraph m_systemGraph;
         double m_intervalMax{};
+        EntityMap m_entities;
         EventStream m_eventStream;
     };
 }

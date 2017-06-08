@@ -16,7 +16,8 @@ SCENARIO("Spaces manage Systems and Events, updating them in BF order", "[space]
         SystemGraph g;
 
         // clang-format off
-        enum V { A, B, C, D, E, F, G, H };
+		enum V { A, B, C, D, E, F, G, H };
+
         // clang-format on
 
         g.addEdge(V::A, V::B);
@@ -75,7 +76,8 @@ SCENARIO("Spaces can add/remove enitities, generating relavant components in the
         SystemGraph g;
 
         // clang-format off
-        enum V { A, B, C, D, E, F, G, H };
+		enum V { A, B, C, D, E, F, G, H };
+
         // clang-format on
 
         g.addEdge(V::A, V::B);
@@ -99,7 +101,7 @@ SCENARIO("Spaces can add/remove enitities, generating relavant components in the
             unsigned int entityID = 0;
 
             // Starts the chain of events that will create a new Entity
-            s.registerHandler(EventType::CREATE_ENTITY, [space = &s, &entityID](Event &e) {
+            s.registerHandler(EventType::CREATE_ENTITY, [ space = &s, &entityID ](Event & e) {
                 auto data = std::static_pointer_cast<std::string>(e.data);
 
                 auto entity = space->createEntity();
@@ -111,16 +113,14 @@ SCENARIO("Spaces can add/remove enitities, generating relavant components in the
                 events.push_back(Event{
                     entity.getID(),
                     EventType::CREATE_COMPONENT,
-                    std::make_shared<eventdata::CREATE_COMPONENT>(ComponentType::FOO)
-                });
+                    std::make_shared<eventdata::CREATE_COMPONENT>(ComponentType::FOO)}
+                );
 
                 events.push_back(Event{
                     entity.getID(),
                     EventType::CREATE_COMPONENT,
-                    std::make_shared<eventdata::CREATE_COMPONENT>(ComponentType::BAR)
-                });
-
-                entity = (*space)[entityID];
+                    std::make_shared<eventdata::CREATE_COMPONENT>(ComponentType::BAR)}
+                );
 
                 space->pushEvents(events, StreamType::OUTGOING);
             });
@@ -128,86 +128,72 @@ SCENARIO("Spaces can add/remove enitities, generating relavant components in the
             int count = 2;
 
             // Adds a created Component to the correct entity
-            s.registerHandler(EventType::ADD_COMPONENT, [space = &s, &count](Event &e) {
+            s.registerHandler(EventType::ADD_COMPONENT, [ space = &s, &count ](Event & e) {
                 auto data = std::static_pointer_cast<eventdata::ADD_COMPONENT>(e.data);
 
-                if(!data->ch.second.isFree)
+                if (!data->ch.second.isFree)
                 {
                     count--;
 
-                    auto ent = (*space)[e.recipient];
-                    ent.addComponent(data->ch);
-                    for (auto& kv : ent.m_components) {
-                        int i = 9;
-                        i++;
-                    }
+                    (*space)[e.recipient].addComponent(data->ch);
                 }
             });
 
-            for(auto i=0;i<4;i++)
+            for (auto i = 0; i < 4; i++)
             {
-                std::cout << "Update " << i << ":" << std::endl;
                 s.update(0);
-            }
-
-            auto enMap = s.m_entities;
-            for (auto& kv : enMap[entityID].getComponents()) {
-                int i = 9;
-                i++;
             }
 
             REQUIRE(count == 0);
 
-            //THEN("Removing the entity")
-            //{
+            THEN("Removing the entity")
+            {
                 std::vector<Event> events;
 
-                auto sdsfdsdf = s[entityID][ComponentType::FOO];
-                auto sdf = s[entityID];
-
-                auto ptr1 = std::make_shared<eventdata::REMOVE_COMPONENT>(ComponentHandle{ComponentType::FOO, s[entityID][ComponentType::FOO]});
-                auto test = ptr1->ch;
+                auto ptr1 = std::make_shared<eventdata::REMOVE_COMPONENT>(ComponentHandle{
+                    ComponentType::FOO,
+                    s[entityID][ComponentType::FOO]}
+                );
 
                 events.push_back(Event{
                     entityID,
                     EventType::REMOVE_COMPONENT,
-                    ptr1
-                });
+                    ptr1}
+                );
 
-                auto ptr2 = std::make_shared<eventdata::REMOVE_COMPONENT>(ComponentHandle{ComponentType::BAR, s[entityID][ComponentType::FOO]});
-                test = ptr2->ch;
+                auto ptr2 = std::make_shared<eventdata::REMOVE_COMPONENT>(ComponentHandle{
+                    ComponentType::BAR,
+                    s[entityID][ComponentType::FOO]}
+                );
                 events.push_back(Event{
                     entityID,
                     EventType::REMOVE_COMPONENT,
-                    std::make_shared<eventdata::REMOVE_COMPONENT>(ComponentHandle{ComponentType::BAR, s[entityID][ComponentType::BAR]})
-                });
+                    ptr2}
+                );
 
                 s.pushEvents(events, StreamType::OUTGOING);
 
-                count = 10;
+                count = 999;
                 // Adds a created Component to the correct entity
-                s.registerHandler(EventType::ADD_COMPONENT, [space = &s, &count](Event &e) {
+                s.registerHandler(EventType::REMOVE_COMPONENT, [ space = &s, &count ](Event & e) {
                     auto data = std::static_pointer_cast<eventdata::REMOVE_COMPONENT>(e.data);
 
-                    if(data->isRemoved)
+                    if (data->isRemoved)
                     {
                         (*space)[e.recipient].removeComponent(data->ch);
 
-                        if((*space)[e.recipient].getComponents().size() == 0)
-                        {
+                        if ((*space)[e.recipient].getComponents().size() == 0)
                             count = space->removeEntity(e.recipient);
-                        }
                     }
                 });
 
-                for(auto i=0;i<4;i++)
+                for (auto i = 0; i < 4; i++)
                 {
-                    std::cout << "Update " << i << ":" << std::endl;
                     s.update(0);
                 }
 
                 REQUIRE(count == 0);
-            //}
+            }
         }
     }
 }

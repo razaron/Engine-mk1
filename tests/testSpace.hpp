@@ -32,38 +32,10 @@ namespace eventdata
 
 class Foo : public Component
 {
-  public:
-    Foo()
-    {
-        std::cout << "Foo" << std::endl;
-    };
-    Foo(const Foo &other)
-    {
-        std::cout << "Foo" << std::endl;
-        *this = other;
-    };
-    ~Foo()
-    {
-        std::cout << "~Foo" << std::endl;
-    };
 };
 
 class Bar : public Component
 {
-  public:
-    Bar()
-    {
-        std::cout << "Bar" << std::endl;
-    };
-    Bar(const Bar &other)
-    {
-        std::cout << "Bar" << std::endl;
-        *this = other;
-    };
-    ~Bar()
-    {
-        std::cout << "~Bar" << std::endl;
-    };
 };
 
 class SystemA : public System
@@ -84,7 +56,8 @@ class SystemA : public System
                 system->pushEvent(Event{
                     e.recipient,
                     EventType::ADD_COMPONENT,
-                    std::make_shared<eventdata::ADD_COMPONENT>(ch)});
+                    std::make_shared<eventdata::ADD_COMPONENT>(ch)
+                });
             }
         });
 
@@ -98,8 +71,9 @@ class SystemA : public System
 
                 system->pushEvent(Event{
                     e.recipient,
-                    EventType::ADD_COMPONENT,
-                    std::make_shared<eventdata::REMOVE_COMPONENT>(data->ch, result)});
+                    EventType::REMOVE_COMPONENT,
+                    std::make_shared<eventdata::REMOVE_COMPONENT>(data->ch, result)
+                });
             }
         });
     }
@@ -117,7 +91,6 @@ class SystemA : public System
             pushEvent(Event{0u, EventType::CREATE_ENTITY, std::make_shared<std::string>("Foo + Bar")});
         }
 
-        capacity = m_pool.capacity();
         return m_taskGraph;
     }
 
@@ -148,7 +121,7 @@ class SystemA : public System
             removeObject<Foo>(p_ch.second);
             break;
         default:
-            h = Handle{};
+            return false;
             break;
         }
 
@@ -156,7 +129,6 @@ class SystemA : public System
     }
 
     int count{};
-    int capacity{};
 
   private:
     std::string sysName{"SystemA"};
@@ -176,7 +148,7 @@ class SystemC : public System
         return m_taskGraph;
     }
 
-    int count = 0;
+    int count{};
 
   private:
     std::string sysName{"SystemC"};
@@ -200,7 +172,8 @@ class SystemD : public System
                 system->pushEvent(Event{
                     e.recipient,
                     EventType::ADD_COMPONENT,
-                    std::make_shared<eventdata::ADD_COMPONENT>(ch)});
+                    std::make_shared<eventdata::ADD_COMPONENT>(ch)
+                });
             }
         });
 
@@ -214,8 +187,9 @@ class SystemD : public System
 
                 system->pushEvent(Event{
                     e.recipient,
-                    EventType::ADD_COMPONENT,
-                    std::make_shared<eventdata::REMOVE_COMPONENT>(data->ch, result)});
+                    EventType::REMOVE_COMPONENT,
+                    std::make_shared<eventdata::REMOVE_COMPONENT>(data->ch, result)
+                });
             }
         });
     }
@@ -226,6 +200,7 @@ class SystemD : public System
         UNUSED(p_entities);
         UNUSED(delta);
         count++;
+
         return m_taskGraph;
     }
 
@@ -256,7 +231,7 @@ class SystemD : public System
             removeObject<Bar>(p_ch.second);
             break;
         default:
-            h = Handle{};
+            return false;
             break;
         }
 
@@ -264,7 +239,6 @@ class SystemD : public System
     }
 
     int count{};
-    int capacity{};
 
   private:
     std::string sysName{"SystemD"};
@@ -284,7 +258,7 @@ class SystemB : public System
         return m_taskGraph;
     }
 
-    int count = 0;
+    int count{};
 
   private:
     std::string sysName{"SystemB"};
@@ -304,7 +278,7 @@ class SystemE : public System
         return m_taskGraph;
     }
 
-    int count = 0;
+    int count{};
 
   private:
     std::string sysName{"SystemE"};
@@ -324,7 +298,7 @@ class SystemF : public System
         return m_taskGraph;
     }
 
-    int count = 0;
+    int count{};
 
   private:
     std::string sysName{"SystemF"};

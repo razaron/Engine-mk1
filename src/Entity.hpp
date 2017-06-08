@@ -78,8 +78,8 @@ namespace razaron::core::entity
 				return Handle{};
 		}
 
-		unsigned int m_id;
-		ComponentMap m_components;
 	private:
+		unsigned m_id;
+		ComponentMap m_components;
 	};
 }
