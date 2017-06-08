@@ -5,6 +5,7 @@
 
 #include "Entity.hpp"
 #include "EventStream.hpp"
+#include "EventData.hpp"
 #include "ObjectPool.hpp"
 #include "TaskScheduler.hpp"
 
@@ -16,6 +17,7 @@ namespace razaron::core::system
     using namespace razaron::taskscheduler;
     using namespace razaron::graph;
     using namespace razaron::core::entity;
+    using namespace razaron::eventdata;
 
     /*! Denotes the type of a derived System. */
     enum class SystemType
@@ -44,6 +46,12 @@ namespace razaron::core::system
 		*	@returns	Returns the TaskGraph needed to run update logic for the Component objects.
 		*/
         virtual TaskGraph &update(EntityMap &p_entities, double delta) = 0;
+
+        /*! Creates a new Component in the ObjectPool. */
+        virtual ComponentHandle createComponent(ComponentType p_type) = 0;
+
+        /*! Removes a Component from the ObjectPool. */
+        virtual bool removeComponent(ComponentHandle p_ch) = 0;
 
         /*! Constructs a object into System managed memory.
 		*
@@ -103,6 +111,41 @@ namespace razaron::core::system
         double getTaskGraph() { return static_cast<double>(m_interval) / 1000; }
 
       protected:
+        System()
+        {
+            registerHandler(EventType::CREATE_COMPONENT, [system = this](Event & e) {
+                auto data = std::static_pointer_cast<eventdata::CREATE_COMPONENT>(e.data);
+
+                // If ComponentType is valid, do something
+                if (system->m_componentTypes.count(data->type))
+                {
+                    auto ch = system->createComponent(data->type);
+
+                    system->pushEvent(Event{
+                        e.recipient,
+                        EventType::CREATE_COMPONENT,
+                        std::make_shared<eventdata::CREATE_COMPONENT>(ch, true)
+                    });
+                }
+            });
+
+            registerHandler(EventType::REMOVE_COMPONENT, [system = this](Event & e) {
+                auto data = std::static_pointer_cast<eventdata::REMOVE_COMPONENT>(e.data);
+
+                // If ComponentType is valid, do something
+                if (system->m_componentTypes.count(data->ch.first))
+                {
+                    bool result = system->removeComponent(data->ch);
+
+                    system->pushEvent(Event{
+                        e.recipient,
+                        EventType::REMOVE_COMPONENT,
+                        std::make_shared<eventdata::REMOVE_COMPONENT>(data->ch, result)
+                    });
+                }
+            });
+        }
+
         ObjectPool m_pool;               /*!< The ObjectPool used to manage the memory of this System. */
         double m_interval = 0.05;        /*!< The interval (in seconds) between updates for this System. */
         EventStream m_eventStream;       /*!< The EventStream belonging to this System. */

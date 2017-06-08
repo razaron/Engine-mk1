@@ -75,7 +75,7 @@ namespace razaron::core::entity
 			if(m_components.find(p_type) != m_components.end())
 				return m_components[p_type];
 			else
-				return Handle{};
+				throw std::invalid_argument("ComponentType not found in Entity: " + std::to_string(m_id));
 		}
 
 	private:

@@ -110,7 +110,7 @@ namespace razaron::objectpool
         //TODO template<class T> T* getObjects(std::vector<Handle> p_handles);
 
         /*!	Removes an object from the ObjectPool and free's the space for use.
-		*	It does not call the objects destructor, it just resets the memory used to store the object in the ObjectPool.
+		*	It calls the destructor for non-trivially destructible objects.
 		*
         *   @tparam	T			The type of the object to remove from the ObjectPool.
         *
@@ -465,6 +465,10 @@ namespace razaron::objectpool
         if (p_handle.index == posCurFree) return;
 
         Handle *ptrToRemove = getObject<Handle, Pool>(p_handle, true);
+
+        // Call object destructor if it is manually set
+        if(std::is_destructible<T>::value && !std::is_trivially_destructible<T>::value)
+            reinterpret_cast<T*>(ptrToRemove)->~T();
 
         // Resets the data back to zero
         std::memset(ptrToRemove, 0, pool->first->size);

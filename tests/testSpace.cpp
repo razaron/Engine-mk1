@@ -128,18 +128,18 @@ SCENARIO("Spaces can add/remove enitities, generating relavant components in the
             int count = 2;
 
             // Adds a created Component to the correct entity
-            s.registerHandler(EventType::ADD_COMPONENT, [ space = &s, &count ](Event & e) {
-                auto data = std::static_pointer_cast<eventdata::ADD_COMPONENT>(e.data);
-
-                if (!data->ch.second.isFree)
+            s.registerHandler(EventType::CREATE_COMPONENT, [ space = &s, &count ](Event & e) {
+                auto data = std::static_pointer_cast<eventdata::CREATE_COMPONENT>(e.data);
+                
+                if (data->isCreated)
                 {
                     count--;
 
-                    (*space)[e.recipient].addComponent(data->ch);
+                    (*space)[e.recipient].addComponent(ComponentHandle{data->type, data->handle});
                 }
             });
 
-            for (auto i = 0; i < 4; i++)
+            for (auto i = 0; i < 5; i++)
             {
                 s.update(0);
             }

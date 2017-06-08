@@ -17,6 +17,36 @@ Space::Space(SystemGraph &p_systemGraph)
 
     m_systemGraph.breadthFirstTraversal(0);
     m_systemGraph.reset();
+
+    // Starts the chain of events that will create a new Entity from a list of components
+    registerHandler(EventType::CREATE_ENTITY, [ space = this ](Event & e) {
+        auto data = std::static_pointer_cast<eventdata::CREATE_ENTITY>(e.data);
+
+        auto entity = space->createEntity();
+
+        std::vector<Event> events;
+
+        for(auto type : data->components)
+        {
+            events.push_back(Event{
+                entity.getID(),
+                EventType::CREATE_COMPONENT,
+                std::make_shared<eventdata::CREATE_COMPONENT>(type)}
+            );
+        }
+
+        space->pushEvents(events, StreamType::OUTGOING);
+    });
+
+    // Adds a created Component to the correct entity
+    registerHandler(EventType::CREATE_COMPONENT, [ space = this ](Event & e) {
+        auto data = std::static_pointer_cast<eventdata::CREATE_COMPONENT>(e.data);
+
+        if (!data->isCreated)
+        {
+            (*space)[e.recipient].addComponent(ComponentHandle{data->type, data->handle});
+        }
+    });
 }
 
 Space::~Space()

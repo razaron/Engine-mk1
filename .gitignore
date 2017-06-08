@@ -60,6 +60,8 @@ results.txt
 # =========================
 Release
 Debug
+docs/local
+docs/doxylocal
 
 # FILETYPES
 # =========================

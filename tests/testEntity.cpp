@@ -37,7 +37,18 @@ SCENARIO("Entities can be constructed from a ComponentMap, then be added/removed
             {
                 e.removeComponent(ComponentHandle{ComponentType::FOO, Handle{HandleSize{4}, HandleIndex{0}, false}});
 
-                REQUIRE(e[ComponentType::FOO] == Handle{});
+                bool result = false;
+
+                try
+                {
+                    e[ComponentType::FOO];
+                }
+                catch (const std::invalid_argument& e)
+                {
+                    result = true;
+                }
+                
+                REQUIRE(result == true);
             }
         }
     }

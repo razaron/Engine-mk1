@@ -13,15 +13,16 @@ class FooSystem : public System
     FooSystem() {}
     ~FooSystem() {}
 
-    TaskGraph& update(EntityMap &p_entities, double delta){
+    TaskGraph &update(EntityMap &p_entities, double delta)
+    {
         UNUSED(p_entities);
         UNUSED(delta);
 
         auto events = popEvents();
 
-        for(auto &e : events)
+        for (auto &e : events)
         {
-            if(e.type == EventType::ADD_COMPONENT)
+            if (e.type == EventType::ADD_COMPONENT)
             {
                 auto data = std::static_pointer_cast<int>(e.data);
 
@@ -32,8 +33,11 @@ class FooSystem : public System
         return m_taskGraph;
     }
 
+    ComponentHandle createComponent(ComponentType p_type) { UNUSED(p_type); return ComponentHandle{}; }
+    bool removeComponent(ComponentHandle p_ch) { UNUSED(p_ch); return false; }
+
     int count{};
-    std::string name { "FooSystem" };
+    std::string name{"FooSystem"};
 };
 
 class BarSystem : public System
@@ -42,11 +46,12 @@ class BarSystem : public System
     BarSystem() {}
     ~BarSystem() {}
 
-    TaskGraph& update(EntityMap &p_entities, double delta){
+    TaskGraph &update(EntityMap &p_entities, double delta)
+    {
         UNUSED(p_entities);
         UNUSED(delta);
 
-        for(auto i=0;i<5;i++)
+        for (auto i = 0; i < 5; i++)
         {
             pushEvent(Event{0, EventType::ADD_COMPONENT, std::make_shared<int>(i)});
         }
@@ -54,5 +59,8 @@ class BarSystem : public System
         return m_taskGraph;
     }
 
-    std::string name { "BarSystem" };
+    ComponentHandle createComponent(ComponentType p_type) { UNUSED(p_type); return ComponentHandle{}; }
+    bool removeComponent(ComponentHandle p_ch) { UNUSED(p_ch); return false; }
+
+    std::string name{"BarSystem"};
 };
