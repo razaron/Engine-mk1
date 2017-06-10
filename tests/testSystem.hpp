@@ -13,7 +13,7 @@ class FooSystem : public System
     FooSystem() {}
     ~FooSystem() {}
 
-    TaskGraph &update(EntityMap &p_entities, double delta)
+    Task update(EntityMap &p_entities, double delta)
     {
         UNUSED(p_entities);
         UNUSED(delta);
@@ -30,7 +30,7 @@ class FooSystem : public System
             }
         }
 
-        return m_taskGraph;
+        return Task{};
     }
 
     ComponentHandle createComponent(ComponentType p_type) { UNUSED(p_type); return ComponentHandle{}; }
@@ -46,7 +46,7 @@ class BarSystem : public System
     BarSystem() {}
     ~BarSystem() {}
 
-    TaskGraph &update(EntityMap &p_entities, double delta)
+    Task update(EntityMap &p_entities, double delta)
     {
         UNUSED(p_entities);
         UNUSED(delta);
@@ -56,7 +56,7 @@ class BarSystem : public System
             pushEvent(Event{0, EventType::ADD_COMPONENT, std::make_shared<int>(i)});
         }
 
-        return m_taskGraph;
+        return Task{};
     }
 
     ComponentHandle createComponent(ComponentType p_type) { UNUSED(p_type); return ComponentHandle{}; }

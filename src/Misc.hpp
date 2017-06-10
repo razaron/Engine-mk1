@@ -1,7 +1,6 @@
 #pragma once
 
 #include <array>
-#include <atomic>
 #include <type_traits>
 
 // Check windows
@@ -54,39 +53,20 @@ using expand_type = int[];
     }, TUPLE);
 
 // Handling for pointers etc.
-using HandleSize = std::size_t;
-using HandleIndex = unsigned short;
+using HandleSize = std::size_t; /*!< Represents the size of Handle%d objects. */
+using HandleIndex = unsigned short; /*!< Represents the indexed location of Handle%d objects. */
+/*! Handles are used to abstract data access away from pointers. */
 struct Handle
 {
-	HandleSize size;
-	HandleIndex index;
-	bool isFree{true};
+	HandleSize size; /*!< The size of the Handle%d object. */
+	HandleIndex index;/*!< The indexed location of the Handle%d object. */
+	bool isFree{true};/*!< Whether the index denotes a free or occupied location. */
 
+    /*! Basic equality comparator. */
     bool operator==(const Handle &rhs)
     {
         return (size == rhs.size && index == rhs.index && isFree == rhs.isFree);
     }
-};
-
-template<typename T>
-struct AtomicCounter {
-	std::atomic<T> value{0};
-
-	T operator ++(int) {
-		return value++;
-	}
-
-	T operator --(int) {
-		return value--;
-	}
-
-	T operator =(T desired) {
-		return value = desired;
-	}
-
-	T get() {
-		return value.load();
-	}
 };
 
 template <typename T>

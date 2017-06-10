@@ -23,7 +23,9 @@ namespace razaron::core::space
         std::vector<std::pair<System *, System *>> orderedSystems; /*!< A std::vector containing ordered std::pairs of src/dst System pointers. */
     };
 
-    /*! The Space class handles processing of System updates. */
+    /*! The Space class handles processing of System updates.
+    *   For more information and examples, see page \ref space.
+    */
     class Space
     {
       public:

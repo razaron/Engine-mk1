@@ -45,7 +45,7 @@ namespace razaron::core::system
 		*
 		*	@returns	Returns the TaskGraph needed to run update logic for the Component objects.
 		*/
-        virtual TaskGraph &update(EntityMap &p_entities, double delta) = 0;
+        virtual Task update(EntityMap &p_entities, double delta) = 0;
 
         /*! Creates a new Component in the ObjectPool. */
         virtual ComponentHandle createComponent(ComponentType p_type) = 0;
@@ -150,7 +150,6 @@ namespace razaron::core::system
         double m_interval = 0.05;        /*!< The interval (in seconds) between updates for this System. */
         EventStream m_eventStream;       /*!< The EventStream belonging to this System. */
         std::set<ComponentType> m_componentTypes; /*!< The set of ComponentType%s supported by this System. */
-        TaskGraph m_taskGraph;           /*!< The last generated TaskGraph. */
     };
 
     inline System::~System()

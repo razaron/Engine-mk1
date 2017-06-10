@@ -54,7 +54,9 @@ namespace razaron::objectpool
     // clang-format on
     /*! @endcond */
 
-    /*!	Stores objects of any type with size upto OBJECT_SIZE_64 Bytes in contiguous aligned memory. */
+    /*!	Stores objects of any type with size upto \c sizeof(std::size_t)*64 Bytes in contiguous aligned memory.
+    *   For more information and examples, see page \ref objectpool.
+    */
     class ObjectPool
     {
       public:
