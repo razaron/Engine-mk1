@@ -57,8 +57,6 @@ Task TaskScheduler::push(WorkFunc p_work, Task p_dependency)
     return task;
 }
 
-
-
 Task TaskScheduler::push(WorkGroup p_group, Task p_dependency)
 {
     std::lock_guard<std::mutex> lk(m_taskQueueMutex);
@@ -230,9 +228,16 @@ Task TaskScheduler::pushGraph(WorkGraph p_workGraph, Task p_dependency)
             // For each dependency, set its parent to the dummy
             for(auto &dep : dependencies)
             {
-                parents[dep.id].parentID = dummy.taskID;
-                dummy.openWorkItems++;
+				auto it = std::find(tasks.begin(), tasks.end(), parents[dep.id]);
+
+				if (it != tasks.end())
+				{
+					it->parentID = dummy.taskID;
+					dummy.openWorkItems++;
+				}
             }
+
+			tasks.push_back(dummy);
 
             // Create a new parent task
             Task parent{
@@ -291,7 +296,13 @@ Task TaskScheduler::pushGraph(WorkGraph p_workGraph, Task p_dependency)
 
 void TaskScheduler::helpWork()
 {
-    while (true)
+	std::unique_lock<std::mutex> lk(m_taskQueueMutex);
+	m_hasWorkCondition.wait(lk, [this] { return !m_hasWork; });
+	lk.unlock();
+
+	return;
+	
+	while (true)
     {
         Task task = getWork();
 
