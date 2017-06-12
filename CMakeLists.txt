@@ -12,8 +12,10 @@ SET(TEST_SOURCES "fail" CACHE STRING "Build option. 32 or 64")
 include_directories (${MY_INCLUDES} ${PROJECT_SOURCE_DIR}/src)
 add_subdirectory (src)
 
+find_package (Threads)
+
 # connect all libs
-set (EXTRA_LIBS ${EXTRA_LIBS} engine-mk1)
+set (EXTRA_LIBS ${EXTRA_LIBS} engine-mk1 ${CMAKE_THREAD_LIBS_INIT})
 
 # connect all sources for the test suite
 set (TEST_SOURCES tests/main.cpp ${TEST_SOURCES})

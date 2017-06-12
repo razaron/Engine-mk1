@@ -82,13 +82,14 @@ namespace razaron::taskscheduler
         Task pushGraph(WorkGraph p_workGraph, Task p_dependency = Task{});
 
         /*! A function to let the main thread help process Task%s until there are none left. */
-        void helpWork();
+        void helpWorkers();
 
       private:
         void worker();
         std::pair<TaskList::iterator, TaskList *> getParent(const Task &p_task);
         std::pair<TaskList::iterator, TaskList *> getDependency(const Task &p_task);
-        Task getWork();
+        Task getTask();
+        void doTask(Task task);
 
         std::atomic<std::size_t> m_nextTaskID{1};
         TaskList m_openTasks;

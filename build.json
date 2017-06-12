@@ -42,6 +42,10 @@
             {
                 "fullpath": "tests/testSpace.cpp",
                 "description": "lol description"
+            },
+            {
+                "fullpath": "tests/testTaskScheduler.cpp",
+                "description": "lol description"
             }
         ]
     },

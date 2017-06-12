@@ -36,7 +36,8 @@ Task TaskScheduler::push(WorkFunc p_work, Task p_dependency)
         0,
         p_dependency.taskID,
         p_work,
-        1 };
+        1
+    };
 
     if (task.dependencyID)
     {
@@ -45,7 +46,7 @@ Task TaskScheduler::push(WorkFunc p_work, Task p_dependency)
         if (pair.first != pair.second->end())
             m_pendingTasks.push_back(task);
         else
-            m_pendingTasks.push_back(task);
+            m_openTasks.push_back(task);
     }
     else
         m_openTasks.push_back(task);
@@ -67,7 +68,8 @@ Task TaskScheduler::push(WorkGroup p_group, Task p_dependency)
         0,
         p_dependency.taskID,
         p_group.second[0],
-        1 };
+        1
+    };
 
     if (parent.dependencyID)
     {
@@ -76,7 +78,7 @@ Task TaskScheduler::push(WorkGroup p_group, Task p_dependency)
         if (pair.first != pair.second->end())
             m_pendingTasks.push_back(parent);
         else
-            m_pendingTasks.push_back(parent);
+            m_openTasks.push_back(parent);
     }
     else
         m_openTasks.push_back(parent);
@@ -90,7 +92,8 @@ Task TaskScheduler::push(WorkGroup p_group, Task p_dependency)
             parent.taskID,
             p_dependency.taskID,
             p_group.second[0],
-            1 };
+            1
+        };
 
         if (task.parentID)
         {
@@ -107,14 +110,13 @@ Task TaskScheduler::push(WorkGroup p_group, Task p_dependency)
             if (pair.first != pair.second->end())
                 m_pendingTasks.push_back(task);
             else
-                m_pendingTasks.push_back(task);
+                m_openTasks.push_back(task);
         }
         else
             m_openTasks.push_back(task);
 
         work++;
     }
-
 
     m_hasWork = true;
     m_hasOpenWork = true;
@@ -127,27 +129,26 @@ Task TaskScheduler::pushGraph(WorkGraph p_workGraph, Task p_dependency)
 {
     std::list<Task> tasks;
     std::map<unsigned, Task> parents;
-    Task dependency = p_dependency;
-    p_workGraph.vertexFuncs[State::WHITE] = [this, &tasks, &parents, &dependency](WorkGraphVertex &v, WorkGraph &g){
+
+    auto fillTaskList = [this, &tasks, &parents, &p_dependency](WorkGraphVertex &v, WorkGraph &g) {
         unsigned depth = v.data.first;
         std::vector<WorkGraphVertex> dependencies;
 
         // Get all dependency work groups
-        for(auto &e : v.adjacencyList)
+        for (auto &e : v.adjacencyList)
         {
-            if(g[e.target].data.first < depth)
+            if (g[e.target].data.first < depth)
             {
                 dependencies.push_back(g[e.target]);
             }
         }
 
-        if(dependencies.size() == 0)
-        {
+        auto pushTasks = [this, &v, &tasks, &parents](std::size_t depID){
             // Create a new parent task
             Task parent{
                 m_nextTaskID++,
                 0,
-                0,
+                depID,
                 v.data.second[0],
                 1
             };
@@ -162,117 +163,76 @@ Task TaskScheduler::pushGraph(WorkGraph p_workGraph, Task p_dependency)
             auto w = v.data.second.begin();
             (w != v.data.second.end()) ? w++ : w;
 
-            while( w != v.data.second.end())
+            while (w != v.data.second.end())
             {
                 Task child{
                     m_nextTaskID++,
                     parent.taskID,
-                    0,
+                    depID,
                     *w,
                     1
                 };
 
                 tasks.push_back(child);
 
+				auto it = std::find(tasks.begin(), tasks.end(), parent);
+				it->openWorkItems++;
+
                 w++;
             }
+
+            return parent;
+        };
+
+        // Generate tasks dependent on the optional dependency
+        if (dependencies.size() == 0)
+        {
+            return pushTasks(p_dependency.taskID);
         }
-        else if(dependencies.size() == 1)
+        // Generate tasks dependent on the sole dependency
+        else if (dependencies.size() == 1)
         {
             Task dep = parents[dependencies[0].id];
 
-            // Create a new parent task
-            Task parent{
-                m_nextTaskID++,
-                0,
-                dep.taskID,
-                v.data.second[0],
-                1
-            };
-
-            // Add it to the tasks list
-            tasks.push_back(parent);
-
-            // Add it to the parent map
-            parents[v.id] = parent;
-
-            // Add childen tasks to the task list
-            auto w = v.data.second.begin();
-            (w != v.data.second.end()) ? w++ : w;
-
-            while( w != v.data.second.end())
-            {
-                Task child{
-                    m_nextTaskID++,
-                    parent.taskID,
-                    dep.taskID,
-                    *w,
-                    1
-                };
-
-                tasks.push_back(child);
-
-                w++;
-            }
+            return pushTasks(dep.taskID);
         }
+        // Insert a dummy task as the parent of the dependencies, then generate tasks dependent on the dummy
         else
         {
             Task dummy{
                 m_nextTaskID++,
                 0,
                 0,
-                [v](){std::clog << "dummy for " << v.id << std::endl; },
+                [v]() { std::clog << "dummy for " << v.id << std::endl; },
                 1
             };
 
             // For each dependency, set its parent to the dummy
-            for(auto &dep : dependencies)
+            for (auto &dep : dependencies)
             {
-				auto it = std::find(tasks.begin(), tasks.end(), parents[dep.id]);
+                auto it = std::find(tasks.begin(), tasks.end(), parents[dep.id]);
 
-				if (it != tasks.end())
-				{
-					it->parentID = dummy.taskID;
-					dummy.openWorkItems++;
-				}
+                if (it != tasks.end())
+                {
+                    it->parentID = dummy.taskID;
+                    dummy.openWorkItems++;
+                }
             }
 
-			tasks.push_back(dummy);
+            tasks.push_back(dummy);
 
-            // Create a new parent task
-            Task parent{
-                m_nextTaskID++,
-                0,
-                dummy.taskID,
-                v.data.second[0],
-                1
-            };
-
-            // Add it to the tasks list
-            tasks.push_back(parent);
-
-            // Add it to the parent map
-            parents[v.id] = parent;
-
-            // Add childen tasks to the task list
-            auto w = v.data.second.begin();
-            (w != v.data.second.end()) ? w++ : w;
-
-            while( w != v.data.second.end())
-            {
-                Task child{
-                    m_nextTaskID++,
-                    parent.taskID,
-                    dummy.taskID,
-                    *w,
-                    1
-                };
-
-                tasks.push_back(child);
-
-                w++;
-            }
+            return pushTasks(dummy.taskID);
         }
+    };
+
+    p_workGraph.vertexFuncs[State::WHITE] = [&fillTaskList](WorkGraphVertex &v, WorkGraph &g) {
+        fillTaskList(v, g);
+    };
+
+    Task retDep{};
+
+    p_workGraph.vertexFuncs[State::GREEN] = [&fillTaskList, &retDep](WorkGraphVertex &v, WorkGraph &g) {
+        retDep = fillTaskList(v, g);
     };
 
     p_workGraph.breadthFirstTraversal(0);
@@ -280,7 +240,7 @@ Task TaskScheduler::pushGraph(WorkGraph p_workGraph, Task p_dependency)
     {
         std::lock_guard<std::mutex> lk(m_taskQueueMutex);
 
-        if(m_pendingTasks.size())
+        if (m_pendingTasks.size())
             m_pendingTasks.splice(m_pendingTasks.end()--, tasks);
         else
             m_pendingTasks.splice(m_pendingTasks.begin(), tasks);
@@ -291,67 +251,19 @@ Task TaskScheduler::pushGraph(WorkGraph p_workGraph, Task p_dependency)
         m_hasWorkCondition.notify_all();
     }
 
-    return Task{};
+    return retDep;
 }
 
-void TaskScheduler::helpWork()
+void TaskScheduler::helpWorkers()
 {
-	std::unique_lock<std::mutex> lk(m_taskQueueMutex);
-	m_hasWorkCondition.wait(lk, [this] { return !m_hasWork; });
-	lk.unlock();
-
-	return;
-	
 	while (true)
     {
-        Task task = getWork();
+        Task task = getTask();
 
         // If work is available, do it
         if (task.work)
         {
-            task.work();
-
-            std::lock_guard<std::mutex> lg(m_taskQueueMutex);
-
-            auto t = std::find(m_openTasks.begin(), m_openTasks.end(), task);
-            t->openWorkItems--;
-
-            // If task has no openWorkItems remaining
-            if (t != m_openTasks.end() && !t->openWorkItems)
-            {
-                // Remove task from open list
-                m_openTasks.erase(t);
-
-                // Decrement its parents openWorkItems count
-                auto pair = getParent(task);
-
-                if (pair.first != pair.second->end())
-                {
-                    pair.first->openWorkItems--;
-
-                    if (!pair.first->openWorkItems)
-                    {
-                        pair.second->erase(pair.first);
-                    }
-                }
-
-                // Find if a dependant task is in the pending tasks list
-                auto pending = std::find_if(m_pendingTasks.begin(), m_pendingTasks.end(), [task](const Task &p) {
-                    return p.dependencyID == task.taskID;
-                });
-
-                // Put the dependent task in the open queue
-                if (pending != m_pendingTasks.end())
-                {
-                    m_openTasks.push_back(*pending);
-                    m_pendingTasks.erase(pending);
-                }
-            }
-
-            m_hasOpenWork = m_pendingTasks.size() || m_openTasks.size();
-            m_hasWork = m_pendingTasks.size() || m_openTasks.size();
-
-            m_hasWorkCondition.notify_all();
+            doTask(task);
         }
         // If no work is available
         else
@@ -415,7 +327,7 @@ std::pair<TaskList::iterator, TaskList *> TaskScheduler::getDependency(const Tas
     return std::make_pair(dependency, list);
 }
 
-Task TaskScheduler::getWork()
+Task TaskScheduler::getTask()
 {
     std::lock_guard<std::mutex> lk(m_taskQueueMutex);
 
@@ -482,6 +394,65 @@ Task TaskScheduler::getWork()
     return Task{};
 }
 
+void TaskScheduler::doTask(Task task)
+{
+    task.work();
+
+    std::lock_guard<std::mutex> lg(m_taskQueueMutex);
+
+    auto t = std::find(m_openTasks.begin(), m_openTasks.end(), task);
+    t->openWorkItems--;
+
+    // If task has no openWorkItems remaining
+    if (t != m_openTasks.end() && !t->openWorkItems)
+    {
+        // Remove task from open list
+        m_openTasks.erase(t);
+
+		// Get all parents
+        std::list<std::pair<TaskList::iterator, TaskList *>> parents;
+
+		auto pair = getParent(task);
+		while (pair.first != pair.second->end())
+		{
+			parents.push_back(pair);
+			pair = getParent(*(parents.back().first));
+		}
+
+		// Successively decrements parents work items and erase if neccassary
+		auto it = parents.begin();
+		while (it != parents.end())
+		{
+			it->first->openWorkItems--;
+
+			if (!it->first->openWorkItems)
+			{
+				it->second->erase(it->first);
+				++it;
+			}
+			else
+				it = parents.end();
+		}
+
+        // Find if a dependant task is in the pending tasks list
+        auto pending = std::find_if(m_pendingTasks.begin(), m_pendingTasks.end(), [task](const Task &p) {
+            return p.dependencyID == task.taskID;
+        });
+
+        // Put the dependent task in the open queue
+        if (pending != m_pendingTasks.end())
+        {
+            m_openTasks.push_back(*pending);
+            m_pendingTasks.erase(pending);
+        }
+    }
+
+    m_hasOpenWork = m_pendingTasks.size() || m_openTasks.size();
+    m_hasWork = m_pendingTasks.size() || m_openTasks.size();
+
+    m_hasWorkCondition.notify_all();
+}
+
 void TaskScheduler::worker()
 {
     while (!m_isEnd)
@@ -492,53 +463,11 @@ void TaskScheduler::worker()
         lk.unlock();
 
         // get task to work on
-        Task task = getWork();
+        Task task = getTask();
 
         if (task.work)
         {
-            task.work();
-
-            std::lock_guard<std::mutex> lg(m_taskQueueMutex);
-
-            auto t = std::find(m_openTasks.begin(), m_openTasks.end(), task);
-            t->openWorkItems--;
-
-            // If task has no openWorkItems remaining
-            if (t != m_openTasks.end() && !t->openWorkItems)
-            {
-                // Remove task from open list
-                m_openTasks.erase(t);
-
-                // Decrement its parents openWorkItems count
-                auto pair = getParent(task);
-
-                if (pair.first != pair.second->end())
-                {
-                    pair.first->openWorkItems--;
-
-                    if (!pair.first->openWorkItems)
-                    {
-                        pair.second->erase(pair.first);
-                    }
-                }
-
-                // Find if a dependant task is in the pending tasks list
-                auto pending = std::find_if(m_pendingTasks.begin(), m_pendingTasks.end(), [task](const Task &p) {
-                    return p.dependencyID == task.taskID;
-                });
-
-                // Put the dependent task in the open queue
-                if (pending != m_pendingTasks.end())
-                {
-                    m_openTasks.push_back(*pending);
-                    m_pendingTasks.erase(pending);
-                }
-            }
-
-            m_hasOpenWork = m_pendingTasks.size() || m_openTasks.size();
-            m_hasWork = m_pendingTasks.size() || m_openTasks.size();
-
-            m_hasWorkCondition.notify_all();
+            doTask(task);
         }
     }
 }

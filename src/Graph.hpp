@@ -160,24 +160,24 @@ namespace razaron::graph
         while (!openList.empty())
         {
             // Pop a vertex from the openList
-            auto v = openList.begin();
+            auto v = *openList.begin();
             openList.pop_front();
 
             // If the vertex is already in the closed list, go to the next loop
-            if (std::find(closedList.begin(), closedList.end(), (*this)[v->id]) != closedList.end())
+            if (std::find(closedList.begin(), closedList.end(), (*this)[v.id]) != closedList.end())
                 continue;
             else
-                closedList.push_back((*this)[v->id]);
+                closedList.push_back((*this)[v.id]);
 
             // Run the vertices discovery function
-            if (vertexFuncs[(*this)[v->id].state])
-                vertexFuncs[(*this)[v->id].state]((*this)[v->id], *this);
+            if (vertexFuncs[(*this)[v.id].state])
+                vertexFuncs[(*this)[v.id].state]((*this)[v.id], *this);
 
-            if((*this)[v->id].state == State::WHITE)
-                (*this)[v->id].state = State::GREY;
+            if((*this)[v.id].state == State::WHITE)
+                (*this)[v.id].state = State::GREY;
 
             // Loop through adjacent edges
-            for (auto &e : (*this)[v->id].adjacencyList)
+            for (auto &e : (*this)[v.id].adjacencyList)
             {
                 // Run the edges discovery function
                 if (edgeFuncs[e.state])
