@@ -18,23 +18,29 @@ void EventStream::pushEvent(Event p_event, StreamType p_streamType)
     {
     case StreamType::INCOMING:
     {
+        std::lock_guard<std::mutex> lk{m_incomingEventsMutex};
+
         m_incomingEvents.push(p_event);
         break;
     }
     case StreamType::OUTGOING:
     {
+        std::lock_guard<std::mutex> lk{m_outgoingEventsMutex};
+
         m_outgoingEvents.push(p_event);
         break;
     }
     }
 }
 
-void EventStream::pushEvents(std::vector<Event> &p_events, StreamType p_streamType)
+void EventStream::pushEvents(const std::vector<Event> &p_events, StreamType p_streamType)
 {
     switch (p_streamType)
     {
     case StreamType::INCOMING:
     {
+        std::lock_guard<std::mutex> lk{m_incomingEventsMutex};
+
         for (auto e : p_events)
         {
             m_incomingEvents.push(e);
@@ -44,6 +50,8 @@ void EventStream::pushEvents(std::vector<Event> &p_events, StreamType p_streamTy
     }
     case StreamType::OUTGOING:
     {
+        std::lock_guard<std::mutex> lk{m_outgoingEventsMutex};
+
         for (auto e : p_events)
         {
             m_outgoingEvents.push(e);
@@ -60,6 +68,8 @@ Event EventStream::popEvent(StreamType p_streamType)
     {
     case StreamType::INCOMING:
     {
+        std::lock_guard<std::mutex> lk{m_incomingEventsMutex};
+
         if (m_incomingEvents.size() == 0)
             return Event{};
         else
@@ -72,6 +82,8 @@ Event EventStream::popEvent(StreamType p_streamType)
     }
     case StreamType::OUTGOING:
     {
+        std::lock_guard<std::mutex> lk{m_outgoingEventsMutex};
+
         if (m_outgoingEvents.size() == 0)
             return Event{};
         else
@@ -93,6 +105,8 @@ std::vector<Event> EventStream::popEvents(StreamType p_streamType)
     {
     case StreamType::INCOMING:
     {
+        std::lock_guard<std::mutex> lk{m_incomingEventsMutex};
+
         std::vector<Event> events = {};
 
         for (std::size_t i = 0, max = m_incomingEvents.size(); i < max; i++)
@@ -107,6 +121,8 @@ std::vector<Event> EventStream::popEvents(StreamType p_streamType)
     }
     case StreamType::OUTGOING:
     {
+        std::lock_guard<std::mutex> lk{m_outgoingEventsMutex};
+
         std::vector<Event> events = {};
 
         for (std::size_t i = 0, max = m_outgoingEvents.size(); i < max; i++)
@@ -126,12 +142,16 @@ std::vector<Event> EventStream::popEvents(StreamType p_streamType)
 
 void EventStream::registerHandler(EventType p_type, EventHandler p_handler)
 {
+    std::lock_guard<std::mutex> lk{m_eventHandlersMutex};
+
     m_eventHandlers[p_type] = p_handler;
 }
 
 void EventStream::processEvents()
 {
-	auto events = popEvents(StreamType::INCOMING);
+    std::lock_guard<std::mutex> lk{m_eventHandlersMutex};
+
+    auto events = popEvents(StreamType::INCOMING);
 
 	for(auto &e: events)
 	{
