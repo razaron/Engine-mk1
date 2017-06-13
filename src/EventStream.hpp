@@ -6,8 +6,7 @@
 #include <memory>
 #include <queue>
 #include <vector>
-
-#include "Misc.hpp"
+#include <mutex>
 
 /*! %Event streams are used to queue up events to be consumed at a later time. */
 namespace razaron::eventstream
@@ -60,19 +59,60 @@ namespace razaron::eventstream
         EventStream();  /*!< Default constructor. */
         ~EventStream(); /*!< Default destructor. */
 
-        void pushEvent(Event p_event, StreamType p_streamType);                 /*!< Pushes an Event onto this EventStream. */
-        void pushEvents(std::vector<Event> &p_events, StreamType p_streamType); /*!< Pushes a vector of Events onto this EventStream. */
-        Event popEvent(StreamType p_streamType);                                /*!< Pops an Event from this EventStream. */
-        std::vector<Event> popEvents(StreamType p_streamType);                  /*!< Pops a std::vector of Event%s from this EventStream. */
+        /*! Pushes an Event onto this EventStream.
+        *
+        *   @remark Thread-safe, blocking. Allows for 1 thread to access incoming Event%s and a 2nd thread to
+        *   access incoming events simultaneasly.
+        */
+        void pushEvent(Event p_event, StreamType p_streamType);
 
-        void registerHandler(EventType p_type, EventHandler p_handler); /*!< Register an EventHandler to the passed EventType. */
-        void processEvents();                                           /*!< Processes all incoming Event%s with their respective handlers. */
-        void propogateEvents(EventStream &p_dst);                       /*!< Moves all of this EventStream%s outgoing Event%s to another EventStream. */
+        /*! Pushes a vector of Events onto this EventStream.
+        *
+        *   @remark Thread-safe, blocking. Allows for 1 thread to access incoming Event%s and a 2nd thread to
+        *   access incoming events simultaneasly.
+        */
+        void pushEvents(const std::vector<Event> &p_events, StreamType p_streamType);
+
+        /*! Pops an Event from this EventStream.
+        *
+        *   @remark Thread-safe, blocking. Allows for 1 thread to access incoming Event%s and a 2nd thread to
+        *   access incoming events simultaneasly.
+        */
+        Event popEvent(StreamType p_streamType);
+
+        /*! Pops a std::vector of Event%s from this EventStream.
+        *
+        *   @remark Thread-safe, blocking. Allows for 1 thread to access incoming Event%s and a 2nd thread to
+        *   access incoming events simultaneasly.
+        */
+        std::vector<Event> popEvents(StreamType p_streamType);
+
+        /*!< Register an EventHandler to the passed EventType.
+        *
+        *   @remark Thread-safe, blocking. Allows for 1 thread to registed an EventHandler at a time.
+        */
+        void registerHandler(EventType p_type, EventHandler p_handler);
+
+        /*!< Processes all incoming Event%s with their respective handlers.
+        *
+        *   @remark Thread-safe, blocking. Allows for 1 thread to process events at a time.
+        */
+        void processEvents();
+
+        /*!< Moves all of this EventStream%s outgoing Event%s to another EventStream.
+        *
+        *   @remark Thread-safe, blocking. Internally makes use of EventStream::popEvents and
+        *   EventStream::pushEvents, so comes with the same caveats.
+        */
+        void propogateEvents(EventStream &p_dst);
 
       private:
         std::queue<Event> m_incomingEvents;
         std::queue<Event> m_outgoingEvents;
-
         std::map<EventType, EventHandler> m_eventHandlers;
+
+        std::mutex m_incomingEventsMutex;
+        std::mutex m_outgoingEventsMutex;
+        std::mutex m_eventHandlersMutex;
     };
 }

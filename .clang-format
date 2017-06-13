@@ -6,3 +6,4 @@ IndentCaseLabels: false
 ColumnLimit: 0
 NamespaceIndentation: All
 AccessModifierOffset: -2
+Cpp11BracedListStyle: false
