@@ -78,11 +78,13 @@ SCENARIO("EventStreams can propogate Events to eachother", "[eventstream]")
     }
 }
 
-SCENARIO("An EventStream can be used from multiple threads")
+SCENARIO("An EventStream can be used from multiple threads", "[eventstream][concurrent]")
 {
     GIVEN("A single EventStream, 1 producer thread and 1 consumer thread")
     {
         EventStream stream;
+        std::vector<Event> popped;
+
         std::thread producer;
         std::thread consumer;
 
@@ -100,8 +102,9 @@ SCENARIO("An EventStream can be used from multiple threads")
                     stream.pushEvents(events, StreamType::INCOMING);
                 } };
 
-                consumer = std::thread{ [&stream]() {
-                    stream.popEvents(StreamType::INCOMING);
+                consumer = std::thread{ [&stream, &popped]() {
+                    auto vec = stream.popEvents(StreamType::INCOMING);
+                    popped.insert(popped.end(), vec.begin(), vec.end());
                 } };
 
                 producer.join();
@@ -109,7 +112,7 @@ SCENARIO("An EventStream can be used from multiple threads")
 
                 auto result = stream.popEvents(StreamType::INCOMING);
 
-                REQUIRE(result.size() == 0);
+                REQUIRE(result.size()+popped.size() == 1000);
             }
 
             THEN("If the StreamType is OUTGOING")
@@ -118,8 +121,9 @@ SCENARIO("An EventStream can be used from multiple threads")
                     stream.pushEvents(events, StreamType::OUTGOING);
                 } };
 
-                consumer = std::thread{ [&stream]() {
-                    stream.popEvents(StreamType::OUTGOING);
+                consumer = std::thread{ [&stream, &popped]() {
+                    auto vec = stream.popEvents(StreamType::OUTGOING);
+                    popped.insert(popped.end(), vec.begin(), vec.end());
                 } };
 
                 producer.join();
@@ -127,7 +131,7 @@ SCENARIO("An EventStream can be used from multiple threads")
 
                 auto result = stream.popEvents(StreamType::OUTGOING);
 
-                REQUIRE(result.size() == 0);
+                REQUIRE(result.size()+popped.size() == 1000);
             }
         }
 
@@ -185,6 +189,7 @@ SCENARIO("An EventStream can be used from multiple threads")
     {
         EventStream stream;
         std::vector<Event> popped;
+        std::mutex poppedMutex;
 
         std::array<std::thread, 4> producer;
         std::array<std::thread, 4> consumer;
@@ -208,8 +213,10 @@ SCENARIO("An EventStream can be used from multiple threads")
 
                 for (unsigned i = 0; i < consumer.size(); i++)
                 {
-                    consumer[i] = std::thread{ [&stream, &popped]() {
+                    consumer[i] = std::thread{ [&stream, &popped, &poppedMutex]() {
                         auto vec = stream.popEvents(StreamType::INCOMING);
+
+                        std::lock_guard<std::mutex> lk{poppedMutex};
                         popped.insert(popped.end(), vec.begin(), vec.end());
                     } };
                 }
@@ -240,8 +247,10 @@ SCENARIO("An EventStream can be used from multiple threads")
 
                 for (unsigned i = 0; i < consumer.size(); i++)
                 {
-                    consumer[i] = std::thread{ [&stream, &popped]() {
+                    consumer[i] = std::thread{ [&stream, &popped, &poppedMutex]() {
                         auto vec = stream.popEvents(StreamType::OUTGOING);
+
+                        std::lock_guard<std::mutex> lk{poppedMutex};
                         popped.insert(popped.end(), vec.begin(), vec.end());
                     } };
                 }
@@ -281,8 +290,10 @@ SCENARIO("An EventStream can be used from multiple threads")
 
                 for (unsigned i = 0; i < consumer.size(); i++)
                 {
-                    consumer[i] = std::thread{ [&stream, &popped]() {
+                    consumer[i] = std::thread{ [&stream, &popped, &poppedMutex]() {
                         auto vec = stream.popEvents(StreamType::OUTGOING);
+
+                        std::lock_guard<std::mutex> lk{poppedMutex};
                         popped.insert(popped.end(), vec.begin(), vec.end());
                     } };
                 }
@@ -315,8 +326,10 @@ SCENARIO("An EventStream can be used from multiple threads")
 
                 for (unsigned i = 0; i < consumer.size(); i++)
                 {
-                    consumer[i] = std::thread{ [&stream, &popped]() {
+                    consumer[i] = std::thread{ [&stream, &popped, &poppedMutex]() {
                         auto vec = stream.popEvents(StreamType::INCOMING);
+
+                        std::lock_guard<std::mutex> lk{poppedMutex};
                         popped.insert(popped.end(), vec.begin(), vec.end());
                     } };
                 }
@@ -343,6 +356,9 @@ SCENARIO("An EventStream can be used from multiple threads")
                 std::vector<Event> poppedIn;
                 std::vector<Event> poppedOut;
 
+                std::mutex poppedInMutex;
+                std::mutex poppedOutMutex;
+
                 for (unsigned i = 0; i < producer.size(); i++)
                 {
                     if(i<2)
@@ -363,15 +379,19 @@ SCENARIO("An EventStream can be used from multiple threads")
                 {
                     if(i < 2)
                     {
-                        consumer[i] = std::thread{ [&stream, &poppedIn]() {
+                        consumer[i] = std::thread{ [&stream, &poppedIn, &poppedInMutex]() {
                             auto vec = stream.popEvents(StreamType::INCOMING);
+
+                            std::lock_guard<std::mutex> lk{poppedInMutex};
                             poppedIn.insert(poppedIn.end(), vec.begin(), vec.end());
                         } };
                     }
                     else
                     {
-                        consumer[i] = std::thread{ [&stream, &poppedOut]() {
+                        consumer[i] = std::thread{ [&stream, &poppedOut, &poppedOutMutex]() {
                             auto vec = stream.popEvents(StreamType::OUTGOING);
+
+                            std::lock_guard<std::mutex> lk{poppedOutMutex};
                             poppedOut.insert(poppedOut.end(), vec.begin(), vec.end());
                         } };
                     }

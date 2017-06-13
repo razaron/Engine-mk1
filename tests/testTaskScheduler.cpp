@@ -4,7 +4,7 @@
 
 using namespace razaron::taskscheduler;
 
-SCENARIO("TaskSchedulers can queue work in several ways", "[taskscheduler]")
+SCENARIO("TaskSchedulers can queue work in several ways", "[taskscheduler][concurrent]")
 {
     GIVEN("A TaskScheduler")
     {
@@ -232,7 +232,7 @@ SCENARIO("TaskSchedulers can queue work in several ways", "[taskscheduler]")
         				{ [i, &output, &outputMutex]() {
         					std::lock_guard<std::mutex> lk(outputMutex);
         					output.push_back(i);
-        				}, []() {} , []() {} , []() {} , []() {} , []() {} , []() {} , []() {} , []() {} , []() {} }
+        				}, []() {} , []() {} , []() {} , []() {} }
         			};
 
         			g[1].data = WorkGroup{
@@ -240,7 +240,7 @@ SCENARIO("TaskSchedulers can queue work in several ways", "[taskscheduler]")
         				{ [i, &output, &outputMutex]() {
         					std::lock_guard<std::mutex> lk(outputMutex);
         					output.push_back(i + 1);
-        				}, []() {}, []() {} , []() {} , []() {} , []() {} , []() {} , []() {} , []() {} , []() {} }
+        				}, []() {} , []() {} , []() {} , []() {} }
         			};
 
         			g[2].data = WorkGroup{
@@ -248,7 +248,7 @@ SCENARIO("TaskSchedulers can queue work in several ways", "[taskscheduler]")
         				{ [i, &output, &outputMutex]() {
         					std::lock_guard<std::mutex> lk(outputMutex);
         					output.push_back(i + 2);
-        				}, []() {} , []() {} , []() {} , []() {} , []() {} , []() {} , []() {} , []() {} , []() {} }
+        				}, []() {} , []() {} , []() {} , []() {} }
         			};
 
         			g[3].data = WorkGroup{
@@ -256,7 +256,7 @@ SCENARIO("TaskSchedulers can queue work in several ways", "[taskscheduler]")
         				{ [i, &output, &outputMutex]() {
         					std::lock_guard<std::mutex> lk(outputMutex);
         					output.push_back(i + 3);
-        				}, []() {} , []() {} , []() {} , []() {} , []() {} , []() {} , []() {} , []() {} , []() {} }
+        				}, []() {} , []() {} , []() {} , []() {} }
         			};
 
         			g[3].state = State::GREEN;

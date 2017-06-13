@@ -7,7 +7,7 @@
 #define OBJECT_POOL_PAGE_ALIGNMENT 64
 #endif
 
-#define OBJECT_SIZE_MIN sizeof(std::size_t) * 2
+#define OBJECT_SIZE_1 sizeof(std::size_t) * 2
 
 #define OBJECT_SIZE_2 sizeof(std::size_t) * 2
 #define OBJECT_SIZE_4 sizeof(std::size_t) * 4
@@ -21,6 +21,8 @@
 #include <sstream>
 #include <tuple>
 #include <typeinfo>
+#include <mutex>
+#include <memory>
 
 #include "Misc.hpp"
 
@@ -35,12 +37,12 @@ namespace razaron::objectpool
     using ArrayE = alignedArray<char, OBJECT_POOL_PAGE_LENGTH * OBJECT_SIZE_32, OBJECT_POOL_PAGE_ALIGNMENT>;
     using ArrayF = alignedArray<char, OBJECT_POOL_PAGE_LENGTH * OBJECT_SIZE_64, OBJECT_POOL_PAGE_ALIGNMENT>;
 
-    using PoolA = std::pair<Handle *, std::list<ArrayA *>>;
-    using PoolB = std::pair<Handle *, std::list<ArrayB *>>;
-    using PoolC = std::pair<Handle *, std::list<ArrayC *>>;
-    using PoolD = std::pair<Handle *, std::list<ArrayD *>>;
-    using PoolE = std::pair<Handle *, std::list<ArrayE *>>;
-    using PoolF = std::pair<Handle *, std::list<ArrayF *>>;
+    using PoolA = std::tuple<Handle *, std::list<ArrayA *>, std::shared_ptr<std::recursive_mutex>>;
+    using PoolB = std::tuple<Handle *, std::list<ArrayB *>, std::shared_ptr<std::recursive_mutex>>;
+    using PoolC = std::tuple<Handle *, std::list<ArrayC *>, std::shared_ptr<std::recursive_mutex>>;
+    using PoolD = std::tuple<Handle *, std::list<ArrayD *>, std::shared_ptr<std::recursive_mutex>>;
+    using PoolE = std::tuple<Handle *, std::list<ArrayE *>, std::shared_ptr<std::recursive_mutex>>;
+    using PoolF = std::tuple<Handle *, std::list<ArrayF *>, std::shared_ptr<std::recursive_mutex>>;
 
     using PoolTuple = std::tuple<PoolA, PoolB, PoolC, PoolD, PoolE, PoolF>;
 
@@ -108,7 +110,7 @@ namespace razaron::objectpool
 		*	@retval nullptr                    On failure, a nullptr.
 		*/
         template <class T>
-        T *getObject(Handle p_handle, bool p_isNaive = false);
+        T *get(Handle p_handle, bool p_isNaive = false);
         //TODO template<class T> T* getObjects(std::vector<Handle> p_handles);
 
         /*!	Removes an object from the ObjectPool and free's the space for use.
@@ -119,8 +121,8 @@ namespace razaron::objectpool
 		*	@param	p_handle	The handle of the object to remove from the ObjectPool.
 		*/
         template <class T>
-        void removeObject(Handle p_handle);
-        //TODO template<class T> void removeObject(Handle p_handle); // for calling the destructor ~T()
+        void erase(Handle p_handle);
+        //TODO template<class T> void erase(Handle p_handle); // for calling the destructor ~T()
         //TODO void squash(); // Defragments the pools.
         HandleIndex capacity(); // added p_size parameter. Checks how many p_size bytes long object can fit.
 
@@ -137,7 +139,7 @@ namespace razaron::objectpool
         void addPage();
 
         template <class Pool>
-        typename Pool::second_type::value_type getPage(HandleIndex p_index);
+        typename std::tuple_element<1, Pool>::type::value_type getPage(HandleIndex p_index);
 
         template <class T, class Pool>
         T *getObject(Handle p_handle, bool p_isNaive = false);
@@ -146,7 +148,7 @@ namespace razaron::objectpool
         typename std::enable_if<std::is_pointer<T>::value, HandleIndex>::type getIndex(T p_ptr);
 
         template <class T, class Pool>
-        void removeObject(Handle p_handle);
+        void erase(Handle p_handle);
     };
 
     /* *************************************************
@@ -155,21 +157,22 @@ namespace razaron::objectpool
 
     inline ObjectPool::ObjectPool()
     {
-        FOR_EACH_TUPLE({
-            element.first = nullptr;
+        m_pools = FOR_EACH_TUPLE({
+            std::get<0>(element) = nullptr;
+            std::get<2>(element) = std::make_shared<std::recursive_mutex>();
 
-            return 0;
+            return element;
         },
             m_pools);
     }
 
     inline ObjectPool::~ObjectPool()
     {
-        FOR_EACH_TUPLE({
-            for (auto arr : element.second)
+        m_pools = FOR_EACH_TUPLE({
+            for (auto arr : std::get<1>(element))
                 delete arr;
 
-            return 0;
+            return element;
         },
             m_pools);
     }
@@ -214,7 +217,7 @@ namespace razaron::objectpool
     }
 
     template <class T>
-    inline T *ObjectPool::getObject(Handle p_handle, bool p_isNaive)
+    inline T *ObjectPool::get(Handle p_handle, bool p_isNaive)
     {
         // Find the pool that fits T
         using Pool = typename PoolCond1<T>::type;
@@ -240,7 +243,7 @@ namespace razaron::objectpool
     }
 
     template <class T>
-    inline void ObjectPool::removeObject(Handle p_handle)
+    inline void ObjectPool::erase(Handle p_handle)
     {
         // Find the pool that fits T
         using Pool = typename PoolCond1<T>::type;
@@ -254,7 +257,7 @@ namespace razaron::objectpool
         }
         else if (sizeof(T) <= OBJECT_SIZE_64)
         {
-            return removeObject<T, Pool>(p_handle);
+            return erase<T, Pool>(p_handle);
         }
         else
         {
@@ -274,7 +277,7 @@ namespace razaron::objectpool
         auto pE = std::get<PoolE>(m_pools);
         auto pF = std::get<PoolF>(m_pools);
 
-        return pA.second.size() * sizeof(ArrayA) + pB.second.size() * sizeof(ArrayB) + pC.second.size() * sizeof(ArrayC) + pD.second.size() * sizeof(ArrayD) + pE.second.size() * sizeof(ArrayE) + pF.second.size() * sizeof(ArrayF);
+        return std::get<1>(pA).size() * sizeof(ArrayA) + std::get<1>(pB).size() * sizeof(ArrayB) + std::get<1>(pC).size() * sizeof(ArrayC) + std::get<1>(pD).size() * sizeof(ArrayD) + std::get<1>(pE).size() * sizeof(ArrayE) + std::get<1>(pF).size() * sizeof(ArrayF);
     }
 
     /* *************************************************
@@ -294,22 +297,24 @@ namespace razaron::objectpool
     {
         auto pool = &std::get<Pool>(m_pools);
 
+        std::lock_guard<std::recursive_mutex> lk{*std::get<2>(*pool)};
+
         // If the next free position pointer points to non-existant page, add a new page
-        int totalPositions = pool->second.size() * OBJECT_POOL_PAGE_LENGTH;
-        if (totalPositions == 0 || totalPositions <= pool->first->index)
+        int totalPositions = std::get<1>(*pool).size() * OBJECT_POOL_PAGE_LENGTH;
+        if (totalPositions == 0 || totalPositions <= std::get<0>(*pool)->index)
         {
             addPage<Pool>();
         }
 
         // Get pointers to the current and next free elements
-        Handle *curFree = pool->first;
+        Handle *curFree = std::get<0>(*pool);
         Handle *nextFree = getObject<Handle, Pool>(*curFree, true);
 
         // Copy object data to the location current free pointer
         std::memcpy(curFree, &p_object, sizeof(T));
 
         // Set the pools first free pointer to the next free pointer
-        pool->first = nextFree;
+        std::get<0>(*pool) = nextFree;
 
         // Configure a handle for the newly placed object
         Handle h{HandleSize{sizeof(T)}, HandleIndex{getIndex<Pool>(curFree)}, false};
@@ -320,34 +325,34 @@ namespace razaron::objectpool
     template <class Pool>
     inline void ObjectPool::addPage()
     {
-        typedef typename Pool::second_type::value_type PagePtr;
+        typedef typename std::tuple_element<1, Pool>::type::value_type PagePtr;
         typedef typename std::remove_pointer<PagePtr>::type Page;
 
         auto pool = &std::get<Pool>(m_pools);
 
         // Create and push a new page onto the pool
         auto page = new Page{};
-        pool->second.push_back(page);
+        std::get<1>(*pool).push_back(page);
 
         // Initialize the pages positions with free handles pointing to the next free handle
-        auto pageData = pool->second.back()->data();
+        auto pageData = std::get<1>(*pool).back()->data();
         for (auto i = 0; i < OBJECT_POOL_PAGE_LENGTH; i++)
         {
-            HandleIndex nextFree = static_cast<HandleIndex>(i + 1 + ((pool->second.size() - 1) * OBJECT_POOL_PAGE_LENGTH));
+            HandleIndex nextFree = static_cast<HandleIndex>(i + 1 + ((std::get<1>(*pool).size() - 1) * OBJECT_POOL_PAGE_LENGTH));
 
             Handle h = {static_cast<HandleSize>(page->size() / OBJECT_POOL_PAGE_LENGTH), nextFree, true};
             std::memcpy(&pageData[i * page->size() / OBJECT_POOL_PAGE_LENGTH], &h, sizeof(h));
         }
 
         // If it's the first page, set the first free position to the beginning of the page
-        if (pool->first == nullptr)
-            pool->first = reinterpret_cast<Handle *>(page->data());
+        if (std::get<0>(*pool) == nullptr)
+            std::get<0>(*pool) = reinterpret_cast<Handle *>(page->data());
     }
 
     template <class Pool>
-    inline typename Pool::second_type::value_type ObjectPool::getPage(HandleIndex p_index)
+    inline typename std::tuple_element<1, Pool>::type::value_type ObjectPool::getPage(HandleIndex p_index)
     {
-        typedef typename Pool::second_type::value_type PagePtr;
+        typedef typename std::tuple_element<1, Pool>::type::value_type PagePtr;
 
         auto pool = &std::get<Pool>(m_pools);
 
@@ -356,7 +361,7 @@ namespace razaron::objectpool
 
         // Finds a pointer to the correct page
         PagePtr page = nullptr;
-        for (auto &p : pool->second)
+        for (auto &p : std::get<1>(*pool))
         {
             if (!d.quot)
             {
@@ -372,9 +377,11 @@ namespace razaron::objectpool
     template <class T, class Pool>
     inline T *ObjectPool::getObject(Handle p_handle, bool p_isNaive)
     {
-        typedef typename Pool::second_type::value_type PagePtr;
+        typedef typename std::tuple_element<1, Pool>::type::value_type PagePtr;
 
         auto pool = &std::get<Pool>(m_pools);
+
+        std::lock_guard<std::recursive_mutex> lk{*std::get<2>(*pool)};
 
         // Find the page containg p_handle
         PagePtr page = getPage<Pool>(p_handle.index);
@@ -383,12 +390,12 @@ namespace razaron::objectpool
         std::div_t d = std::div(p_handle.index, OBJECT_POOL_PAGE_LENGTH);
 
         // Find and cast the element refering to objects first byte
-        auto objectPtr = reinterpret_cast<T *>(&page->data()[d.rem * pool->first->size]);
+        auto objectPtr = reinterpret_cast<T *>(&page->data()[d.rem * std::get<0>(*pool)->size]);
 
         // Loop through free pointers to see if objectPtr is one of them
-        if (!p_isNaive && pool->first->index <= p_handle.index)
+        if (!p_isNaive && std::get<0>(*pool)->index <= p_handle.index)
         {
-            Handle *freePtr = pool->first;
+            Handle *freePtr = std::get<0>(*pool);
             while (freePtr->index <= p_handle.index)
             {
                 freePtr = getObject<Handle, Pool>(
@@ -411,7 +418,7 @@ namespace razaron::objectpool
     template <class Pool, typename T>
     inline typename std::enable_if<std::is_pointer<T>::value, HandleIndex>::type ObjectPool::getIndex(T p_ptr)
     {
-        typedef typename Pool::second_type::value_type PagePtr;
+        typedef typename std::tuple_element<1, Pool>::type::value_type PagePtr;
         typedef typename std::remove_pointer<PagePtr>::type Page;
 
         auto pool = &std::get<Pool>(m_pools);
@@ -420,11 +427,14 @@ namespace razaron::objectpool
         std::size_t ptrAdr = reinterpret_cast<std::size_t>(p_ptr);
         std::size_t pageAdr = 0;
         std::size_t diff = 0;
+		int pageNumber = 0;
 
-        for (auto &p : pool->second)
+        for (auto &p : std::get<1>(*pool))
         {
             pageAdr = reinterpret_cast<std::size_t>(p->data());
             diff = ptrAdr - pageAdr;
+
+			++pageNumber;
 
             if (diff >= 0 && diff < sizeof(Page))
                 break;
@@ -436,15 +446,17 @@ namespace razaron::objectpool
             throw std::out_of_range("Pointer is not in any page.");
         }
 
-        // Calculate position of p_handle using pointer arithmatic
-        std::size_t position = ptrAdr - pageAdr;
+		// Calculate index relative to it's page
+		std::size_t position = ptrAdr - pageAdr;
+		position = position / std::get<0>(*pool)->size;
 
-        position = position / pool->first->size;
+		// Add add sum of preceding positions to get absolute index
+		position = position + (pageNumber - 1)*OBJECT_POOL_PAGE_LENGTH;
 
         // If position is in valid range, return. Else, throw.
         if (position <= std::numeric_limits<HandleIndex>::max())
         {
-            return position;
+            return static_cast<HandleIndex>(position);
         }
         else
         {
@@ -456,12 +468,14 @@ namespace razaron::objectpool
     }
 
     template <class T, class Pool>
-    inline void ObjectPool::removeObject(Handle p_handle)
+    inline void ObjectPool::erase(Handle p_handle)
     {
         auto pool = &std::get<Pool>(m_pools);
 
+        std::lock_guard<std::recursive_mutex> lk{*std::get<2>(*pool)};
+
         // Get index of first free position
-        auto posCurFree = getIndex<Pool>(pool->first);
+        auto posCurFree = getIndex<Pool>(std::get<0>(*pool));
 
         // Fail if first free position and object being removed are the same
         if (p_handle.index == posCurFree) return;
@@ -473,7 +487,7 @@ namespace razaron::objectpool
             reinterpret_cast<T*>(ptrToRemove)->~T();
 
         // Resets the data back to zero
-        std::memset(ptrToRemove, 0, pool->first->size);
+        std::memset(ptrToRemove, 0, std::get<0>(*pool)->size);
 
         // If the object being removed is located BEFORE the first free position
         if (p_handle.index < posCurFree)
@@ -481,17 +495,17 @@ namespace razaron::objectpool
 
             // Setup the object being removed to become the next firstFree pointer
             ptrToRemove->isFree = true;
-            ptrToRemove->size = pool->first->size;
+            ptrToRemove->size = std::get<0>(*pool)->size;
             ptrToRemove->index = posCurFree;
 
-            pool->first = ptrToRemove;
+            std::get<0>(*pool) = ptrToRemove;
 
             return;
         }
 
         // If the object being removed is located AFTER the first free position
         Handle *ptrPrevFree = nullptr;
-        Handle *ptrNextFree = pool->first;
+        Handle *ptrNextFree = std::get<0>(*pool);
 
         std::size_t posNextFree = getIndex<Pool>(ptrNextFree);
 
@@ -507,10 +521,11 @@ namespace razaron::objectpool
         // Currently, ptrToRemove is set to some value (e.g. "hello"), so I have to use p_handle
         ptrPrevFree->index = p_handle.index;
 
-        // Setup the object being removed to become the next firstFree pointer
+        // Setup the ptr being removed to be inbetween ptrPrevFree and ptrNextFree
         ptrToRemove->isFree = true;
-        ptrToRemove->size = ptrNextFree->size;
-        ptrToRemove->index = posNextFree;
+		ptrToRemove->size = std::get<0>(*pool)->size;
+        ptrToRemove->index = static_cast<HandleIndex>(posNextFree);
+
 
         return;
     }

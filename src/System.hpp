@@ -77,14 +77,14 @@ namespace razaron::core::system
 		*	@retval	nullptr	On failure, a nullptr.
 		*/
         template <class T>
-        T *getobject(Handle p_handle) { return m_pool.getObject<T>(p_handle); }
+        T *getobject(Handle p_handle) { return m_pool.get<T>(p_handle); }
 
         /*! Deletes the desired object from System managed memory.
 		*
 		*	@tparam	T	The type of the object to remove.
 		*/
         template <class T>
-        void removeObject(Handle p_handle) { m_pool.removeObject<T>(p_handle); };
+        void removeObject(Handle p_handle) { m_pool.erase<T>(p_handle); };
 
         /*! Register an EventHandler to the passed EventType. */
         void registerHandler(EventType p_type, EventHandler p_handler);
@@ -151,39 +151,4 @@ namespace razaron::core::system
         EventStream m_eventStream;       /*!< The EventStream belonging to this System. */
         std::set<ComponentType> m_componentTypes; /*!< The set of ComponentType%s supported by this System. */
     };
-
-    inline System::~System()
-    {
-    }
-
-    inline void System::registerHandler(razaron::eventstream::EventType p_type, EventHandler p_handler)
-    {
-        m_eventStream.registerHandler(p_type, p_handler);
-    }
-
-    inline void System::processEvents()
-    {
-        m_eventStream.processEvents();
-    }
-
-    inline void System::propogateEvents(System &dst)
-    {
-        m_eventStream.propogateEvents(dst.m_eventStream);
-    }
-
-    inline void System::pushEvent(Event p_event)
-    {
-        m_eventStream.pushEvent(p_event, StreamType::OUTGOING);
-    }
-
-    inline void System::pushEvents(std::vector<Event> &p_events)
-    {
-        m_eventStream.pushEvents(p_events, StreamType::INCOMING);
-        m_eventStream.pushEvents(p_events, StreamType::OUTGOING);
-    }
-
-    inline std::vector<Event> System::popEvents()
-    {
-        return m_eventStream.popEvents(StreamType::INCOMING);
-    }
 }

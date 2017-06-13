@@ -34,7 +34,7 @@ using expand_type = int[];
 #define VARIADIC_EXPANDER(PATTERN) 				\
     expand_type { 0, ((PATTERN), void(), 0)... }
 
-// EXPRESSION is a brace enclosed function body
+// Returns a tuple of results. EXPRESSION is a brace enclosed function body
 #define FOR_EACH_TUPLE(EXPRESSION, TUPLE) \
     std::apply([](auto... x) {            \
         return std::make_tuple(           \
@@ -58,8 +58,8 @@ using HandleIndex = unsigned short; /*!< Represents the indexed location of Hand
 /*! Handles are used to abstract data access away from pointers. */
 struct Handle
 {
-	HandleSize size; /*!< The size of the Handle%d object. */
-	HandleIndex index;/*!< The indexed location of the Handle%d object. */
+	HandleSize size{}; /*!< The size of the Handle%d object. */
+	HandleIndex index{};/*!< The indexed location of the Handle%d object. */
 	bool isFree{true};/*!< Whether the index denotes a free or occupied location. */
 
     /*! Basic equality comparator. */
