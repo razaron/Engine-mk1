@@ -65,12 +65,13 @@ namespace razaron::core::entity
 
 		/*!	Gets the Handle mapped to the passed ComponentType.
 		*
-		*	@param	p_type	The ComponentType to search for.
+		*	@param		p_type					The ComponentType to search for.
 		*
-		*	@retval	Handle	On success, the matching ComponentHandle.
-		*	@retval	Handle	On failure, an empty Handle object.
+        *   @exception  std::invalid_argument   Throws if the ComponentType maps to no Handle.
+        *
+		*	@returns	A reference to the mapped Handle.
 		*/
-		Handle operator[](ComponentType p_type)
+		Handle &operator[](ComponentType p_type)
 		{
 			if(m_components.find(p_type) != m_components.end())
 				return m_components[p_type];

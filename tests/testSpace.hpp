@@ -25,7 +25,7 @@ class SystemA : public System
 
     ~SystemA() {}
 
-    TaskGraph &update(EntityMap &p_entities, double delta)
+    Task update(EntityMap &p_entities, double delta)
     {
         UNUSED(p_entities);
         UNUSED(delta);
@@ -40,7 +40,7 @@ class SystemA : public System
             });
         }
 
-        return m_taskGraph;
+        return Task{};
     }
 
     ComponentHandle createComponent(ComponentType p_type)
@@ -89,12 +89,12 @@ class SystemC : public System
     SystemC() {}
     ~SystemC() {}
 
-    TaskGraph &update(EntityMap &p_entities, double delta)
+    Task update(EntityMap &p_entities, double delta)
     {
         UNUSED(p_entities);
         UNUSED(delta);
         count++;
-        return m_taskGraph;
+        return Task{};
     }
 
     ComponentHandle createComponent(ComponentType p_type)
@@ -123,13 +123,13 @@ class SystemD : public System
     }
     ~SystemD() {}
 
-    TaskGraph &update(EntityMap &p_entities, double delta)
+    Task update(EntityMap &p_entities, double delta)
     {
         UNUSED(p_entities);
         UNUSED(delta);
         count++;
 
-        return m_taskGraph;
+        return Task{};
     }
 
     ComponentHandle createComponent(ComponentType p_type)
@@ -178,12 +178,12 @@ class SystemB : public System
     SystemB() {}
     ~SystemB() {}
 
-    TaskGraph &update(EntityMap &p_entities, double delta)
+    Task update(EntityMap &p_entities, double delta)
     {
         UNUSED(p_entities);
         UNUSED(delta);
         count++;
-        return m_taskGraph;
+        return Task{};
     }
 
     ComponentHandle createComponent(ComponentType p_type)
@@ -209,12 +209,12 @@ class SystemE : public System
     SystemE() {}
     ~SystemE() {}
 
-    TaskGraph &update(EntityMap &p_entities, double delta)
+    Task update(EntityMap &p_entities, double delta)
     {
         UNUSED(p_entities);
         UNUSED(delta);
         count++;
-        return m_taskGraph;
+        return Task{};
     }
 
     ComponentHandle createComponent(ComponentType p_type)
@@ -240,12 +240,12 @@ class SystemF : public System
     SystemF() {}
     ~SystemF() {}
 
-    TaskGraph &update(EntityMap &p_entities, double delta)
+    Task update(EntityMap &p_entities, double delta)
     {
         UNUSED(p_entities);
         UNUSED(delta);
         count++;
-        return m_taskGraph;
+        return Task{};
     }
 
     ComponentHandle createComponent(ComponentType p_type)

@@ -1,8 +1,5 @@
 #define CATCH_CONFIG_RUNNER
 
-#include <array>
-#include <vector>
-
 #include <catch.hpp>
 
 int main(int argc, char* argv[])

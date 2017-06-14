@@ -69,3 +69,4 @@ docs/doxylocal
 *.a
 *.odg
 *.exe
+*.gch

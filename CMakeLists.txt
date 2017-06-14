@@ -1,23 +1,24 @@
 cmake_minimum_required (VERSION 2.6)
 project (engine-mk1)
 
-SET(MY_COMPILE_FLAGS "fail" CACHE STRING "Build option. 32 or 64")
-SET(MY_LINKER_FLAGS "fail" CACHE STRING "Build option. 32 or 64")
-SET(MY_INCLUDES "fail" CACHE STRING "Build option. 32 or 64")
+SET(MY_COMPILE_FLAGS "NULL" CACHE STRING "Build option. 32 or 64")
+SET(MY_LINKER_FLAGS "NULL" CACHE STRING "Build option. 32 or 64")
+SET(MY_INCLUDES "NULL" CACHE STRING "Build option. 32 or 64")
 
-SET(TEST_NAME "fail" CACHE STRING "Build option. 32 or 64")
-SET(TEST_SOURCES "fail" CACHE STRING "Build option. 32 or 64")
+SET(TEST_NAME "NULL" CACHE STRING "Build option. 32 or 64")
+SET(TEST_SOURCES "NULL" CACHE STRING "Build option. 32 or 64")
 
 # Setup includes
 include_directories (${MY_INCLUDES} ${PROJECT_SOURCE_DIR}/src)
+
+# For -lpthread
+find_package (Threads)
+
+# Create engine-mk1-lib
 add_subdirectory (src)
 
 # connect all libs
-set (EXTRA_LIBS ${EXTRA_LIBS} engine-mk1)
+set (REQUIRED_LIBS ${REQUIRED_LIBS} engine-mk1 ${CMAKE_THREAD_LIBS_INIT})
 
-# connect all sources for the test suite
-set (TEST_SOURCES tests/main.cpp ${TEST_SOURCES})
-
-add_executable (${TEST_NAME} ${TEST_SOURCES})
-set_target_properties(${TEST_NAME} PROPERTIES COMPILE_FLAGS ${MY_COMPILE_FLAGS} LINK_FLAGS ${MY_LINKER_FLAGS})
-target_link_libraries (${TEST_NAME} ${EXTRA_LIBS})
+# Create the test exe
+add_subdirectory (tests)

@@ -2,7 +2,7 @@
 
 using namespace razaron::core::component;
 
-AtomicCounter<unsigned> razaron::core::component::g_nextID;
+std::atomic<unsigned> razaron::core::component::g_nextID;
 
 Component::Component()
 	:m_id(g_nextID++)

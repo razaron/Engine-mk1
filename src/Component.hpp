@@ -3,6 +3,7 @@
 #include <map>
 #include <limits>
 #include <iostream>
+#include <atomic>
 
 #include "Misc.hpp"
 
@@ -13,7 +14,7 @@ namespace razaron::core::component
 	enum class ComponentType { DEFAULT, FOO, BAR, RENDER, MESH, TRANSFORM, LOCOMOTION, COLLIDER, CONTROLLER, STEERING, ENUM_SIZE };
 
 	/*! A unique unsigned int representing the next available unique ID. */
-	extern AtomicCounter<unsigned> g_nextID;
+	extern std::atomic<unsigned> g_nextID;
 
 	/*! Combines the size and position info of a Handle with the type information of a ComponentType. */
 	using ComponentHandle = std::pair<ComponentType, Handle>;

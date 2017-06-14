@@ -4,8 +4,8 @@
 #include <functional>
 #include <iostream>
 #include <list>
-#include <vector>
 #include <map>
+#include <vector>
 
 /*! Contains classes, enums and structs related to graphs and graph traversal. */
 namespace razaron::graph
@@ -35,13 +35,19 @@ namespace razaron::graph
     struct Vertex
     {
         V data;                           /*!< The data held by this Vertex. */
-        Vertex<V,E> *parent;
         std::list<Edge<E>> adjacencyList; /*!< An std::list of connected Edge%s. */
         unsigned short id;                /*!< An ID that doubles as an index value. */
-        State state;;                       /*!< The current state of the Vertex, represented by a bitfield. */
+        State state;
+        ; /*!< The current state of the Vertex, represented by a bitfield. */
 
-        /*! Constructs an empty Vertex with the ID <tt>p_index</tt>. */
-        Vertex(unsigned short p_index) : data(V{}), parent(nullptr), id(p_index), state(State::WHITE) {}
+        /*! Constructs an empty Vertex with the ID `p_index`. */
+        Vertex(unsigned short p_index) : data(V{}), id(p_index), state(State::WHITE) {}
+
+        /*! Basic equality comparator. */
+        bool operator==(const Vertex<V,E> &rhs) const
+        {
+            return id == rhs.id;
+        }
     };
 
     /*!	A template struct for representing Edge objects.
@@ -54,7 +60,7 @@ namespace razaron::graph
         E data;                /*!< The data held by this Edge. */
         unsigned short source; /*!< The ID of the source Vertex. */
         unsigned short target; /*!< The ID of the target Vertex. */
-        State state;            /*!< The current state of the Edge, represented by a bitfield. */
+        State state;           /*!< The current state of the Edge, represented by a bitfield. */
     };
 
     /*!	A template class for representing Graph objects.
@@ -70,17 +76,16 @@ namespace razaron::graph
         using EdgeFunc = std::function<void(Edge<E> &, Graph<V, E, G> &)>;
 
       public:
-        Graph();                     /*!< Default constructor. */
-        ~Graph(){}                  /*!< Default destructor. */
+        Graph();    /*!< Default constructor. */
+        ~Graph() {} /*!< Default destructor. */
 
         /*!	Performs a breadth first traversal of the Graph.
 		*
-		*	Starting at the Vertex with the ID <tt>p_origin</tt>, traverses the Graph in breadth first order.
-		*	Runs onVertexDiscoverFunc for every Vertex with the state <tt>State::WHITE</tt> and
-		*	onEdgeDiscoverFunc for every Edge with the state <tt>State::WHITE</tt>.
+		*	Starting at the Vertex with the ID `p_origin`, traverses the Graph in breadth first order.
+		*	Runs the defined discovery function for every Vertex and Edge.
 		*
-		*	By default Sets the state of every touched Vertex and Edge to <tt>State::GREY</tt> unless specified otherwise
-		*	in onVertexDiscoverFunc or onEdgeDiscoverFunc.
+		*	By default, sets the state of every touched Vertex and Edge with `State::WHITE` to `State::GREY`
+        *   unless specified otherwise in their discovery functions.
 		*
 		*	@param	p_origin	The ID of the Vertex to start the traversal from.
 		*/
@@ -88,7 +93,8 @@ namespace razaron::graph
 
         /*!	Constructs and adds a new Edge to the Graph.
 		*
-		*	If no Vertex objects exist with the IDs <tt>p_source</tt> or <tt>p_target</tt>, constructs and adds new Vertex objects for the missing IDs to the Graph.
+		*	If no Vertex objects exist with the IDs `p_source` or `p_target`, constructs and adds new Vertex
+        *   objects for the missing IDs to the Graph.
 		*
 		*	@param	p_data		The data held by the edge.
 		*	@param	p_source	The ID of the source Vertex.
@@ -96,13 +102,13 @@ namespace razaron::graph
 		*/
         void addEdge(unsigned short source, unsigned short target, E data = E{});
 
-        /*! Resets the state of all Edge and Vertex objects belonging to the Graph to State::WHITE. */
+        /*! Resets the state of all Edge and Vertex objects belonging to the Graph to `State::WHITE`. */
         void reset();
 
         /*! Returns the number of Vertex objects. */
         std::size_t size() { return m_vertices.size(); }
 
-        /*!	Searched the graph for the Vertex with id == p_index.
+        /*!	Get's a reference to the Vertex with `id == p_index`.
 		*
 		*	@exception	std::out_of_range	p_index out of range for m_vertices.
 		*
@@ -110,14 +116,12 @@ namespace razaron::graph
 		*/
         Vertex<V, E> &operator[](unsigned short p_index);
 
-        G data{};                                                                             /*!< The data held by this Graph */
+        G data{};                                /*!< The data held by this Graph */
         std::map<State, VertexFunc> vertexFuncs; /*!< The function to run on Vertex discovery. */
-        std::map<State, EdgeFunc> edgeFuncs;       /*<! The function to run on Edge discovery */
+        std::map<State, EdgeFunc> edgeFuncs;     /*<! The function to run on Edge discovery */
 
       private:
         std::vector<Vertex<V, E>> m_vertices;
-        std::list<Vertex<V, E> *> m_openQueue;
-        std::list<Vertex<V, E> *> m_orderedQueue;
     };
 
     // Default constructor
@@ -129,80 +133,63 @@ namespace razaron::graph
             {State::GREY, nullptr},
             {State::BLACK, nullptr},
             {State::RED, nullptr},
-            {State::GREEN, nullptr}
-        };
+            {State::GREEN, nullptr}};
 
         edgeFuncs = {
             {State::WHITE, nullptr},
             {State::GREY, nullptr},
             {State::BLACK, nullptr},
             {State::RED, nullptr},
-            {State::GREEN, nullptr}
-        };
+            {State::GREEN, nullptr}};
     }
 
     template <class V, class E, class G>
     inline void Graph<V, E, G>::breadthFirstTraversal(unsigned short p_origin)
     {
+        // Return if p_origin has no adjacent vertices
         if (!(*this)[p_origin].adjacencyList.size())
             return;
 
+        std::list<Vertex<V, E>> openList;
+        std::list<Vertex<V, E>> closedList;
+
         //add this vertex to openQueue
-        m_openQueue.push_back(&(*this)[p_origin]);
-
-        //add adjacent vertices to openQueue
-        for (auto &e : (*this)[p_origin].adjacencyList)
-        {
-            if (e.state == State::WHITE)
-            {
-                e.state = State::GREY;
-
-                if(edgeFuncs[State::WHITE])
-                    edgeFuncs[State::WHITE](e, *this);
-
-                m_openQueue.push_back(&(*this)[e.target]);
-            }
-        }
-
-        auto curOpenQueue = m_openQueue;
-        m_openQueue.clear();
+        openList.push_back((*this)[p_origin]);
 
         //Process open queue
-        while (!curOpenQueue.empty())
+        while (!openList.empty())
         {
-            curOpenQueue.erase(
-                std::remove_if(curOpenQueue.begin(), curOpenQueue.end(), [&](Vertex<V, E> *v) {
-                    //Process newly discovered vertex
-                    if (v->state == State::WHITE)
-                    {
-                        //sets vertex to touched (State::GREY)
-                        v->state = State::GREY;
+            // Pop a vertex from the openList
+            auto v = *openList.begin();
+            openList.pop_front();
 
-                        if (vertexFuncs[State::WHITE])
-                            vertexFuncs[State::WHITE]((*this)[v->id], *this);
+            // If the vertex is already in the closed list, go to the next loop
+            if (std::find(closedList.begin(), closedList.end(), (*this)[v.id]) != closedList.end())
+                continue;
+            else
+                closedList.push_back((*this)[v.id]);
 
-                        //add adjacent vertices to openQueue
-                        for (auto &e : (*this)[v->id].adjacencyList)
-                        {
-                            if (e.state == State::WHITE)
-                            {
-                                e.state = State::GREY;
+            // Run the vertices discovery function
+            if (vertexFuncs[(*this)[v.id].state])
+                vertexFuncs[(*this)[v.id].state]((*this)[v.id], *this);
 
-                                if(edgeFuncs[State::WHITE])
-                                    edgeFuncs[State::WHITE](e, *this);
+            if((*this)[v.id].state == State::WHITE)
+                (*this)[v.id].state = State::GREY;
 
-                                m_openQueue.push_back(&(*this)[e.target]);
-                            }
-                        }
-                    }
+            // Loop through adjacent edges
+            for (auto &e : (*this)[v.id].adjacencyList)
+            {
+                // Run the edges discovery function
+                if (edgeFuncs[e.state])
+                    edgeFuncs[e.state](e, *this);
 
-                    return v->state != State::WHITE;
-                }));
+                if(e.state == State::WHITE)
+                    e.state = State::GREY;
 
-            std::clog << "curOpenQueue.size() = " << curOpenQueue.size() << std::endl;
+                openList.push_back((*this)[e.target]);
+            }
 
-            curOpenQueue = m_openQueue;
-            m_openQueue.clear();
+            std::clog << "openList.size() = " << openList.size() << std::endl;
         }
     }
 
@@ -237,7 +224,6 @@ namespace razaron::graph
         }
 
         (*this)[source].adjacencyList.push_back({data, source, target, State::WHITE});
-        (*this)[target].parent = &(*this)[source];
     }
 
     template <class V, class E, class G>
@@ -258,16 +244,14 @@ namespace razaron::graph
             {State::GREY, nullptr},
             {State::BLACK, nullptr},
             {State::RED, nullptr},
-            {State::GREEN, nullptr}
-        };
+            {State::GREEN, nullptr}};
 
         edgeFuncs = {
             {State::WHITE, nullptr},
             {State::GREY, nullptr},
             {State::BLACK, nullptr},
             {State::RED, nullptr},
-            {State::GREEN, nullptr}
-        };
+            {State::GREEN, nullptr}};
     }
 
     template <class V, class E, class G>

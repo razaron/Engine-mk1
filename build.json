@@ -13,34 +13,39 @@
             "-Wextra"
         ],
         "cmake_opts": {
-            "CMAKE_BUILD_TYPE": "Debug"
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_FLAGS": "-fsanitize=thread"
         },
         "testSrc": [{
-                "fullpath": "tests/testComponent.cpp",
+                "fullpath": "testComponent.cpp",
                 "description": "lol description"
             },
             {
-                "fullpath": "tests/testObjectPool.cpp",
+                "fullpath": "testObjectPool.cpp",
                 "description": "lol description"
             },
             {
-                "fullpath": "tests/testGraph.cpp",
+                "fullpath": "testGraph.cpp",
                 "description": "lol description"
             },
             {
-                "fullpath": "tests/testEventStream.cpp",
+                "fullpath": "testEventStream.cpp",
                 "description": "lol description"
             },
             {
-                "fullpath": "tests/testEntity.cpp",
+                "fullpath": "testEntity.cpp",
                 "description": "lol description"
             },
             {
-                "fullpath": "tests/testSystem.cpp",
+                "fullpath": "testSystem.cpp",
                 "description": "lol description"
             },
             {
-                "fullpath": "tests/testSpace.cpp",
+                "fullpath": "testSpace.cpp",
+                "description": "lol description"
+            },
+            {
+                "fullpath": "testTaskScheduler.cpp",
                 "description": "lol description"
             }
         ]
