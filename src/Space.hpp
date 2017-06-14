@@ -32,25 +32,46 @@ namespace razaron::core::space
         Space(SystemGraph &p_systemGraph); /*!< Constructs a Space from the passed SystemGraph. */
         ~Space();                          /*!< Default destructor. */
 
-        /*! Updates the related System%s with respect to <tt>delta</tt>.
+        /*! Updates the related System%s with respect to `delta`.
 		*
-		*	If <tt>delta</tt> is greater than the greatest interval of the System objects in the
+		*	If `delta` is greater than the greatest interval of the System objects in the
 		*	SystemGraph then the systems are updated with the value of the greatest interval, decreasing
-		*	the value of <tt>delta</tt> eachtime until <tt>delta</tt> is smaller than the greatest inteval.
+		*	the value of `delta` eachtime until `delta` is smaller than the greatest inteval.
 		*/
         void update(double delta);
 
         //TODO System* addSystem(System* p_system, System* p_root); /*!< Adds a System to the Space. */
 
-        Entity &createEntity(); /*! Constructs an a new empty Entity. */
+        /*!	Creates a new empty Entity.
+		*
+		*	@returns    A reference to the created Entity.
+		*/
+        Entity &createEntity();
+
+        /*!	Copies an object of type T into the ObjectPool.
+		*
+		*	@returns    The number of Component%s remaining in the Entity.
+		*/
         std::size_t removeEntity(unsigned int p_id); /*!< Deletes an Entity from the Space. */
+
         //TODO Entity* moveEntity(); /*!< Moves an Entity into another Space. */
         //TODO std::vector<Entity>* getEntities() { return &m_entities; } /*!<  */
 
+        /*! Calls `registerHandler` on the member EventStream with the given arguments. */
         void registerHandler(EventType p_type, EventHandler p_handler);
+
+        /*! Calls `pushEvents` on the member EventStream with the given arguments. */
         void pushEvents(std::vector<Event> &p_events, StreamType p_streamType);
 
-        Entity &operator[](unsigned short p_id);
+        /*!	Gets the Entity mapped to the passed ID.
+		*
+		*	@param      p_id                    The ID of the Entity to search for.
+		*
+        *   @exception  std::invalid_argument   Throws if the ID maps to no Entity.
+        *
+		*	@returns    A reference to the mapped Entity.
+		*/
+		Entity &operator[](unsigned short p_id);
 
       private:
 		void updateSystems(double delta);

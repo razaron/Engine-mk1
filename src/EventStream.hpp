@@ -62,28 +62,28 @@ namespace razaron::eventstream
         /*! Pushes an Event onto this EventStream.
         *
         *   @remark Thread-safe, blocking. Allows for 1 thread to access incoming Event%s and a 2nd thread to
-        *   access incoming events simultaneasly.
+        *   access outgoing events simultaneasly.
         */
         void pushEvent(Event p_event, StreamType p_streamType);
 
         /*! Pushes a vector of Events onto this EventStream.
         *
         *   @remark Thread-safe, blocking. Allows for 1 thread to access incoming Event%s and a 2nd thread to
-        *   access incoming events simultaneasly.
+        *   access outgoing events simultaneasly.
         */
         void pushEvents(const std::vector<Event> &p_events, StreamType p_streamType);
 
         /*! Pops an Event from this EventStream.
         *
         *   @remark Thread-safe, blocking. Allows for 1 thread to access incoming Event%s and a 2nd thread to
-        *   access incoming events simultaneasly.
+        *   access outgoing events simultaneasly.
         */
         Event popEvent(StreamType p_streamType);
 
         /*! Pops a std::vector of Event%s from this EventStream.
         *
         *   @remark Thread-safe, blocking. Allows for 1 thread to access incoming Event%s and a 2nd thread to
-        *   access incoming events simultaneasly.
+        *   access outgoing events simultaneasly.
         */
         std::vector<Event> popEvents(StreamType p_streamType);
 

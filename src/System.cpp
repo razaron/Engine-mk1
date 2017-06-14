@@ -2,6 +2,41 @@
 
 using namespace razaron::core::system;
 
+
+System::System(){
+    registerHandler(EventType::CREATE_COMPONENT, [system = this](Event & e) {
+        auto data = std::static_pointer_cast<eventdata::CREATE_COMPONENT>(e.data);
+
+        // If ComponentType is valid, do something
+        if (system->m_componentTypes.count(data->type))
+        {
+            auto ch = system->createComponent(data->type);
+
+            system->pushEvent(Event{
+                e.recipient,
+                EventType::CREATE_COMPONENT,
+                std::make_shared<eventdata::CREATE_COMPONENT>(ch, true)
+            });
+        }
+    });
+
+    registerHandler(EventType::REMOVE_COMPONENT, [system = this](Event & e) {
+        auto data = std::static_pointer_cast<eventdata::REMOVE_COMPONENT>(e.data);
+
+        // If ComponentType is valid, do something
+        if (system->m_componentTypes.count(data->ch.first))
+        {
+            bool result = system->removeComponent(data->ch);
+
+            system->pushEvent(Event{
+                e.recipient,
+                EventType::REMOVE_COMPONENT,
+                std::make_shared<eventdata::REMOVE_COMPONENT>(data->ch, result)
+            });
+        }
+    });
+}
+
 System::~System()
 {
 }

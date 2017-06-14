@@ -130,7 +130,7 @@ SCENARIO("Spaces can add/remove enitities, generating relavant components in the
             // Adds a created Component to the correct entity
             s.registerHandler(EventType::CREATE_COMPONENT, [ space = &s, &count ](Event & e) {
                 auto data = std::static_pointer_cast<eventdata::CREATE_COMPONENT>(e.data);
-                
+
                 if (data->isCreated)
                 {
                     count--;
@@ -163,7 +163,7 @@ SCENARIO("Spaces can add/remove enitities, generating relavant components in the
 
                 auto ptr2 = std::make_shared<eventdata::REMOVE_COMPONENT>(ComponentHandle{
                     ComponentType::BAR,
-                    s[entityID][ComponentType::FOO]}
+                    s[entityID][ComponentType::BAR]}
                 );
                 events.push_back(Event{
                     entityID,

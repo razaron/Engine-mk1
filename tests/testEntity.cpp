@@ -47,7 +47,7 @@ SCENARIO("Entities can be constructed from a ComponentMap, then be added/removed
                 {
                     result = true;
                 }
-                
+
                 REQUIRE(result == true);
             }
         }

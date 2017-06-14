@@ -70,9 +70,18 @@ namespace razaron::taskscheduler
         */
         Task push(WorkFunc p_work, Task p_dependency = Task{});
 
+        /*! Pushes a group Task to be scheduled.
+        *   The first WorkFunc in the WorkGroup becomes the parent Task, with the remaining WorkFunc%s becoming
+        *   child Task%s of the parent Task.
+        *
+        *   @param  p_group         The WorkGroup to be create Task%s from.
+        *   @param  p_dependency    <\em optional> The Task that must finish before this one can run.
+        *
+        *   @return A copy of the parent Task.
+        */
         Task push(WorkGroup p_group, Task p_dependency = Task{});
 
-        /*! Creates a series of Task%s from a WorkGraph.
+        /*! Creates and pushes a series of interdependent Task%s from a WorkGraph.
         *
         *   @param  p_workGraph     The Graph of WorkFunc%s to convert into Task%s.
         *   @param  p_dependency    <\em optional> The Task that must finish before this one can run.

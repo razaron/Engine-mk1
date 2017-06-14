@@ -210,6 +210,8 @@ SCENARIO("ObjectPools can retrieve objects from Handles", "[objectpool]")
 
         THEN("the handles can be converted to objects")
         {
+            bool result = true;
+
             for (HandleIndex i = 0; i < 100; i++)
             {
 
@@ -220,19 +222,34 @@ SCENARIO("ObjectPools can retrieve objects from Handles", "[objectpool]")
                 auto p32 = *p.get<std::array<int, OBJECT_SIZE_32 / sizeof(int)>>({ OBJECT_SIZE_32, i, false });
                 auto p64 = *p.get<std::array<int, OBJECT_SIZE_64 / sizeof(int)>>({ OBJECT_SIZE_64, i, false });
 
-                REQUIRE(p2[0] == 2);
-                REQUIRE(p2[1] == 0);
-                REQUIRE(p4[0] == 4);
-                REQUIRE(p4[1] == 0);
-                REQUIRE(p8[0] == 8);
-                REQUIRE(p8[1] == 0);
-                REQUIRE(p16[0] == 16);
-                REQUIRE(p16[1] == 0);
-                REQUIRE(p32[0] == 32);
-                REQUIRE(p32[1] == 0);
-                REQUIRE(p64[0] == 64);
-                REQUIRE(p64[1] == 0);
+
+                if(p2[0] != 2)
+                    result = false;
+                if(p2[1] != 0)
+                    result = false;
+                if(p4[0] != 4)
+                    result = false;
+                if(p4[1] != 0)
+                    result = false;
+                if(p8[0] != 8)
+                    result = false;
+                if(p8[1] != 0)
+                    result = false;
+                if(p16[0] != 16)
+                    result = false;
+                if(p16[1] != 0)
+                    result = false;
+                if(p32[0] != 32)
+                    result = false;
+                if(p32[1] != 0)
+                    result = false;
+                if(p64[0] != 64)
+                    result = false;
+                if(p64[1] != 0)
+                    result = false;
             }
+
+            REQUIRE(result == true);
         }
     }
 }
@@ -302,6 +319,107 @@ SCENARIO("You removes objects from anywhere in the ObjectPool", "[objectpool]")
     }
 }
 
+
+SCENARIO("ObjectPools can reorder objects to earlier free positions, then remove unnecessary pages")
+{
+    GIVEN("An object pool  with 2 empty pages followed by 2 full pages and 1 (reserved) empty page")
+    {
+        ObjectPool p;
+
+        // Creates 4 pages in every sub-pool
+        for (auto i = 0; i < OBJECT_POOL_PAGE_LENGTH*4; i++)
+        {
+            p.emplace<std::array<int, OBJECT_SIZE_2 / sizeof(int)>>(std::array<int, OBJECT_SIZE_2 / sizeof(int)>{ 2 });
+            p.emplace<std::array<int, OBJECT_SIZE_4 / sizeof(int)>>(std::array<int, OBJECT_SIZE_4 / sizeof(int)>{ 4 });
+            p.emplace<std::array<int, OBJECT_SIZE_8 / sizeof(int)>>(std::array<int, OBJECT_SIZE_8 / sizeof(int)>{ 8 });
+            p.emplace<std::array<int, OBJECT_SIZE_16 / sizeof(int)>>(std::array<int, OBJECT_SIZE_16 / sizeof(int)>{ 16 });
+            p.emplace<std::array<int, OBJECT_SIZE_32 / sizeof(int)>>(std::array<int, OBJECT_SIZE_32 / sizeof(int)>{ 32 });
+            p.emplace<std::array<int, OBJECT_SIZE_64 / sizeof(int)>>(std::array<int, OBJECT_SIZE_64 / sizeof(int)>{ 64 });
+        }
+
+        std::size_t expected = 5*OBJECT_POOL_PAGE_LENGTH*(OBJECT_SIZE_2+OBJECT_SIZE_4+OBJECT_SIZE_8+OBJECT_SIZE_16+OBJECT_SIZE_32+OBJECT_SIZE_64);
+
+        REQUIRE(expected == p.capacity());
+
+        // Erases the first 2 pages from every sub-pool
+        for (HandleIndex i = 0; i < OBJECT_POOL_PAGE_LENGTH*2; i++)
+        {
+
+            p.erase<std::array<int, OBJECT_SIZE_2 / sizeof(int)>>({ OBJECT_SIZE_2, i, false });
+            p.erase<std::array<int, OBJECT_SIZE_4 / sizeof(int)>>({ OBJECT_SIZE_4, i, false });
+            p.erase<std::array<int, OBJECT_SIZE_8 / sizeof(int)>>({ OBJECT_SIZE_8, i, false });
+            p.erase<std::array<int, OBJECT_SIZE_16 / sizeof(int)>>({ OBJECT_SIZE_16, i, false });
+            p.erase<std::array<int, OBJECT_SIZE_32 / sizeof(int)>>({ OBJECT_SIZE_32, i, false });
+            p.erase<std::array<int, OBJECT_SIZE_64 / sizeof(int)>>({ OBJECT_SIZE_64, i, false });
+        }
+
+        WHEN("The 2nd 2 pages have their objects reordered.")
+        {
+            // Reorders everything in the 2nd 2 pages of every sub-pool
+            for (HandleIndex i = OBJECT_POOL_PAGE_LENGTH*2; i < OBJECT_POOL_PAGE_LENGTH*4; i++)
+            {
+
+                p.reorder<std::array<int, OBJECT_SIZE_2 / sizeof(int)>>({ OBJECT_SIZE_2, i, false });
+                p.reorder<std::array<int, OBJECT_SIZE_4 / sizeof(int)>>({ OBJECT_SIZE_4, i, false });
+                p.reorder<std::array<int, OBJECT_SIZE_8 / sizeof(int)>>({ OBJECT_SIZE_8, i, false });
+                p.reorder<std::array<int, OBJECT_SIZE_16 / sizeof(int)>>({ OBJECT_SIZE_16, i, false });
+                p.reorder<std::array<int, OBJECT_SIZE_32 / sizeof(int)>>({ OBJECT_SIZE_32, i, false });
+                p.reorder<std::array<int, OBJECT_SIZE_64 / sizeof(int)>>({ OBJECT_SIZE_64, i, false });
+            }
+
+            // Verifies that the 2nd 2 pages have been reordered
+            bool result = true;
+            for (HandleIndex i = 0; i < OBJECT_POOL_PAGE_LENGTH*2; i++)
+            {
+
+                auto p2 = *p.get<std::array<int, OBJECT_SIZE_2 / sizeof(int)>>({ OBJECT_SIZE_2, i, false });
+                auto p4 = *p.get<std::array<int, OBJECT_SIZE_4 / sizeof(int)>>({ OBJECT_SIZE_4, i, false });
+                auto p8 = *p.get<std::array<int, OBJECT_SIZE_8 / sizeof(int)>>({ OBJECT_SIZE_8, i, false });
+                auto p16 = *p.get<std::array<int, OBJECT_SIZE_16 / sizeof(int)>>({ OBJECT_SIZE_16, i, false });
+                auto p32 = *p.get<std::array<int, OBJECT_SIZE_32 / sizeof(int)>>({ OBJECT_SIZE_32, i, false });
+                auto p64 = *p.get<std::array<int, OBJECT_SIZE_64 / sizeof(int)>>({ OBJECT_SIZE_64, i, false });
+
+
+                if(p2[0] != 2)
+                    result = false;
+                if(p2[1] != 0)
+                    result = false;
+                if(p4[0] != 4)
+                    result = false;
+                if(p4[1] != 0)
+                    result = false;
+                if(p8[0] != 8)
+                    result = false;
+                if(p8[1] != 0)
+                    result = false;
+                if(p16[0] != 16)
+                    result = false;
+                if(p16[1] != 0)
+                    result = false;
+                if(p32[0] != 32)
+                    result = false;
+                if(p32[1] != 0)
+                    result = false;
+                if(p64[0] != 64)
+                    result = false;
+                if(p64[1] != 0)
+                    result = false;
+            }
+
+            REQUIRE(result == true);
+
+            THEN("Shrinking the ObjectPool will release 3 pages worth of memory")
+            {
+                p.shrink();
+
+                std::size_t expected = 2*OBJECT_POOL_PAGE_LENGTH*(OBJECT_SIZE_2+OBJECT_SIZE_4+OBJECT_SIZE_8+OBJECT_SIZE_16+OBJECT_SIZE_32+OBJECT_SIZE_64);
+
+                REQUIRE(expected == p.capacity());
+            }
+        }
+    }
+}
+
 template <typename T>
 void emplacer(ObjectPool &pool, T value, std::vector<Handle> &handles, std::mutex &mutex)
 {
@@ -346,7 +464,7 @@ void eraser(ObjectPool &pool, std::vector<Handle> &handles, std::mutex &mutex, s
 }
 
 template <typename T>
-void getter(ObjectPool &pool, std::vector<Handle> &handles, std::mutex &mutex)
+void reorderer(ObjectPool &pool, std::vector<Handle> &handles, std::mutex &mutex)
 {
     for (auto i = 0; i < 1000; i++)
     {
@@ -419,11 +537,11 @@ SCENARIO("ObjectPools can be safely accessed from multiple threads.", "[objectpo
                 REQUIRE(vecSize2.size() + counterSize2 == 1000);
             }
 
-            THEN("If 1 thread is emplacing, 1 thread is erasing and 1 thread is getting")
+            THEN("If 1 thread is emplacing, 1 thread is erasing and 1 thread is reordering")
             {
                 t1 = std::thread{emplacer<Object2>, std::ref(pool), Object2{}, std::ref(vecSize2), std::ref(vecSize2Mutex)};
                 t2 = std::thread{eraser<Object2>, std::ref(pool), std::ref(vecSize2), std::ref(vecSize2Mutex), std::ref(counterSize2)};
-                t3 = std::thread{getter<Object2>, std::ref(pool), std::ref(vecSize2), std::ref(vecSize2Mutex)};
+                t3 = std::thread{reorderer<Object2>, std::ref(pool), std::ref(vecSize2), std::ref(vecSize2Mutex)};
 
                 t1.join();
                 t2.join();
@@ -445,7 +563,7 @@ SCENARIO("ObjectPools can be safely accessed from multiple threads.", "[objectpo
             std::thread t8;
             std::thread t9;
 
-            THEN("If 6 threads are emplacing and 3 thread is erasing")
+            THEN("If 6 threads are emplacing and 3 threads are erasing")
             {
                 t1 = std::thread{emplacer<Object2>, std::ref(pool), Object2{}, std::ref(vecSize2), std::ref(vecSize2Mutex)};
                 t2 = std::thread{emplacer<Object8>, std::ref(pool), Object8{}, std::ref(vecSize8), std::ref(vecSize8Mutex)};
@@ -472,7 +590,7 @@ SCENARIO("ObjectPools can be safely accessed from multiple threads.", "[objectpo
                 REQUIRE(vecSize32.size() + counterSize32 == 2000);
             }
 
-            THEN("If 6 threads are erasing and 3 thread is emplacing")
+            THEN("If 6 threads are erasing and 3 threads are emplacing")
             {
                 t1 = std::thread{emplacer<Object2>, std::ref(pool), Object2{}, std::ref(vecSize2), std::ref(vecSize2Mutex)};
                 t2 = std::thread{emplacer<Object8>, std::ref(pool), Object8{}, std::ref(vecSize8), std::ref(vecSize8Mutex)};
@@ -499,7 +617,7 @@ SCENARIO("ObjectPools can be safely accessed from multiple threads.", "[objectpo
                 REQUIRE(vecSize32.size() + counterSize32 == 1000);
             }
 
-            THEN("If 3 thread is emplacing, 3 thread is erasing and 3 thread is getting")
+            THEN("If 3 threads are emplacing, 3 threads are erasing and 3 threads are reordering")
             {
                 t1 = std::thread{emplacer<Object2>, std::ref(pool), Object2{}, std::ref(vecSize2), std::ref(vecSize2Mutex)};
                 t2 = std::thread{emplacer<Object8>, std::ref(pool), Object8{}, std::ref(vecSize8), std::ref(vecSize8Mutex)};
@@ -507,9 +625,9 @@ SCENARIO("ObjectPools can be safely accessed from multiple threads.", "[objectpo
                 t4 = std::thread{eraser<Object2>, std::ref(pool), std::ref(vecSize2), std::ref(vecSize2Mutex), std::ref(counterSize2)};
                 t5 = std::thread{eraser<Object8>, std::ref(pool), std::ref(vecSize8), std::ref(vecSize8Mutex), std::ref(counterSize8)};
                 t6 = std::thread{eraser<Object32>, std::ref(pool), std::ref(vecSize32), std::ref(vecSize32Mutex), std::ref(counterSize32)};
-                t7 = std::thread{getter<Object2>, std::ref(pool), std::ref(vecSize2), std::ref(vecSize2Mutex)};
-                t8 = std::thread{getter<Object8>, std::ref(pool), std::ref(vecSize8), std::ref(vecSize8Mutex)};
-                t9 = std::thread{getter<Object32>, std::ref(pool), std::ref(vecSize32), std::ref(vecSize32Mutex)};
+                t7 = std::thread{reorderer<Object2>, std::ref(pool), std::ref(vecSize2), std::ref(vecSize2Mutex)};
+                t8 = std::thread{reorderer<Object8>, std::ref(pool), std::ref(vecSize8), std::ref(vecSize8Mutex)};
+                t9 = std::thread{reorderer<Object32>, std::ref(pool), std::ref(vecSize32), std::ref(vecSize32Mutex)};
 
                 t1.join();
                 t2.join();

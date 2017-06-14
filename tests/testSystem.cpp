@@ -15,8 +15,8 @@ SCENARIO("Systems can manage their memory via their ObjectPool", "[system][objec
             Handle i = sys.emplaceObject<int>(420);
             Handle a = sys.emplaceObject<std::array<std::size_t, 64>>(1u,2u,3u,4u,5u,6u,7u,8u,9u,10u);
 
-            auto iPtr = sys.getobject<int>(i);
-            auto aPtr = sys.getobject<std::array<std::size_t, 64>>(a);
+            auto iPtr = sys.getObject<int>(i);
+            auto aPtr = sys.getObject<std::array<std::size_t, 64>>(a);
 
             REQUIRE(*iPtr == 420);
             REQUIRE(*aPtr == (std::array<std::size_t, 64>{1u,2u,3u,4u,5u,6u,7u,8u,9u,10u}));

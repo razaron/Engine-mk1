@@ -53,46 +53,25 @@ namespace razaron::core::system
         /*! Removes a Component from the ObjectPool. */
         virtual bool removeComponent(ComponentHandle p_ch) = 0;
 
-        /*! Constructs a object into System managed memory.
-		*
-		*	@tparam		C		The class of the object to construct.
-		*	@tparam		Args	The parameter pack for the constructor arguments of C.<sup>[1]</sup>
-		*
-		*	@param		p_args	The constructor arguments for C.
-		*
-		*	@returns	Returns the TaskGraph needed to run update logic for the object objects.
-		*	<small><sup>[1]</sup> Don't enter this. It <a title="cppreference" href="http://en.cppreference.com/w/cpp/language/template_argument_deduction">deduced</a> by the compiler.</small>
-		*/
+        /*! Calls `emplace` on the member ObjectPool with the given arguments. */
         template <class T, typename... Args>
         Handle emplaceObject(Args... p_args) { return m_pool.emplace<T>(p_args...); }
 
-        /*! Constructs a object into System managed memory.
-		*
-		*	@tparam	C		The class of the object to construct.
-		*	@tparam	Args	The parameter pack for the constructor arguments of C.<sup>[1]</sup>
-		*
-		*	@param	p_args	The constructor arguments for C.
-		*
-		*	@retval	C*		On success, a pointer to the desired object.
-		*	@retval	nullptr	On failure, a nullptr.
-		*/
+        /*! Calls `get` on the member ObjectPool with the given arguments. */
         template <class T>
-        T *getobject(Handle p_handle) { return m_pool.get<T>(p_handle); }
+        T *getObject(Handle p_handle) { return m_pool.get<T>(p_handle); }
 
-        /*! Deletes the desired object from System managed memory.
-		*
-		*	@tparam	T	The type of the object to remove.
-		*/
+        /*! Calls `erase` on the member ObjectPool with the given arguments. */
         template <class T>
         void removeObject(Handle p_handle) { m_pool.erase<T>(p_handle); };
 
-        /*! Register an EventHandler to the passed EventType. */
+        /*! Calls `registerHandler` on the member EventStream with the given arguments. */
         void registerHandler(EventType p_type, EventHandler p_handler);
 
-        /*! Processes all incoming Event%s with their respective handlers. */
+        /*! Calls `processEvents` on the member EventStream. */
         void processEvents();
 
-        /*! Moves queued up Event objects to the dst System. */
+        /*! Calls `propogateEvents` on the member EventStream with the given argument. */
         void propogateEvents(System &dst);
 
         /*! Pushes an Event onto the outgoing stream. */
@@ -111,40 +90,7 @@ namespace razaron::core::system
         double getTaskGraph() { return static_cast<double>(m_interval) / 1000; }
 
       protected:
-        System()
-        {
-            registerHandler(EventType::CREATE_COMPONENT, [system = this](Event & e) {
-                auto data = std::static_pointer_cast<eventdata::CREATE_COMPONENT>(e.data);
-
-                // If ComponentType is valid, do something
-                if (system->m_componentTypes.count(data->type))
-                {
-                    auto ch = system->createComponent(data->type);
-
-                    system->pushEvent(Event{
-                        e.recipient,
-                        EventType::CREATE_COMPONENT,
-                        std::make_shared<eventdata::CREATE_COMPONENT>(ch, true)
-                    });
-                }
-            });
-
-            registerHandler(EventType::REMOVE_COMPONENT, [system = this](Event & e) {
-                auto data = std::static_pointer_cast<eventdata::REMOVE_COMPONENT>(e.data);
-
-                // If ComponentType is valid, do something
-                if (system->m_componentTypes.count(data->ch.first))
-                {
-                    bool result = system->removeComponent(data->ch);
-
-                    system->pushEvent(Event{
-                        e.recipient,
-                        EventType::REMOVE_COMPONENT,
-                        std::make_shared<eventdata::REMOVE_COMPONENT>(data->ch, result)
-                    });
-                }
-            });
-        }
+        System();
 
         ObjectPool m_pool;               /*!< The ObjectPool used to manage the memory of this System. */
         double m_interval = 0.05;        /*!< The interval (in seconds) between updates for this System. */

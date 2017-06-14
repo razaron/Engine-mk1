@@ -40,7 +40,7 @@ namespace razaron::graph
         State state;
         ; /*!< The current state of the Vertex, represented by a bitfield. */
 
-        /*! Constructs an empty Vertex with the ID <tt>p_index</tt>. */
+        /*! Constructs an empty Vertex with the ID `p_index`. */
         Vertex(unsigned short p_index) : data(V{}), id(p_index), state(State::WHITE) {}
 
         /*! Basic equality comparator. */
@@ -81,12 +81,11 @@ namespace razaron::graph
 
         /*!	Performs a breadth first traversal of the Graph.
 		*
-		*	Starting at the Vertex with the ID <tt>p_origin</tt>, traverses the Graph in breadth first order.
-		*	Runs onVertexDiscoverFunc for every Vertex with the state <tt>State::WHITE</tt> and
-		*	onEdgeDiscoverFunc for every Edge with the state <tt>State::WHITE</tt>.
+		*	Starting at the Vertex with the ID `p_origin`, traverses the Graph in breadth first order.
+		*	Runs the defined discovery function for every Vertex and Edge.
 		*
-		*	By default Sets the state of every touched Vertex and Edge to <tt>State::GREY</tt> unless specified otherwise
-		*	in onVertexDiscoverFunc or onEdgeDiscoverFunc.
+		*	By default, sets the state of every touched Vertex and Edge with `State::WHITE` to `State::GREY`
+        *   unless specified otherwise in their discovery functions.
 		*
 		*	@param	p_origin	The ID of the Vertex to start the traversal from.
 		*/
@@ -94,7 +93,8 @@ namespace razaron::graph
 
         /*!	Constructs and adds a new Edge to the Graph.
 		*
-		*	If no Vertex objects exist with the IDs <tt>p_source</tt> or <tt>p_target</tt>, constructs and adds new Vertex objects for the missing IDs to the Graph.
+		*	If no Vertex objects exist with the IDs `p_source` or `p_target`, constructs and adds new Vertex
+        *   objects for the missing IDs to the Graph.
 		*
 		*	@param	p_data		The data held by the edge.
 		*	@param	p_source	The ID of the source Vertex.
@@ -102,13 +102,13 @@ namespace razaron::graph
 		*/
         void addEdge(unsigned short source, unsigned short target, E data = E{});
 
-        /*! Resets the state of all Edge and Vertex objects belonging to the Graph to State::WHITE. */
+        /*! Resets the state of all Edge and Vertex objects belonging to the Graph to `State::WHITE`. */
         void reset();
 
         /*! Returns the number of Vertex objects. */
         std::size_t size() { return m_vertices.size(); }
 
-        /*!	Searched the graph for the Vertex with id == p_index.
+        /*!	Get's a reference to the Vertex with `id == p_index`.
 		*
 		*	@exception	std::out_of_range	p_index out of range for m_vertices.
 		*
