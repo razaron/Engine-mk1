@@ -203,7 +203,7 @@ Task TaskScheduler::pushGraph(WorkGraph p_workGraph, Task p_dependency)
                 m_nextTaskID++,
                 0,
                 0,
-                [v]() { std::clog << "dummy for " << v.id << std::endl; },
+                []() { },
                 1
             };
 

@@ -6,8 +6,6 @@ using namespace razaron::core::entity;
 Space::Space(SystemGraph &p_systemGraph)
     : m_id{g_nextID++}, m_systemGraph{std::move(p_systemGraph)}
 {
-    std::clog << "Space Constructor" << std::endl;
-
     m_systemGraph.vertexFuncs[State::WHITE] = [this](SystemGraphVertex &v, SystemGraph &g) {
         UNUSED(g);
 
@@ -51,8 +49,6 @@ Space::Space(SystemGraph &p_systemGraph)
 
 Space::~Space()
 {
-    std::clog << "Space Destructor" << std::endl;
-
     m_systemGraph.reset();
 
     m_systemGraph.vertexFuncs[State::WHITE] = [](SystemGraphVertex &v, SystemGraph &g) {
