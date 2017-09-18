@@ -40,7 +40,7 @@ Space::Space(SystemGraph &p_systemGraph)
     registerHandler(EventType::CREATE_COMPONENT, [ space = this ](Event & e) {
         auto data = std::static_pointer_cast<eventdata::CREATE_COMPONENT>(e.data);
 
-        if (!data->isCreated)
+        if (data->isCreated)
         {
             (*space)[e.recipient].addComponent(ComponentHandle{data->type, data->handle});
         }
@@ -104,6 +104,9 @@ void Space::propagateEvents()
         {
             auto events = g[e.target].data->popEvents();
 
+            // Push copy of events back onto e.target
+            g[e.target].data->pushEvents(events);
+            
             // Only pushing to incoming to stop Events looping around SystemGraph
             space->pushEvents(events, StreamType::INCOMING);
         }
