@@ -6,21 +6,22 @@ using namespace razaron::core::entity;
 Space::Space(SystemGraph &p_systemGraph)
     : m_id{g_nextID++}, m_systemGraph{std::move(p_systemGraph)}
 {
-    m_systemGraph.vertexFuncs[State::WHITE] = [this](SystemGraphVertex &v, SystemGraph &g) {
+    // Finds the highest interval for given Systems
+    m_systemGraph.vertexFuncs[State::WHITE] = [&](SystemGraphVertex &v, SystemGraph &g) {
         UNUSED(g);
 
-        if (this->m_intervalMax < v.data->getInterval())
-            this->m_intervalMax = v.data->getInterval();
+        if (m_intervalMax < v.data->getInterval())
+            m_intervalMax = v.data->getInterval();
     };
 
     m_systemGraph.breadthFirstTraversal(0);
     m_systemGraph.reset();
 
     // Starts the chain of events that will create a new Entity from a list of components
-    registerHandler(EventType::CREATE_ENTITY, [ space = this ](Event & e) {
+    registerHandler(EventType::CREATE_ENTITY, [&](Event & e) {
         auto data = std::static_pointer_cast<eventdata::CREATE_ENTITY>(e.data);
 
-        auto entity = space->createEntity();
+        auto entity = createEntity();
 
         std::vector<Event> events;
 
@@ -33,18 +34,84 @@ Space::Space(SystemGraph &p_systemGraph)
             );
         }
 
-        space->pushEvents(events, StreamType::OUTGOING);
+        pushEvents(events, StreamType::OUTGOING);
     });
 
     // Adds a created Component to the correct entity
-    registerHandler(EventType::CREATE_COMPONENT, [ space = this ](Event & e) {
+    registerHandler(EventType::CREATE_COMPONENT, [&](Event & e) {
         auto data = std::static_pointer_cast<eventdata::CREATE_COMPONENT>(e.data);
 
         if (data->isCreated)
         {
-            (*space)[e.recipient].addComponent(ComponentHandle{data->type, data->handle});
+            (*this)[e.recipient].addComponent(ComponentHandle{data->type, data->handle});
         }
     });
+
+    // Starts the chain of events that will create a new Entity from a list of components
+    registerHandler(EventType::REMOVE_ENTITY, [&](Event & e) {
+        auto data = std::static_pointer_cast<eventdata::REMOVE_ENTITY>(e.data);
+
+        // If this is the initial request
+        if(data->initial)
+        {
+            // Creates a REMOVE_COMPONENT Event for each Component in the Entity
+            auto entity = (*this)[e.recipient];
+
+            std::vector<Event> events;
+            for(auto& [type, handle] : entity.getComponents())
+            {
+                Event event{
+                    e.recipient,
+                    EventType::REMOVE_COMPONENT,
+                    std::make_shared<eventdata::REMOVE_COMPONENT>(ComponentHandle{type, handle})
+                };
+
+                events.push_back(event);
+            }
+
+            pushEvents(events, StreamType::OUTGOING);
+
+            // Create a followup REMOVE_ENTITY event to check up on progress
+            std::vector<Event> event{{
+                e.recipient,
+                EventType::REMOVE_ENTITY,
+                std::make_shared<eventdata::REMOVE_ENTITY>(false)
+            }};
+
+            pushEvents(event, StreamType::INCOMING);
+        }
+        // If this is a followup request
+        else
+        {
+            // If Entity is empty, delete it
+            if(!(*this)[e.recipient].getComponents().size())
+            {
+                removeEntity(e.recipient);
+            }
+            // Else resend the event
+            else
+            {
+                std::vector<Event> event{{
+                    e.recipient,
+                    EventType::REMOVE_ENTITY,
+                    std::make_shared<eventdata::REMOVE_ENTITY>(false)
+                }};
+
+                pushEvents(event, StreamType::INCOMING);
+            }
+        }
+    });
+
+    // On succesful Component deletion, removes it's Handle from relevant Entity
+    registerHandler(EventType::REMOVE_COMPONENT, [&](Event & e) {
+        auto data = std::static_pointer_cast<eventdata::REMOVE_COMPONENT>(e.data);
+
+        if (data->isRemoved)
+        {
+            (*this)[e.recipient].removeComponent(data->ch);
+        }
+    });
+
 }
 
 Space::~Space()
@@ -106,7 +173,7 @@ void Space::propagateEvents()
 
             // Push copy of events back onto e.target
             g[e.target].data->pushEvents(events);
-            
+
             // Only pushing to incoming to stop Events looping around SystemGraph
             space->pushEvents(events, StreamType::INCOMING);
         }

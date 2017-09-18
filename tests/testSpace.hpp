@@ -31,15 +31,6 @@ class SystemA : public System
         UNUSED(delta);
         count++;
 
-        if (count == 1)
-        {
-            pushEvent(Event{
-                0u,
-                EventType::CREATE_ENTITY,
-                std::make_shared<eventdata::CREATE_ENTITY>(std::list<ComponentType>{ComponentType::FOO, ComponentType::BAR})
-            });
-        }
-
         return Task{};
     }
 

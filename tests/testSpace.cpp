@@ -96,103 +96,58 @@ SCENARIO("Spaces can add/remove enitities, generating relavant components in the
 
         Space s{g};
 
-        WHEN("Creating a new Entity (Foo+Bar)")
+        WHEN("Creating new Entities (Foo+Bar)")
         {
-            unsigned int entityID = 0;
+            std::vector<Event> events;
 
-            // Starts the chain of events that will create a new Entity
-            s.registerHandler(EventType::CREATE_ENTITY, [ space = &s, &entityID ](Event & e) {
-                auto data = std::static_pointer_cast<std::string>(e.data);
+            for(auto i=0;i<10;i++)
+            {
+                Event e{
+                    0, // Entity ID. 0 because unneeded
+                    EventType::CREATE_ENTITY, // Event type enum
+                    std::make_shared<eventdata::CREATE_ENTITY>(
+                        std::list<ComponentType>{
+                            ComponentType::FOO,
+                            ComponentType::BAR
+                        }
+                    )
+                };
 
-                auto entity = space->createEntity();
+                events.push_back(e);
+            }
 
-                entityID = entity.getID();
+            s.pushEvents(events, StreamType::INCOMING);
 
-                std::vector<Event> events;
-
-                events.push_back(Event{
-                    entity.getID(),
-                    EventType::CREATE_COMPONENT,
-                    std::make_shared<eventdata::CREATE_COMPONENT>(ComponentType::FOO)}
-                );
-
-                events.push_back(Event{
-                    entity.getID(),
-                    EventType::CREATE_COMPONENT,
-                    std::make_shared<eventdata::CREATE_COMPONENT>(ComponentType::BAR)}
-                );
-
-                space->pushEvents(events, StreamType::OUTGOING);
-            });
-
-            int count = 2;
-
-            // Adds a created Component to the correct entity
-            s.registerHandler(EventType::CREATE_COMPONENT, [ space = &s, &count ](Event & e) {
-                auto data = std::static_pointer_cast<eventdata::CREATE_COMPONENT>(e.data);
-
-                if (data->isCreated)
-                {
-                    count--;
-
-                    (*space)[e.recipient].addComponent(ComponentHandle{data->type, data->handle});
-                }
-            });
-
-            for (auto i = 0; i < 5; i++)
+            for(auto i=0;i<100;i++)
             {
                 s.update(0);
             }
 
-            REQUIRE(count == 0);
+            REQUIRE(s.getEntities().size() == 10);
 
             THEN("Removing the entity")
             {
                 std::vector<Event> events;
 
-                auto ptr1 = std::make_shared<eventdata::REMOVE_COMPONENT>(ComponentHandle{
-                    ComponentType::FOO,
-                    s[entityID][ComponentType::FOO]}
-                );
+                for(auto& [id, entity] : s.getEntities())
+                {
+                    Event e{
+                        id, // Entity ID.
+                        EventType::REMOVE_ENTITY, // Event type enum
+                        std::make_shared<eventdata::REMOVE_ENTITY>()
+                    };
 
-                events.push_back(Event{
-                    entityID,
-                    EventType::REMOVE_COMPONENT,
-                    ptr1}
-                );
+                    events.push_back(e);
+                }
 
-                auto ptr2 = std::make_shared<eventdata::REMOVE_COMPONENT>(ComponentHandle{
-                    ComponentType::BAR,
-                    s[entityID][ComponentType::BAR]}
-                );
-                events.push_back(Event{
-                    entityID,
-                    EventType::REMOVE_COMPONENT,
-                    ptr2}
-                );
+                s.pushEvents(events, StreamType::INCOMING);
 
-                s.pushEvents(events, StreamType::OUTGOING);
-
-                count = 999;
-                // Adds a created Component to the correct entity
-                s.registerHandler(EventType::REMOVE_COMPONENT, [ space = &s, &count ](Event & e) {
-                    auto data = std::static_pointer_cast<eventdata::REMOVE_COMPONENT>(e.data);
-
-                    if (data->isRemoved)
-                    {
-                        (*space)[e.recipient].removeComponent(data->ch);
-
-                        if ((*space)[e.recipient].getComponents().size() == 0)
-                            count = space->removeEntity(e.recipient);
-                    }
-                });
-
-                for (auto i = 0; i < 4; i++)
+                for(auto i=0;i<10;i++)
                 {
                     s.update(0);
                 }
 
-                REQUIRE(count == 0);
+                REQUIRE(s.getEntities().size() == 0);
             }
         }
     }
