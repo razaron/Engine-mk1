@@ -28,8 +28,12 @@ namespace razaron::eventstream
         DEFAULT,          /*!< Default value. */
         CREATE_ENTITY,    /*!< Lets a Space know to create an Entity. */
         CREATE_COMPONENT, /*!< Lets a System know to create a Component. */
-        ADD_COMPONENT,    /*!< Lets a Space know it can add a Component to an Entity. */
-        REMOVE_COMPONENT  /*!< Tells a System to remove a Component or tells a Space a Component has been removed. */
+        REMOVE_ENTITY,    /*!< Tells Systems to remove relevant Components, then removes Entity. */
+        REMOVE_COMPONENT,  /*!< Tells a System to remove a Component or tells a Space a Component has been removed. */
+        EVENT_1,
+        EVENT_2,
+        EVENT_3,
+        EVENT_4
     };
 
     /*! Contains the data required to receive and process an Event. */

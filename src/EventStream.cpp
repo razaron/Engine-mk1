@@ -4,12 +4,10 @@ using namespace razaron::eventstream;
 
 EventStream::EventStream()
 {
-    std::clog << "EventStream Constructed" << std::endl;
 }
 
 EventStream::~EventStream()
 {
-    std::clog << "EventStream Destroyed" << std::endl;
 }
 
 void EventStream::pushEvent(Event p_event, StreamType p_streamType)

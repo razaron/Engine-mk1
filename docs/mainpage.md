@@ -4,6 +4,6 @@ My Main Page                         {#mainpage}
 Main page yo.
 
 [TaskScheduler](@ref taskscheduler)
-[Core](@ref core)
+[Space](@ref space)
 [ObjectPool](@ref objectpool)
 [Graph](@ref graph)

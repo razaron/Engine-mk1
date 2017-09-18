@@ -22,7 +22,7 @@ class FooSystem : public System
 
         for (auto &e : events)
         {
-            if (e.type == EventType::ADD_COMPONENT)
+            if (e.type == EventType::REMOVE_COMPONENT)
             {
                 auto data = std::static_pointer_cast<int>(e.data);
 
@@ -53,7 +53,7 @@ class BarSystem : public System
 
         for (auto i = 0; i < 5; i++)
         {
-            pushEvent(Event{0, EventType::ADD_COMPONENT, std::make_shared<int>(i)});
+            pushEvent(Event{0, EventType::REMOVE_COMPONENT, std::make_shared<int>(i)});
         }
 
         return Task{};

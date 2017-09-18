@@ -188,8 +188,6 @@ namespace razaron::graph
 
                 openList.push_back((*this)[e.target]);
             }
-
-            std::clog << "openList.size() = " << openList.size() << std::endl;
         }
     }
 

@@ -71,14 +71,16 @@ namespace razaron::core::space
         *
 		*	@returns    A reference to the mapped Entity.
 		*/
-		Entity &operator[](unsigned short p_id);
+        Entity &operator[](unsigned short p_id);
+
+        EntityMap &getEntities() { return m_entities; };
 
       private:
-		void updateSystems(double delta);
-		void propagateEvents();
+        void updateSystems(double delta);
+        void propagateEvents();
 
         unsigned m_id;
-		SystemGraph m_systemGraph;
+        SystemGraph m_systemGraph;
         double m_intervalMax{};
         EntityMap m_entities;
         EventStream m_eventStream;

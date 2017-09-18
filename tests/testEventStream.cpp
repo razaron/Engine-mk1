@@ -12,7 +12,7 @@ SCENARIO("You can push/pop Events from an EventStream", "[eventstream]")
     {
         EventStream stream;
 
-        stream.pushEvent({ 0, EventType::ADD_COMPONENT, std::make_shared<std::string>("lolwut") }, StreamType::OUTGOING);
+        stream.pushEvent({ 0, EventType::REMOVE_COMPONENT, std::make_shared<std::string>("lolwut") }, StreamType::OUTGOING);
 
         std::vector<Event> events;
         for (unsigned int i = 1; i < 5; i++)
@@ -54,7 +54,7 @@ SCENARIO("EventStreams can propogate Events to eachother", "[eventstream]")
         EventStream a;
         EventStream b;
 
-        a.pushEvent({ 0, EventType::ADD_COMPONENT, std::make_shared<std::string>("lolwut") }, StreamType::OUTGOING);
+        a.pushEvent({ 0, EventType::REMOVE_COMPONENT, std::make_shared<std::string>("lolwut") }, StreamType::OUTGOING);
 
         std::vector<Event> events;
         for (unsigned int i = 1; i < 5; i++)
