@@ -44,7 +44,7 @@ namespace razaron::core::entity
 		*/
 		void removeComponent(ComponentHandle p_component)
 		{
-			if(m_components[p_component.first] == p_component.second)
+			if(m_components.find(p_component.first) != m_components.end() && m_components[p_component.first] == p_component.second)
 				m_components.erase(p_component.first);
 		}
 

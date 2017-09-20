@@ -22,3 +22,6 @@ set (REQUIRED_LIBS ${REQUIRED_LIBS} engine-mk1 ${CMAKE_THREAD_LIBS_INIT})
 
 # Create the test exe
 add_subdirectory (tests)
+
+# Create the game_v1 exe
+add_subdirectory (game_v1)

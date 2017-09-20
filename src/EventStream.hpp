@@ -23,7 +23,7 @@ namespace razaron::eventstream
     };
 
     /*! The EventType is used to determine how to process an Event. */
-    enum class EventType : unsigned short
+    enum class EventType
     {
         DEFAULT,          /*!< Default value. */
         CREATE_ENTITY,    /*!< Lets a Space know to create an Entity. */
