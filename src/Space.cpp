@@ -162,20 +162,17 @@ void Space::propagateEvents()
 
     // Reset SystemGraph and propogate Events down the graph
     m_systemGraph.reset();
-    m_systemGraph.edgeFuncs[State::WHITE] = [space = this](SystemGraphEdge & e, SystemGraph & g)
+    m_systemGraph.edgeFuncs[State::WHITE] = [&](SystemGraphEdge & e, SystemGraph & g)
     {
         g[e.source].data->propogateEvents(*g[e.target].data);
 
         // If e.target is at the bottom of the graph, propogate it's events to the Space
         if (!g[e.target].adjacencyList.size())
         {
-            auto events = g[e.target].data->popEvents();
+            g[e.target].data->propogateEvents(m_eventStream);
 
-            // Push copy of events back onto e.target
-            g[e.target].data->pushEvents(events);
-
-            // Only pushing to incoming to stop Events looping around SystemGraph
-            space->pushEvents(events, StreamType::INCOMING);
+            // TODO Whitelist repeat events. For now I'm just deleting everything.
+            m_eventStream.popEvents(StreamType::OUTGOING);
         }
     };
     m_systemGraph.breadthFirstTraversal(0);

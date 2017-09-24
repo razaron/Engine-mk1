@@ -73,6 +73,7 @@ namespace razaron::core::system
 
         /*! Calls `propogateEvents` on the member EventStream with the given argument. */
         void propogateEvents(System &dst);
+        void propogateEvents(EventStream &p_stream);
 
         /*! Pushes an Event onto the outgoing stream. */
         void pushEvent(Event p_event);

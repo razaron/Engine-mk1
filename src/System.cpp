@@ -56,6 +56,11 @@ void System::propogateEvents(System &dst)
     m_eventStream.propogateEvents(dst.m_eventStream);
 }
 
+void System::propogateEvents(EventStream &p_stream)
+{
+    m_eventStream.propogateEvents(p_stream);
+}
+
 void System::pushEvent(Event p_event)
 {
     m_eventStream.pushEvent(p_event, StreamType::OUTGOING);

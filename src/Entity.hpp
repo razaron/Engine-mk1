@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 #include "Component.hpp"
 
 /*!	Entities are a way of organizing related components into groups. */
