@@ -48,7 +48,7 @@ namespace razaron::core::system
         virtual Task update(EntityMap &p_entities, double delta) = 0;
 
         /*! Creates a new Component in the ObjectPool. */
-        virtual ComponentHandle createComponent(ComponentType p_type) = 0;
+        virtual ComponentHandle createComponent(ComponentType p_type, std::shared_ptr<void> p_tuplePtr) = 0;
 
         /*! Removes a Component from the ObjectPool. */
         virtual bool removeComponent(ComponentHandle p_ch) = 0;

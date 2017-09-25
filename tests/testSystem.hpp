@@ -33,7 +33,7 @@ class FooSystem : public System
         return Task{};
     }
 
-    ComponentHandle createComponent(ComponentType p_type) { UNUSED(p_type); return ComponentHandle{}; }
+    ComponentHandle createComponent(ComponentType p_type, std::shared_ptr<void> p_tuplePtr) { UNUSED(p_type); return ComponentHandle{}; }
     bool removeComponent(ComponentHandle p_ch) { UNUSED(p_ch); return false; }
 
     int count{};
@@ -59,7 +59,7 @@ class BarSystem : public System
         return Task{};
     }
 
-    ComponentHandle createComponent(ComponentType p_type) { UNUSED(p_type); return ComponentHandle{}; }
+    ComponentHandle createComponent(ComponentType p_type, std::shared_ptr<void> p_tuplePtr) { UNUSED(p_type); return ComponentHandle{}; }
     bool removeComponent(ComponentHandle p_ch) { UNUSED(p_ch); return false; }
 
     std::string name{"BarSystem"};

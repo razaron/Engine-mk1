@@ -1,6 +1,8 @@
 #pragma once
 
 #include <list>
+#include <utility>
+#include <memory>
 
 #include "Component.hpp"
 
@@ -8,20 +10,27 @@ namespace razaron::eventdata
 {
     using namespace razaron::core::component;
 
+    using ComponentArgs = std::pair<ComponentType, std::shared_ptr<void>>;
+
     struct CREATE_ENTITY
     {
-        std::list<ComponentType> components;
+        std::list<ComponentArgs> components;
 
-        CREATE_ENTITY(std::list<ComponentType> p_components) : components{p_components} {}
+        CREATE_ENTITY(std::list<ComponentArgs> p_components) : components{p_components} {}
     };
 
     struct CREATE_COMPONENT
     {
         ComponentType type;
         Handle handle;
+        std::shared_ptr<void> argsPtr;
         bool isCreated{false};
 
-        CREATE_COMPONENT(ComponentType p_type) : type{p_type} {}
+        template <ComponentType Type, class... Args>
+        CREATE_COMPONENT(std::tuple<Args...> p_args) : type{Type}, argsPtr{std::make_shared<std::tuple<Args...>>(p_args)} {}
+
+        CREATE_COMPONENT(ComponentArgs p_args) : type{p_args.first}, argsPtr{p_args.second} {}
+
         CREATE_COMPONENT(ComponentHandle p_ch, bool p_isCreated) : type{p_ch.first}, handle{p_ch.second}, isCreated{p_isCreated} {}
     };
 

@@ -106,9 +106,9 @@ SCENARIO("Spaces can add/remove enitities, generating relavant components in the
                     0, // Entity ID. 0 because unneeded
                     EventType::CREATE_ENTITY, // Event type enum
                     std::make_shared<eventdata::CREATE_ENTITY>(
-                        std::list<ComponentType>{
-                            ComponentType::FOO,
-                            ComponentType::BAR
+                        std::list<ComponentArgs>{
+                            ComponentArgs{ComponentType::FOO, nullptr},
+                            ComponentArgs{ComponentType::BAR, nullptr}
                         }
                     )
                 };

@@ -34,7 +34,7 @@ class SystemA : public System
         return Task{};
     }
 
-    ComponentHandle createComponent(ComponentType p_type)
+    ComponentHandle createComponent(ComponentType p_type, std::shared_ptr<void> p_tuplePtr)
     {
         Handle h;
 
@@ -88,7 +88,7 @@ class SystemC : public System
         return Task{};
     }
 
-    ComponentHandle createComponent(ComponentType p_type)
+    ComponentHandle createComponent(ComponentType p_type, std::shared_ptr<void> p_tuplePtr)
     {
         UNUSED(p_type);
         return ComponentHandle{};
@@ -123,7 +123,7 @@ class SystemD : public System
         return Task{};
     }
 
-    ComponentHandle createComponent(ComponentType p_type)
+    ComponentHandle createComponent(ComponentType p_type, std::shared_ptr<void> p_tuplePtr)
     {
         Handle h;
 
@@ -177,7 +177,7 @@ class SystemB : public System
         return Task{};
     }
 
-    ComponentHandle createComponent(ComponentType p_type)
+    ComponentHandle createComponent(ComponentType p_type, std::shared_ptr<void> p_tuplePtr)
     {
         UNUSED(p_type);
         return ComponentHandle{};
@@ -208,7 +208,7 @@ class SystemE : public System
         return Task{};
     }
 
-    ComponentHandle createComponent(ComponentType p_type)
+    ComponentHandle createComponent(ComponentType p_type, std::shared_ptr<void> p_tuplePtr)
     {
         UNUSED(p_type);
         return ComponentHandle{};
@@ -239,7 +239,7 @@ class SystemF : public System
         return Task{};
     }
 
-    ComponentHandle createComponent(ComponentType p_type)
+    ComponentHandle createComponent(ComponentType p_type, std::shared_ptr<void> p_tuplePtr)
     {
         UNUSED(p_type);
         return ComponentHandle{};

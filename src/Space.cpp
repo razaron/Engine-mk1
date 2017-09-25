@@ -25,13 +25,13 @@ Space::Space(SystemGraph &p_systemGraph)
 
         std::vector<Event> events;
 
-        for(auto type : data->components)
+        for(auto args : data->components)
         {
             events.push_back(Event{
                 entity.getID(),
                 EventType::CREATE_COMPONENT,
-                std::make_shared<eventdata::CREATE_COMPONENT>(type)}
-            );
+                std::make_shared<eventdata::CREATE_COMPONENT>(args)
+            });
         }
 
         pushEvents(events, StreamType::OUTGOING);

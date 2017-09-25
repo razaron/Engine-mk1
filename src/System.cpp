@@ -10,12 +10,14 @@ System::System(){
         // If ComponentType is valid, do something
         if (system->m_componentTypes.count(data->type))
         {
-            auto ch = system->createComponent(data->type);
+            auto ch = system->createComponent(data->type, data->argsPtr);
+
+            auto ptr = std::make_shared<eventdata::CREATE_COMPONENT>(ch, true);
 
             system->pushEvent(Event{
                 e.recipient,
                 EventType::CREATE_COMPONENT,
-                std::make_shared<eventdata::CREATE_COMPONENT>(ch, true)
+                ptr
             });
         }
     });
