@@ -11,7 +11,7 @@
 namespace razaron::core::component
 {
 	/*! Denotes the type of a derived Component object. */
-	enum class ComponentType { DEFAULT, FOO, BAR, RENDER, MESH, TRANSFORM, LOCOMOTION, COLLIDER, CONTROLLER, STEERING, ENUM_SIZE };
+	enum class ComponentType { DEFAULT, FOO, BAR, RENDER, MESH, TRANSFORM, MOTION, COLLIDER, CONTROLLER, STEERING, ENUM_SIZE };
 
 	/*! A unique unsigned int representing the next available unique ID. */
 	extern std::atomic<unsigned> g_nextID;

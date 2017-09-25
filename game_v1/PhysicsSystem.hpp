@@ -3,6 +3,9 @@
 #include <glm/glm.hpp>
 
 #include "System.hpp"
+#include "TransformComponent.hpp"
+#include "MotionComponent.hpp"
+#include "config.hpp"
 
 namespace razaron::physics
 {
@@ -18,9 +21,12 @@ namespace razaron::physics
 
         ~PhysicsSystem();
 
-        Task update(EntityMap &p_entities, double delta);
-        ComponentHandle createComponent(ComponentType p_type);
-        bool removeComponent(ComponentHandle p_ch);
+        Task update(EntityMap &entities, double delta);
+        ComponentHandle createComponent(ComponentType type, std::shared_ptr<void> tuplePtr);
+        bool removeComponent(ComponentHandle ch);
+
+        void seek(float delta, TransformComponent* t, MotionComponent* m);
+
       private:
     };
 }

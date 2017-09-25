@@ -2,6 +2,7 @@
 
 #include <set>
 #include <vector>
+#include <utility>
 
 #include "Entity.hpp"
 #include "EventStream.hpp"

@@ -1,4 +1,4 @@
-set (GAME_V1_SOURCES main.cpp InputSystem.cpp RenderSystem.cpp PhysicsSystem.cpp TransformComponent.cpp)
+set (GAME_V1_SOURCES main.cpp InputSystem.cpp RenderSystem.cpp PhysicsSystem.cpp GameSystem.cpp TransformComponent.cpp MotionComponent.cpp)
 
 # Detect and add SFML
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules" ${CMAKE_MODULE_PATH})

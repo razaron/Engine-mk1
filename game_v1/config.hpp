@@ -12,6 +12,12 @@ using namespace razaron::eventstream;
 const EventType EVENT_INPUT = EventType::EVENT_1;
 const EventType EVENT_MODEL = EventType::EVENT_2;
 
+const unsigned SCREEN_WIDTH = 800u;
+const unsigned SCREEN_HEIGHT = 800u;
+
+extern float g_cameraZoom;
+extern glm::vec2 g_cameraPos;
+
 namespace razaron::input
 {
     enum class ContextType
@@ -54,13 +60,13 @@ namespace razaron::eventdata
         ContextType context;
         std::list<Input> inputs;
 
-        EVENTDATA_INPUT(ContextType p_context, std::list<Input> p_inputs):context{p_context}, inputs{p_inputs} {}
+        EVENTDATA_INPUT(ContextType context, std::list<Input> inputs):context{context}, inputs{inputs} {}
     };
 
     struct EVENTDATA_MODEL
     {
         glm::mat4 model;
 
-        EVENTDATA_MODEL(glm::mat4 p_model) : model{ p_model } {}
+        EVENTDATA_MODEL(glm::mat4 model) : model{ model } {}
     };
 }

@@ -2,8 +2,8 @@
 
 using namespace razaron::input;
 
-InputSystem::InputSystem(sf::Window *p_window)
-    : m_windowPtr(p_window)
+InputSystem::InputSystem(sf::Window *window)
+    : _windowPtr(window)
 {
     createContext(ContextType::DEFAULT, std::set<InputType>{ InputType::MOUSE_LEFT, InputType::MOUSE_RIGHT, InputType::KEY_ESCAPE, InputType::KEY_W, InputType::KEY_A, InputType::KEY_S, InputType::KEY_D });
 }
@@ -12,13 +12,13 @@ InputSystem::~InputSystem()
 {
 }
 
-Task InputSystem::update(EntityMap &p_entities, double delta)
+Task InputSystem::update(EntityMap &entities, double delta)
 {
-    UNUSED(p_entities);
+    UNUSED(entities);
 
     static double delay{0};
 
-    if((delay += delta) < m_interval)
+    if((delay += delta) < _interval)
         return {};
     else
         delay = 0;
@@ -34,7 +34,7 @@ Task InputSystem::update(EntityMap &p_entities, double delta)
 
     // Create event for each sublist of Inputs that apply to a context
     std::vector<Event> events;
-    for (auto &context : m_contexts)
+    for (auto &context : _contexts)
     {
         decltype(inputs) eventInputs;
 
@@ -57,27 +57,39 @@ Task InputSystem::update(EntityMap &p_entities, double delta)
                 eventInputs) });
     }
 
-    m_eventStream.pushEvents(events, StreamType::OUTGOING);
+    _eventStream.pushEvents(events, StreamType::OUTGOING);
 
     return Task{};
 }
 
-ComponentHandle InputSystem::createComponent(ComponentType p_type)
+ComponentHandle InputSystem::createComponent(ComponentType type, std::shared_ptr<void> tuplePtr)
 {
-    UNUSED(p_type);
-    return ComponentHandle{};
+    UNUSED(tuplePtr);
+
+    Handle h;
+
+    switch (type)
+    {
+    default:
+    {
+        h = Handle{};
+        break;
+    }
+    }
+
+    return ComponentHandle{ type, h };
 }
 
-bool InputSystem::removeComponent(ComponentHandle p_ch)
+bool InputSystem::removeComponent(ComponentHandle ch)
 {
-    UNUSED(p_ch);
+    UNUSED(ch);
     return false;
 }
 
-Context InputSystem::createContext(ContextType p_type, std::set<InputType> p_inputTypes)
+Context InputSystem::createContext(ContextType type, std::set<InputType> inputTypes)
 {
-    Context context{ p_type, p_inputTypes };
-    m_contexts.emplace_back(context);
+    Context context{ type, inputTypes };
+    _contexts.emplace_back(context);
 
     return context;
 }
@@ -88,25 +100,25 @@ std::list<Input> InputSystem::mapInputs()
 
     if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
     {
-        auto pos = sf::Mouse::getPosition(*m_windowPtr);
+        auto pos = sf::Mouse::getPosition(*_windowPtr);
 
         inputs.push_back(Input{
             InputType::MOUSE_LEFT,
             true,
-            static_cast<float>(pos.x)/m_windowPtr->getSize().x,
-            static_cast<float>(pos.y)/m_windowPtr->getSize().y
+            static_cast<float>(pos.x)/SCREEN_WIDTH,
+            static_cast<float>(pos.y)/SCREEN_HEIGHT
         });
     }
 
     if (sf::Mouse::isButtonPressed(sf::Mouse::Right))
     {
-        auto pos = sf::Mouse::getPosition(*m_windowPtr);
-        
+        auto pos = sf::Mouse::getPosition(*_windowPtr);
+
         inputs.push_back(Input{
             InputType::MOUSE_RIGHT,
             true,
-            static_cast<float>(pos.x)/m_windowPtr->getSize().x,
-            static_cast<float>(pos.y)/m_windowPtr->getSize().y
+            static_cast<float>(pos.x)/_windowPtr->getSize().x,
+            static_cast<float>(pos.y)/_windowPtr->getSize().y
         });
     }
 

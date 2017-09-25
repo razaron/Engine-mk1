@@ -23,16 +23,16 @@ namespace razaron::render
 
         ~RenderSystem();
 
-        Task update(EntityMap &p_entities, double delta);
-        ComponentHandle createComponent(ComponentType p_type);
-        bool removeComponent(ComponentHandle p_ch);
+        Task update(EntityMap &entities, double delta);
+        ComponentHandle createComponent(ComponentType type, std::shared_ptr<void> tuplePtr);
+        bool removeComponent(ComponentHandle ch);
 
-        bool isOpen() { return m_isOpen; }
-        sf::Window *getWindow() { return &m_window; }
+        bool isOpen() { return _isOpen; }
+        sf::Window *getWindow() { return &_window; }
 
       private:
-        sf::RenderWindow m_window;
-        bool m_isOpen = true;
-        std::map<unsigned short, glm::mat4> m_models;
+        sf::RenderWindow _window;
+        bool _isOpen = true;
+        std::map<unsigned short, glm::mat4> _models;
     };
 }

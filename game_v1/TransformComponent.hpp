@@ -9,20 +9,23 @@ namespace razaron::physics
 {
     using namespace razaron::core::component;
 
+    using TransformArgs = std::tuple<glm::vec2, glm::vec2, float>;
+
     class TransformComponent : public Component
     {
       public:
         TransformComponent();
+        TransformComponent(glm::vec2 translation, glm::vec2 scale, float rotation);
         ~TransformComponent();
 
         glm::mat4 getModel();
 
         glm::vec2 translation;
         glm::vec2 scale;
-        float getRotation() { return m_rotation; }
-        float setRotation(float p_rotation);
+        float getRotation() { return _rotation; }
+        float setRotation(float rotation);
 
       private:
-        float m_rotation; // in radians
+        float _rotation; // in radians
     };
 }
