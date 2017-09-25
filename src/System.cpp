@@ -8,7 +8,7 @@ System::System(){
         auto data = std::static_pointer_cast<eventdata::CREATE_COMPONENT>(e.data);
 
         // If ComponentType is valid, do something
-        if (system->m_componentTypes.count(data->type))
+        if (system->_componentTypes.count(data->type))
         {
             auto ch = system->createComponent(data->type, data->argsPtr);
 
@@ -26,7 +26,7 @@ System::System(){
         auto data = std::static_pointer_cast<eventdata::REMOVE_COMPONENT>(e.data);
 
         // If ComponentType is valid, do something
-        if (system->m_componentTypes.count(data->ch.first))
+        if (system->_componentTypes.count(data->ch.first))
         {
             bool result = system->removeComponent(data->ch);
 
@@ -43,38 +43,38 @@ System::~System()
 {
 }
 
-void System::registerHandler(razaron::eventstream::EventType p_type, EventHandler p_handler)
+void System::registerHandler(razaron::eventstream::EventType type, EventHandler handler)
 {
-    m_eventStream.registerHandler(p_type, p_handler);
+    _eventStream.registerHandler(type, handler);
 }
 
 void System::processEvents()
 {
-    m_eventStream.processEvents();
+    _eventStream.processEvents();
 }
 
 void System::propogateEvents(System &dst)
 {
-    m_eventStream.propogateEvents(dst.m_eventStream);
+    _eventStream.propogateEvents(dst._eventStream);
 }
 
-void System::propogateEvents(EventStream &p_stream)
+void System::propogateEvents(EventStream &stream)
 {
-    m_eventStream.propogateEvents(p_stream);
+    _eventStream.propogateEvents(stream);
 }
 
-void System::pushEvent(Event p_event)
+void System::pushEvent(Event event)
 {
-    m_eventStream.pushEvent(p_event, StreamType::OUTGOING);
+    _eventStream.pushEvent(event, StreamType::OUTGOING);
 }
 
-void System::pushEvents(std::vector<Event> &p_events)
+void System::pushEvents(std::vector<Event> &events)
 {
-    m_eventStream.pushEvents(p_events, StreamType::INCOMING);
-    m_eventStream.pushEvents(p_events, StreamType::OUTGOING);
+    _eventStream.pushEvents(events, StreamType::INCOMING);
+    _eventStream.pushEvents(events, StreamType::OUTGOING);
 }
 
 std::vector<Event> System::popEvents()
 {
-    return m_eventStream.popEvents(StreamType::INCOMING);
+    return _eventStream.popEvents(StreamType::INCOMING);
 }

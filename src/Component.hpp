@@ -37,9 +37,9 @@ namespace razaron::core::component
 		*
 		*	@returns The unique id of this Component.
 		*/
-		unsigned getID() { return m_id; }
+		unsigned getID() { return _id; }
 
 	private:
-		unsigned m_id;
+		unsigned _id;
 	};
 }

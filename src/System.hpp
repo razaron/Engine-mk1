@@ -40,62 +40,62 @@ namespace razaron::core::system
 
         /*! Generates a TaskGraph used to update all relevant Component objects.
 		*
-		*	@param		p_entities	A vector of all Entity objects to access relevant Component objects from.
+		*	@param		entities	A vector of all Entity objects to access relevant Component objects from.
 		*	@param		delta		The time
 		*
 		*	@returns	Returns the TaskGraph needed to run update logic for the Component objects.
 		*/
-        virtual Task update(EntityMap &p_entities, double delta) = 0;
+        virtual Task update(EntityMap &entities, double delta) = 0;
 
         /*! Creates a new Component in the ObjectPool. */
-        virtual ComponentHandle createComponent(ComponentType p_type, std::shared_ptr<void> p_tuplePtr) = 0;
+        virtual ComponentHandle createComponent(ComponentType type, std::shared_ptr<void> tuplePtr) = 0;
 
         /*! Removes a Component from the ObjectPool. */
-        virtual bool removeComponent(ComponentHandle p_ch) = 0;
+        virtual bool removeComponent(ComponentHandle ch) = 0;
 
         /*! Calls `emplace` on the member ObjectPool with the given arguments. */
         template <class T, typename... Args>
-        Handle emplaceObject(Args... p_args) { return m_pool.emplace<T>(p_args...); }
+        Handle emplaceObject(Args... args) { return _pool.emplace<T>(args...); }
 
         /*! Calls `get` on the member ObjectPool with the given arguments. */
         template <class T>
-        T *getObject(Handle p_handle) { return m_pool.get<T>(p_handle); }
+        T *getObject(Handle handle) { return _pool.get<T>(handle); }
 
         /*! Calls `erase` on the member ObjectPool with the given arguments. */
         template <class T>
-        void removeObject(Handle p_handle) { m_pool.erase<T>(p_handle); };
+        void removeObject(Handle handle) { _pool.erase<T>(handle); };
 
         /*! Calls `registerHandler` on the member EventStream with the given arguments. */
-        void registerHandler(EventType p_type, EventHandler p_handler);
+        void registerHandler(EventType type, EventHandler handler);
 
         /*! Calls `processEvents` on the member EventStream. */
         void processEvents();
 
         /*! Calls `propogateEvents` on the member EventStream with the given argument. */
         void propogateEvents(System &dst);
-        void propogateEvents(EventStream &p_stream);
+        void propogateEvents(EventStream &stream);
 
         /*! Pushes an Event onto the outgoing stream. */
-        void pushEvent(Event p_event);
+        void pushEvent(Event event);
 
         /*! Pushes Events onto the incoming stream. */
-        void pushEvents(std::vector<Event> &p_event);
+        void pushEvents(std::vector<Event> &event);
 
         /*! Pops all Event objects from the incoming stream. */
         std::vector<Event> popEvents();
 
         /*! Gets the set interval (in ms) between updates for this System. */
-        double getInterval() { return m_interval; }
+        double getInterval() { return _interval; }
 
         /*! Gets the current TaskGraph of this System. */
-        double getTaskGraph() { return static_cast<double>(m_interval) / 1000; }
+        double getTaskGraph() { return static_cast<double>(_interval) / 1000; }
 
       protected:
         System();
 
-        ObjectPool m_pool;               /*!< The ObjectPool used to manage the memory of this System. */
-        double m_interval = 0.05;        /*!< The interval (in seconds) between updates for this System. */
-        EventStream m_eventStream;       /*!< The EventStream belonging to this System. */
-        std::set<ComponentType> m_componentTypes; /*!< The set of ComponentType%s supported by this System. */
+        ObjectPool _pool;               /*!< The ObjectPool used to manage the memory of this System. */
+        double _interval = 0.05;        /*!< The interval (in seconds) between updates for this System. */
+        EventStream _eventStream;       /*!< The EventStream belonging to this System. */
+        std::set<ComponentType> _componentTypes; /*!< The set of ComponentType%s supported by this System. */
     };
 }

@@ -68,34 +68,34 @@ namespace razaron::eventstream
         *   @remark Thread-safe, blocking. Allows for 1 thread to access incoming Event%s and a 2nd thread to
         *   access outgoing events simultaneasly.
         */
-        void pushEvent(Event p_event, StreamType p_streamType);
+        void pushEvent(Event event, StreamType streamType);
 
         /*! Pushes a vector of Events onto this EventStream.
         *
         *   @remark Thread-safe, blocking. Allows for 1 thread to access incoming Event%s and a 2nd thread to
         *   access outgoing events simultaneasly.
         */
-        void pushEvents(const std::vector<Event> &p_events, StreamType p_streamType);
+        void pushEvents(const std::vector<Event> &events, StreamType streamType);
 
         /*! Pops an Event from this EventStream.
         *
         *   @remark Thread-safe, blocking. Allows for 1 thread to access incoming Event%s and a 2nd thread to
         *   access outgoing events simultaneasly.
         */
-        Event popEvent(StreamType p_streamType);
+        Event popEvent(StreamType streamType);
 
         /*! Pops a std::vector of Event%s from this EventStream.
         *
         *   @remark Thread-safe, blocking. Allows for 1 thread to access incoming Event%s and a 2nd thread to
         *   access outgoing events simultaneasly.
         */
-        std::vector<Event> popEvents(StreamType p_streamType);
+        std::vector<Event> popEvents(StreamType streamType);
 
         /*!< Register an EventHandler to the passed EventType.
         *
         *   @remark Thread-safe, blocking. Allows for 1 thread to registed an EventHandler at a time.
         */
-        void registerHandler(EventType p_type, EventHandler p_handler);
+        void registerHandler(EventType type, EventHandler handler);
 
         /*!< Processes all incoming Event%s with their respective handlers.
         *
@@ -108,15 +108,15 @@ namespace razaron::eventstream
         *   @remark Thread-safe, blocking. Internally makes use of EventStream::popEvents and
         *   EventStream::pushEvents, so comes with the same caveats.
         */
-        void propogateEvents(EventStream &p_dst);
+        void propogateEvents(EventStream &dst);
 
       private:
-        std::queue<Event> m_incomingEvents;
-        std::queue<Event> m_outgoingEvents;
-        std::map<EventType, EventHandler> m_eventHandlers;
+        std::queue<Event> _incomingEvents;
+        std::queue<Event> _outgoingEvents;
+        std::map<EventType, EventHandler> _eventHandlers;
 
-        std::mutex m_incomingEventsMutex;
-        std::mutex m_outgoingEventsMutex;
-        std::mutex m_eventHandlersMutex;
+        std::mutex _incomingEventsMutex;
+        std::mutex _outgoingEventsMutex;
+        std::mutex _eventHandlersMutex;
     };
 }

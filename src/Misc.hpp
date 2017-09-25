@@ -309,14 +309,14 @@ template <class T, std::size_t S, std::size_t A>
 struct alignas(A) alignedArray
 {
 public:
-	T* data() { return m_array.data(); }
+	T* data() { return _array.data(); }
 	std::size_t size() { return S; }
 	std::size_t alignment() { return A; }
 
-	T& operator [](std::size_t i) { return m_array[i]; }
+	T& operator [](std::size_t i) { return _array[i]; }
 	void* operator new(std::size_t sz) { return aligned_malloc(sz, A); }
 	void operator delete(void* ptr) { return aligned_free(ptr); }
 
 private:
-	std::array<T, S> m_array{};
+	std::array<T, S> _array{};
 };

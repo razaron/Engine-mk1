@@ -71,7 +71,7 @@ namespace razaron::objectpool
 		*
 		*	@tparam		T				   The type of the object to be moved int o the ObjectPool.
 		*
-		*	@param		p_object		   The object to copy into the ObjectPool.
+		*	@param		object		   The object to copy into the ObjectPool.
 		*
 		*	@exception	std::length_error  T is too large for ObjectPool.
 		*
@@ -79,13 +79,13 @@ namespace razaron::objectpool
 		*	@retval		Handle             On failure, an empty Handle.
 		*/
         template <class T>
-        Handle push(const T &p_object);
+        Handle push(const T &object);
 
         /*!	Moves an object of type T into the ObjectPool.
 		*
 		*	@tparam		T				   The type of the object to be moved int o the ObjectPool.
 		*
-		*	@param		p_object		   The object to move into the ObjectPool.
+		*	@param		object		   The object to move into the ObjectPool.
 		*
 		*	@exception	std::length_error  T is too large for ObjectPool.
 		*
@@ -93,14 +93,14 @@ namespace razaron::objectpool
 		*	@retval		Handle             On failure, an empty Handle.
 		*/
         template <class T>
-        Handle push(T &&p_object);
+        Handle push(T &&object);
 
         /*!	Constructs an object of type T directly into the ObjectPool.
 		*
 		*	@tparam		T				   The type of the object to be moved into the ObjectPool.
 		*	@tparam		Args			   The parameter pack used to construct the T object.<sup>[1]</sup>
 		*
-		*	@param		p_args			   Constructor arguments to pass to the constructor of T.
+		*	@param		args			   Constructor arguments to pass to the constructor of T.
 		*
 		*	@exception	std::length_error  T is too large for ObjectPool.
 		*
@@ -110,77 +110,77 @@ namespace razaron::objectpool
 		*	<small><sup>[1]</sup> Don't enter this. It <a title="cppreference" href="http://en.cppreference.com/w/cpp/language/template_argument_deduction">deduced</a> by the compiler.</small>
 		*/
         template <class T, class... Args>
-        Handle emplace(Args... p_args);
+        Handle emplace(Args... args);
 
         /*!	Gets a pointer to an object in the ObjectPool.
 		*
 		*	@tparam	T			               The type of the object to get from the ObjectPool.
 		*
-        *	@param	p_handle	               The Handle used to search for the object in the ObjectPool.
-		*	@param	p_isNaive	               If true, check if p_handle belongs to a free position.
+        *	@param	handle	               The Handle used to search for the object in the ObjectPool.
+		*	@param	isNaive	               If true, check if handle belongs to a free position.
 		*
-        *	@exception	std::invalid_argument  T and p_handle are mismatched.
+        *	@exception	std::invalid_argument  T and handle are mismatched.
 		*	@exception	std::length_error      T is too large for ObjectPool.
         *
         *	@retval T*                         On success, a pointer to the desired object.
 		*	@retval nullptr                    On failure, a nullptr.
 		*/
         template <class T>
-        T *get(const Handle &p_handle, bool p_isNaive = false);
+        T *get(const Handle &handle, bool isNaive = false);
 
-        //TODO template<class T> T* getObjects(std::vector<Handle> p_handles);
+        //TODO template<class T> T* getObjects(std::vector<Handle> handles);
 
         /*!	Removes an object from the ObjectPool and free's the space for reuse.
 		*	It calls the destructor for non-trivially destructible objects.
 		*
         *   @tparam	T			The type of the object to remove from the ObjectPool.
         *
-		*	@param	p_handle	The Handle of the object to remove from the ObjectPool.
+		*	@param	handle	The Handle of the object to remove from the ObjectPool.
 		*/
         template <class T>
-        void erase(const Handle &p_handle);
+        void erase(const Handle &handle);
 
         /*! Moves an object to an earlier free position.
         *
         *   @tparam T   The type of the object to reorder.
         *
-        *   @param  p_handle    The Handle of the object to reorder
+        *   @param  handle    The Handle of the object to reorder
 		*
 		*	@retval		Handle		       On success, a Handle for the objects new position.
 		*	@retval		Handle			   On failure, an empty Handle.
         */
         template <class T>
-        Handle reorder(const Handle &p_handle);
+        Handle reorder(const Handle &handle);
 
         /*! Removes unused pages, releasing their memory. */
         void shrink();
 
         /*! Returns the current total capacity in bytes. */
-        std::size_t capacity(); // add overload with p_size parameter. Checks how many p_size bytes long object can fit.
+        std::size_t capacity(); // add overload with size parameter. Checks how many size bytes long object can fit.
 
       private:
-        PoolTuple m_pools;
+        PoolTuple _pools;
 
         template <class T, class Pool, class... Args>
-        Handle allocateConstruct(Args... p_args);
+        Handle allocateConstruct(Args... args);
 
         template <class T, class Pool>
-        Handle allocateMove(T &&p_object);
+        Handle allocateMove(T &&object);
 
         template <class Pool>
         void addPage();
 
         template <class Pool>
-        typename std::tuple_element<1, Pool>::type::value_type getPage(HandleIndex p_index);
+        typename std::tuple_element<1, Pool>::type::value_type getPage(HandleIndex index);
 
         template <class T, class Pool>
-        T *getObject(const Handle &p_handle, bool p_isNaive = false);
+        T *getObject(const Handle &handle, bool isNaive = false);
 
         template <class Pool, typename T>
-        typename std::enable_if<std::is_pointer<T>::value, HandleIndex>::type getIndex(T p_ptr);
+        typename std::enable_if<std::is_pointer<T>::value, HandleIndex>::type getIndex(T ptr);
 
         template <class T, class Pool>
-        void erase(const Handle &p_handle);
+        void erase(const Handle &handle);
 
         template <class Pool>
         void shrink();
@@ -192,31 +192,31 @@ namespace razaron::objectpool
 
     inline ObjectPool::ObjectPool()
     {
-        m_pools = FOR_EACH_TUPLE({
+        _pools = FOR_EACH_TUPLE({
             std::get<0>(element) = nullptr;
             std::get<2>(element) = std::make_shared<std::recursive_mutex>();
 
             return element;
-        }, m_pools);
+        }, _pools);
     }
 
     inline ObjectPool::~ObjectPool()
     {
-        m_pools = FOR_EACH_TUPLE({
+        _pools = FOR_EACH_TUPLE({
             for (auto arr : std::get<1>(element))
                 delete arr;
 
             return element;
-        }, m_pools);
+        }, _pools);
     }
 
     template <class T>
-    inline Handle ObjectPool::push(const T &p_object)
+    inline Handle ObjectPool::push(const T &object)
     {
         // Find the pool that fits T
         using Pool = typename PoolCond1<T>::type;
 
-        T val = p_object;
+        T val = object;
 
         if (sizeof(T) <= OBJECT_SIZE_64)
         {
@@ -233,14 +233,14 @@ namespace razaron::objectpool
     }
 
     template <class T>
-    inline Handle ObjectPool::push(T &&p_object)
+    inline Handle ObjectPool::push(T &&object)
     {
         // Find the pool that fits T
         using Pool = typename PoolCond1<T>::type;
 
         if (sizeof(T) <= OBJECT_SIZE_64)
         {
-            return allocateMove<T, Pool>(p_object);
+            return allocateMove<T, Pool>(object);
         }
         else
         {
@@ -253,14 +253,14 @@ namespace razaron::objectpool
     }
 
     template <class T, class... Args>
-    inline Handle ObjectPool::emplace(Args... p_args)
+    inline Handle ObjectPool::emplace(Args... args)
     {
         // Find the pool that fits T
         using Pool = typename PoolCond1<T>::type;
 
         if (sizeof(T) <= OBJECT_SIZE_64)
         {
-            return allocateConstruct<T, Pool>(p_args...);
+            return allocateConstruct<T, Pool>(args...);
         }
         else
         {
@@ -272,99 +272,99 @@ namespace razaron::objectpool
     }
 
     template <class T>
-    inline T *ObjectPool::get(const Handle &p_handle, bool p_isNaive)
+    inline T *ObjectPool::get(const Handle &handle, bool isNaive)
     {
         // Find the pool that fits T
         using Pool = typename PoolCond1<T>::type;
 
-        if (p_handle.size != sizeof(T))
+        if (handle.size != sizeof(T))
         {
             std::stringstream message;
-            message << "Type mismatch. HandleSize: " << p_handle.size << " != sizeof(T): " << sizeof(T) << ". typeid(T): " << typeid(T).name();
+            message << "Type mismatch. HandleSize: " << handle.size << " != sizeof(T): " << sizeof(T) << ". typeid(T): " << typeid(T).name();
 
             throw std::invalid_argument(message.str());
         }
         else if (sizeof(T) <= OBJECT_SIZE_64)
         {
-            return getObject<T, Pool>(p_handle, p_isNaive);
+            return getObject<T, Pool>(handle, isNaive);
         }
         else
         {
             std::stringstream message;
-            message << "HandleSize (" << p_handle.size << ") too large for ObjectPool.";
+            message << "HandleSize (" << handle.size << ") too large for ObjectPool.";
 
             throw std::length_error(message.str());
         }
     }
 
     template <class T>
-    inline void ObjectPool::erase(const Handle &p_handle)
+    inline void ObjectPool::erase(const Handle &handle)
     {
         // Find the pool that fits T
         using Pool = typename PoolCond1<T>::type;
 
-        if (p_handle.size != sizeof(T))
+        if (handle.size != sizeof(T))
         {
             std::stringstream message;
-            message << "Type mismatch. HandleSize: " << p_handle.size << " != sizeof(T): " << sizeof(T) << ". typeid(T): " << typeid(T).name();
+            message << "Type mismatch. HandleSize: " << handle.size << " != sizeof(T): " << sizeof(T) << ". typeid(T): " << typeid(T).name();
 
             throw std::invalid_argument(message.str());
         }
         else if (sizeof(T) <= OBJECT_SIZE_64)
         {
-            return erase<T, Pool>(p_handle);
+            return erase<T, Pool>(handle);
         }
         else
         {
             std::stringstream message;
-            message << "HandleSize (" << p_handle.size << ") too large for ObjectPool.";
+            message << "HandleSize (" << handle.size << ") too large for ObjectPool.";
 
             throw std::length_error(message.str());
         }
     }
 
     template <class T>
-    inline Handle ObjectPool::reorder(const Handle &p_handle)
+    inline Handle ObjectPool::reorder(const Handle &handle)
     {
         using Pool = typename PoolCond1<T>::type;
 
-        if (p_handle.size != sizeof(T))
+        if (handle.size != sizeof(T))
         {
             std::stringstream message;
-            message << "Type mismatch. HandleSize: " << p_handle.size << " != sizeof(T): " << sizeof(T) << ". typeid(T): " << typeid(T).name();
+            message << "Type mismatch. HandleSize: " << handle.size << " != sizeof(T): " << sizeof(T) << ". typeid(T): " << typeid(T).name();
 
             throw std::invalid_argument(message.str());
         }
 
-        auto pool = &std::get<Pool>(m_pools);
+        auto pool = &std::get<Pool>(_pools);
 
         std::lock_guard<std::recursive_mutex> lk{ *std::get<2>(*pool) };
 
-        // If the first free pointer is located after p_handle, return null
-        if (p_handle.index < getIndex<Pool>(std::get<0>(*pool)))
+        // If the first free pointer is located after handle, return null
+        if (handle.index < getIndex<Pool>(std::get<0>(*pool)))
             return {};
 
         T temp;
 
-        // If no object currently exists for p_handle, returm null
-        if(getObject<T, Pool>(p_handle))
-            temp = *getObject<T, Pool>(p_handle);
+        // If no object currently exists for handle, returm null
+        if(getObject<T, Pool>(handle))
+            temp = *getObject<T, Pool>(handle);
         else
             return {};
 
-        erase<T, Pool>(p_handle);
+        erase<T, Pool>(handle);
 
         return allocateMove<T, Pool>(std::move(temp));
     }
 
     inline std::size_t ObjectPool::capacity()
     {
-        auto pA = std::get<PoolA>(m_pools);
-        auto pB = std::get<PoolB>(m_pools);
-        auto pC = std::get<PoolC>(m_pools);
-        auto pD = std::get<PoolD>(m_pools);
-        auto pE = std::get<PoolE>(m_pools);
-        auto pF = std::get<PoolF>(m_pools);
+        auto pA = std::get<PoolA>(_pools);
+        auto pB = std::get<PoolB>(_pools);
+        auto pC = std::get<PoolC>(_pools);
+        auto pD = std::get<PoolD>(_pools);
+        auto pE = std::get<PoolE>(_pools);
+        auto pF = std::get<PoolF>(_pools);
 
         return std::get<1>(pA).size() * sizeof(ArrayA) + std::get<1>(pB).size() * sizeof(ArrayB) + std::get<1>(pC).size() * sizeof(ArrayC) + std::get<1>(pD).size() * sizeof(ArrayD) + std::get<1>(pE).size() * sizeof(ArrayE) + std::get<1>(pF).size() * sizeof(ArrayF);
     }
@@ -384,17 +384,17 @@ namespace razaron::objectpool
 	****************************************************/
 
     template <class T, class Pool, class... Args>
-    inline Handle ObjectPool::allocateConstruct(Args... p_args)
+    inline Handle ObjectPool::allocateConstruct(Args... args)
     {
-        T temp{ p_args... };
+        T temp{ args... };
 
         return allocateMove<T, Pool>(std::move(temp));
     }
 
     template <class T, class Pool>
-    inline Handle ObjectPool::allocateMove(T &&p_object)
+    inline Handle ObjectPool::allocateMove(T &&object)
     {
-        auto pool = &std::get<Pool>(m_pools);
+        auto pool = &std::get<Pool>(_pools);
 
         std::lock_guard<std::recursive_mutex> lk{ *std::get<2>(*pool) };
 
@@ -410,7 +410,7 @@ namespace razaron::objectpool
         Handle *nextFree = getObject<Handle, Pool>(*curFree, true);
 
         // Copy object data to the location current free pointer
-        std::memcpy(curFree, &p_object, sizeof(T));
+        std::memcpy(curFree, &object, sizeof(T));
 
         // Set the pools first free pointer to the next free pointer
         std::get<0>(*pool) = nextFree;
@@ -427,7 +427,7 @@ namespace razaron::objectpool
         typedef typename std::tuple_element<1, Pool>::type::value_type PagePtr;
         typedef typename std::remove_pointer<PagePtr>::type Page;
 
-        auto pool = &std::get<Pool>(m_pools);
+        auto pool = &std::get<Pool>(_pools);
 
         // Create and push a new page onto the pool
         auto page = new Page{};
@@ -449,14 +449,14 @@ namespace razaron::objectpool
     }
 
     template <class Pool>
-    inline typename std::tuple_element<1, Pool>::type::value_type ObjectPool::getPage(HandleIndex p_index)
+    inline typename std::tuple_element<1, Pool>::type::value_type ObjectPool::getPage(HandleIndex index)
     {
         typedef typename std::tuple_element<1, Pool>::type::value_type PagePtr;
 
-        auto pool = &std::get<Pool>(m_pools);
+        auto pool = &std::get<Pool>(_pools);
 
         // Quotient is the page number and remainder is the position in that page
-        std::div_t d = std::div(p_index, OBJECT_POOL_PAGE_LENGTH);
+        std::div_t d = std::div(index, OBJECT_POOL_PAGE_LENGTH);
 
         // Finds a pointer to the correct page
         PagePtr page = nullptr;
@@ -474,28 +474,28 @@ namespace razaron::objectpool
     }
 
     template <class T, class Pool>
-    inline T *ObjectPool::getObject(const Handle &p_handle, bool p_isNaive)
+    inline T *ObjectPool::getObject(const Handle &handle, bool isNaive)
     {
         typedef typename std::tuple_element<1, Pool>::type::value_type PagePtr;
 
-        auto pool = &std::get<Pool>(m_pools);
+        auto pool = &std::get<Pool>(_pools);
 
         std::lock_guard<std::recursive_mutex> lk{ *std::get<2>(*pool) };
 
-        // Find the page containg p_handle
-        PagePtr page = getPage<Pool>(p_handle.index);
+        // Find the page containg handle
+        PagePtr page = getPage<Pool>(handle.index);
 
         // Quotient is the page number and remainder is the position in that page
-        std::div_t d = std::div(p_handle.index, OBJECT_POOL_PAGE_LENGTH);
+        std::div_t d = std::div(handle.index, OBJECT_POOL_PAGE_LENGTH);
 
         // Find and cast the element refering to objects first byte
         auto objectPtr = reinterpret_cast<T *>(&page->data()[d.rem * std::get<0>(*pool)->size]);
 
         // Loop through free pointers to see if objectPtr is one of them
-        if (!p_isNaive && std::get<0>(*pool)->index <= p_handle.index)
+        if (!isNaive && std::get<0>(*pool)->index <= handle.index)
         {
             Handle *freePtr = std::get<0>(*pool);
-            while (freePtr->index <= p_handle.index)
+            while (freePtr->index <= handle.index)
             {
                 freePtr = getObject<Handle, Pool>(
                     Handle{
@@ -515,15 +515,15 @@ namespace razaron::objectpool
     }
 
     template <class Pool, typename T>
-    inline typename std::enable_if<std::is_pointer<T>::value, HandleIndex>::type ObjectPool::getIndex(T p_ptr)
+    inline typename std::enable_if<std::is_pointer<T>::value, HandleIndex>::type ObjectPool::getIndex(T ptr)
     {
         typedef typename std::tuple_element<1, Pool>::type::value_type PagePtr;
         typedef typename std::remove_pointer<PagePtr>::type Page;
 
-        auto pool = &std::get<Pool>(m_pools);
+        auto pool = &std::get<Pool>(_pools);
 
-        // Find the page that contains p_ptr
-        std::size_t ptrAdr = reinterpret_cast<std::size_t>(p_ptr);
+        // Find the page that contains ptr
+        std::size_t ptrAdr = reinterpret_cast<std::size_t>(ptr);
         std::size_t pageAdr = 0;
         std::size_t diff = 0;
         int pageNumber = 0;
@@ -567,9 +567,9 @@ namespace razaron::objectpool
     }
 
     template <class T, class Pool>
-    inline void ObjectPool::erase(const Handle &p_handle)
+    inline void ObjectPool::erase(const Handle &handle)
     {
-        auto pool = &std::get<Pool>(m_pools);
+        auto pool = &std::get<Pool>(_pools);
 
         std::lock_guard<std::recursive_mutex> lk{ *std::get<2>(*pool) };
 
@@ -577,9 +577,9 @@ namespace razaron::objectpool
         auto posCurFree = getIndex<Pool>(std::get<0>(*pool));
 
         // Fail if first free position and object being removed are the same
-        if (p_handle.index == posCurFree) return;
+        if (handle.index == posCurFree) return;
 
-        Handle *ptrToRemove = getObject<Handle, Pool>(p_handle, true);
+        Handle *ptrToRemove = getObject<Handle, Pool>(handle, true);
 
         // Call object destructor if it is manually set
         if (std::is_destructible<T>::value && !std::is_trivially_destructible<T>::value)
@@ -589,7 +589,7 @@ namespace razaron::objectpool
         std::memset(ptrToRemove, 0, std::get<0>(*pool)->size);
 
         // If the object being removed is located BEFORE the first free position
-        if (p_handle.index < posCurFree)
+        if (handle.index < posCurFree)
         {
 
             // Setup the object being removed to become the next firstFree pointer
@@ -608,8 +608,8 @@ namespace razaron::objectpool
 
         std::size_t posNextFree = getIndex<Pool>(ptrNextFree);
 
-        // Loop through free positions until p_handle is inbetween prevFree and nextFree
-        while (posNextFree < p_handle.index)
+        // Loop through free positions until handle is inbetween prevFree and nextFree
+        while (posNextFree < handle.index)
         {
             ptrPrevFree = ptrNextFree;
 
@@ -617,8 +617,8 @@ namespace razaron::objectpool
             posNextFree = getIndex<Pool>(ptrNextFree);
         }
 
-        // Currently, ptrToRemove is set to some value (e.g. "hello"), so I have to use p_handle
-        ptrPrevFree->index = p_handle.index;
+        // Currently, ptrToRemove is set to some value (e.g. "hello"), so I have to use handle
+        ptrPrevFree->index = handle.index;
 
         // Setup the ptr being removed to be inbetween ptrPrevFree and ptrNextFree
         ptrToRemove->isFree = true;
@@ -631,7 +631,7 @@ namespace razaron::objectpool
     template <class Pool>
     inline void ObjectPool::shrink()
     {
-        auto pool = &std::get<Pool>(m_pools);
+        auto pool = &std::get<Pool>(_pools);
 
         std::lock_guard<std::recursive_mutex> lk{ *std::get<2>(*pool) };
 

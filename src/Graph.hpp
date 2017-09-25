@@ -40,8 +40,8 @@ namespace razaron::graph
         State state;
         ; /*!< The current state of the Vertex, represented by a bitfield. */
 
-        /*! Constructs an empty Vertex with the ID `p_index`. */
-        Vertex(unsigned short p_index) : data(V{}), id(p_index), state(State::WHITE) {}
+        /*! Constructs an empty Vertex with the ID `index`. */
+        Vertex(unsigned short index) : data(V{}), id(index), state(State::WHITE) {}
 
         /*! Basic equality comparator. */
         bool operator==(const Vertex<V,E> &rhs) const
@@ -81,24 +81,24 @@ namespace razaron::graph
 
         /*!	Performs a breadth first traversal of the Graph.
 		*
-		*	Starting at the Vertex with the ID `p_origin`, traverses the Graph in breadth first order.
+		*	Starting at the Vertex with the ID `origin`, traverses the Graph in breadth first order.
 		*	Runs the defined discovery function for every Vertex and Edge.
 		*
 		*	By default, sets the state of every touched Vertex and Edge with `State::WHITE` to `State::GREY`
         *   unless specified otherwise in their discovery functions.
 		*
-		*	@param	p_origin	The ID of the Vertex to start the traversal from.
+		*	@param	origin	The ID of the Vertex to start the traversal from.
 		*/
-        void breadthFirstTraversal(unsigned short p_origin);
+        void breadthFirstTraversal(unsigned short origin);
 
         /*!	Constructs and adds a new Edge to the Graph.
 		*
-		*	If no Vertex objects exist with the IDs `p_source` or `p_target`, constructs and adds new Vertex
+		*	If no Vertex objects exist with the IDs `source` or `target`, constructs and adds new Vertex
         *   objects for the missing IDs to the Graph.
 		*
-		*	@param	p_data		The data held by the edge.
-		*	@param	p_source	The ID of the source Vertex.
-		*	@param	p_target	The ID of the target Vertex.
+		*	@param	data		The data held by the edge.
+		*	@param	source	The ID of the source Vertex.
+		*	@param	target	The ID of the target Vertex.
 		*/
         void addEdge(unsigned short source, unsigned short target, E data = E{});
 
@@ -106,22 +106,22 @@ namespace razaron::graph
         void reset();
 
         /*! Returns the number of Vertex objects. */
-        std::size_t size() { return m_vertices.size(); }
+        std::size_t size() { return _vertices.size(); }
 
-        /*!	Get's a reference to the Vertex with `id == p_index`.
+        /*!	Get's a reference to the Vertex with `id == index`.
 		*
-		*	@exception	std::out_of_range	p_index out of range for m_vertices.
+		*	@exception	std::out_of_range	index out of range for _vertices.
 		*
 		*	@return	A reference to Vertex object.
 		*/
-        Vertex<V, E> &operator[](unsigned short p_index);
+        Vertex<V, E> &operator[](unsigned short index);
 
         G data{};                                /*!< The data held by this Graph */
         std::map<State, VertexFunc> vertexFuncs; /*!< The function to run on Vertex discovery. */
         std::map<State, EdgeFunc> edgeFuncs;     /*<! The function to run on Edge discovery */
 
       private:
-        std::vector<Vertex<V, E>> m_vertices;
+        std::vector<Vertex<V, E>> _vertices;
     };
 
     // Default constructor
@@ -144,17 +144,17 @@ namespace razaron::graph
     }
 
     template <class V, class E, class G>
-    inline void Graph<V, E, G>::breadthFirstTraversal(unsigned short p_origin)
+    inline void Graph<V, E, G>::breadthFirstTraversal(unsigned short origin)
     {
-        // Return if p_origin has no adjacent vertices
-        if (!(*this)[p_origin].adjacencyList.size())
+        // Return if origin has no adjacent vertices
+        if (!(*this)[origin].adjacencyList.size())
             return;
 
         std::list<Vertex<V, E>> openList;
         std::list<Vertex<V, E>> closedList;
 
         //add this vertex to openQueue
-        openList.push_back((*this)[p_origin]);
+        openList.push_back((*this)[origin]);
 
         //Process open queue
         while (!openList.empty())
@@ -202,10 +202,10 @@ namespace razaron::graph
         // if it's not found, construct it
         catch (std::out_of_range e)
         {
-            if (source >= m_vertices.size())
-                m_vertices.emplace_back(source);
+            if (source >= _vertices.size())
+                _vertices.emplace_back(source);
             else
-                m_vertices.emplace(m_vertices.begin() + source, source);
+                _vertices.emplace(_vertices.begin() + source, source);
         }
 
         // look for vertex with ID target
@@ -215,10 +215,10 @@ namespace razaron::graph
         }
         catch (std::out_of_range e)
         {
-            if (target >= m_vertices.size())
-                m_vertices.emplace_back(target);
+            if (target >= _vertices.size())
+                _vertices.emplace_back(target);
             else
-                m_vertices.emplace(m_vertices.begin() + target, target);
+                _vertices.emplace(_vertices.begin() + target, target);
         }
 
         (*this)[source].adjacencyList.push_back({data, source, target, State::WHITE});
@@ -227,7 +227,7 @@ namespace razaron::graph
     template <class V, class E, class G>
     inline void Graph<V, E, G>::reset()
     {
-        for (auto &v : m_vertices)
+        for (auto &v : _vertices)
         {
             v.state = State::WHITE;
 
@@ -253,26 +253,26 @@ namespace razaron::graph
     }
 
     template <class V, class E, class G>
-    inline Vertex<V, E> &graph::Graph<V, E, G>::operator[](unsigned short p_index)
+    inline Vertex<V, E> &graph::Graph<V, E, G>::operator[](unsigned short index)
     {
         typedef typename std::vector<Vertex<V, E>>::iterator Iterator;
 
-        if (p_index >= m_vertices.size())
+        if (index >= _vertices.size())
         {
-            throw std::out_of_range("p_index out of range for m_vertices");
+            throw std::out_of_range("index out of range for _vertices");
         }
-        else if (m_vertices[p_index].id == p_index)
+        else if (_vertices[index].id == index)
         {
-            return m_vertices[p_index];
+            return _vertices[index];
         }
         else
         {
-            auto lamda = [p_index](const Vertex<V, E> &v) { return v.id == p_index; };
-            Iterator it = std::find_if(m_vertices.begin(), m_vertices.end(), lamda);
+            auto lamda = [index](const Vertex<V, E> &v) { return v.id == index; };
+            Iterator it = std::find_if(_vertices.begin(), _vertices.end(), lamda);
 
-            if (it == m_vertices.end())
+            if (it == _vertices.end())
             {
-                throw std::out_of_range("p_index not found in m_vertices");
+                throw std::out_of_range("index not found in _vertices");
             }
             else
             {
