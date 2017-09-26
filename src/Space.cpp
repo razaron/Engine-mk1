@@ -172,7 +172,19 @@ void Space::propagateEvents()
             g[e.target].data->propogateEvents(_eventStream);
 
             // TODO Whitelist repeat events. For now I'm just deleting everything.
-            _eventStream.popEvents(StreamType::OUTGOING);
+            std::vector<Event> events = _eventStream.popEvents(StreamType::OUTGOING);
+            std::vector<Event> liveEvents;
+
+            for(auto &event : events)
+            {
+                if(event.lifetime)
+                {
+                    event.lifetime--;
+                    liveEvents.push_back(event);
+                }
+            }
+
+            _eventStream.pushEvents(liveEvents, StreamType::OUTGOING);
         }
     };
     _systemGraph.breadthFirstTraversal(0);

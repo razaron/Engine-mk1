@@ -16,6 +16,9 @@ GameSystem::GameSystem()
     _componentTypes.insert(COMPONENT_ANIMAL);
 
     registerHandler(EVENT_MODEL, [&](Event &e) {
+        if(e.lifetime)
+            return;
+            
         auto data = std::static_pointer_cast<EVENTDATA_MODEL>(e.data);
 
         _models[e.recipient] = data->model;
@@ -83,6 +86,9 @@ Task GameSystem::update(EntityMap &entities, double delta)
         }
     }
 
+    if(_models.size() != animals.size())
+        return Task{};
+
     // Seperate the animals into carnivores and herbivores
     std::vector<std::pair<unsigned, AnimalComponent *>> carnivores;
     std::vector<std::pair<unsigned, AnimalComponent *>> herbivores;
@@ -98,18 +104,12 @@ Task GameSystem::update(EntityMap &entities, double delta)
     std::vector<Event> events;
     for (auto &carnivore : carnivores)
     {
-        if (_models.find(carnivore.first) == _models.end())
-            continue;
-
         std::pair<unsigned, AnimalComponent *> prey;
         float distance = std::numeric_limits<float>::max();
 
         // Find closest prey
         for (auto &herbivore : herbivores)
         {
-            if (_models.find(herbivore.first) == _models.end())
-                continue;
-
             glm::vec2 p1 = glm::vec2((_models[carnivore.first])[3]);
             glm::vec2 p2 = glm::vec2((_models[herbivore.first])[3]);
 
@@ -178,14 +178,14 @@ void GameSystem::initGame()
     // Create new entity
     std::vector<Event> events;
 
-    for (auto i = 0; i < 2; i++)
+    for (auto i = 0; i < 100; i++)
     {
         std::list<ComponentArgs> list;
 
         list.push_back(ComponentArgs{
             ComponentType::TRANSFORM,
             std::make_shared<TransformArgs>(
-                glm::vec2{ i * 5.f, i * 5.f }, // translation
+                glm::vec2{ i * (10.f/1000), i * (10.f/1000) }, // translation
                 glm::vec2{ 0.25f, 0.25f },     // scale
                 0.f                            // rotation (radians)
                 ) });

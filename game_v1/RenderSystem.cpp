@@ -7,6 +7,9 @@ RenderSystem::RenderSystem()
 {
     // Update or insert a new model matrix into the map of models
     registerHandler(EVENT_MODEL, [&](Event &e) {
+        if(e.lifetime)
+            return;
+            
         auto data = std::static_pointer_cast<EVENTDATA_MODEL>(e.data);
 
         _models[e.recipient] = data->model;
