@@ -28,5 +28,6 @@ namespace razaron::physics
         void seek(float delta, TransformComponent* t, MotionComponent* m);
 
       private:
+        std::map<unsigned, std::pair<unsigned, SteeringBehaviour>> _behaviours;
     };
 }

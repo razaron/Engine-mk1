@@ -16,7 +16,7 @@ MotionComponent::~MotionComponent()
 {
 }
 
-glm::vec2 MotionComponent::applyForce(glm::vec2 force, float delta)
+glm::vec2 MotionComponent::applyForce(glm::vec2 force)
 {
     auto acc = (force / _mass);
 

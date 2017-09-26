@@ -17,7 +17,7 @@ namespace razaron::physics
         MotionComponent(float maxVelocity, float maxAcceleration, float mass);
         ~MotionComponent();
 
-        glm::vec2 applyForce(glm::vec2 force, float delta);
+        glm::vec2 applyForce(glm::vec2 force);
         glm::vec2 updateVelocity(float delta);
 
         glm::vec2 getVelocity() { return _velocity; }

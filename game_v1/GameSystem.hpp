@@ -2,9 +2,10 @@
 
 #include <glm/glm.hpp>
 
+#include "MotionComponent.hpp"
 #include "System.hpp"
 #include "TransformComponent.hpp"
-#include "MotionComponent.hpp"
+#include "AnimalComponent.hpp"
 #include "config.hpp"
 
 namespace razaron::game
@@ -24,6 +25,10 @@ namespace razaron::game
         Task update(EntityMap &entities, double delta);
         ComponentHandle createComponent(ComponentType type, std::shared_ptr<void> tuplePtr);
         bool removeComponent(ComponentHandle ch);
+
+        void initGame();
+
       private:
+        std::map<unsigned short, glm::mat4> _models;
     };
 }

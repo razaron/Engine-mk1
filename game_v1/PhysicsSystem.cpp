@@ -33,6 +33,18 @@ PhysicsSystem::PhysicsSystem()
             }
         }
     });
+
+    registerHandler(EVENT_STEERING, [&](Event &e) {
+        auto data = std::static_pointer_cast<EVENTDATA_STEERING>(e.data);
+
+        _behaviours[e.recipient] = std::make_pair(data->targetID, data->behaviour);
+
+        if (g_delay <= 0)
+        {
+            g_delay = 1;
+            std::cout << _behaviours.size() << std::endl;
+        }
+    });
 }
 
 PhysicsSystem::~PhysicsSystem()
@@ -59,14 +71,6 @@ Task PhysicsSystem::update(EntityMap &entities, double delta)
 
             t->setRotation((v1.x < v2.x) ? pi - theta : theta - pi);
 
-            if (g_delay <= 0)
-            {
-                g_delay = 1;
-                std::cout << "t->translation: " << t->translation.x << ", " << t->translation.y << std::endl;
-                std::cout << "speed: " << glm::length(m->getVelocity()) << std::endl;
-                std::cout << "acceleration: " << glm::length(m->getAcceleration()) << std::endl;
-            }
-
             // Send model matrix to the RenderSystem
             pushEvent(Event{
                 id,
@@ -86,7 +90,7 @@ void PhysicsSystem::seek(float delta, TransformComponent *t, MotionComponent *m)
     glm::vec2 desiredVelocity = glm::normalize(g_target - t->translation) * m->getMaxVelocity();
     glm::vec2 steering = desiredVelocity - m->getVelocity();
 
-    m->applyForce(steering, delta);
+    m->applyForce(steering);
     m->updateVelocity(delta);
 
     t->translation += m->getVelocity() * delta;
