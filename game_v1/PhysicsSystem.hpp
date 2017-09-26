@@ -25,7 +25,7 @@ namespace razaron::physics
         ComponentHandle createComponent(ComponentType type, std::shared_ptr<void> tuplePtr);
         bool removeComponent(ComponentHandle ch);
 
-        void seek(float delta, TransformComponent* t, MotionComponent* m);
+        void seek(float delta, TransformComponent* t, MotionComponent* m, TransformComponent* target);
 
       private:
         std::map<unsigned, std::pair<unsigned, SteeringBehaviour>> _behaviours;

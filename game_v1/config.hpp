@@ -13,7 +13,7 @@ using namespace razaron::core::component;
 
 const EventType EVENT_INPUT = EventType::EVENT_1;
 const EventType EVENT_MODEL = EventType::EVENT_2;
-const EventType EVENT_STEERING = EventType::EVENT_2;
+const EventType EVENT_STEERING = EventType::EVENT_3;
 
 const ComponentType COMPONENT_ANIMAL = ComponentType::COMPONENT_1;
 
