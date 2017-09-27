@@ -13,8 +13,7 @@
             "-Wextra"
         ],
         "cmake_opts": {
-            "CMAKE_BUILD_TYPE": "Debug",
-            "CMAKE_CXX_FLAGS": "-fsanitize=thread"
+            "CMAKE_BUILD_TYPE": "Debug"
         },
         "testSrc": [{
                 "fullpath": "testComponent.cpp",

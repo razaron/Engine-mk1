@@ -20,27 +20,29 @@ class SystemA : public System
   public:
     SystemA()
     {
-        m_componentTypes.insert(ComponentType::FOO);
+        _componentTypes.insert(ComponentType::COMPONENT_1);
     }
 
     ~SystemA() {}
 
-    Task update(EntityMap &p_entities, double delta)
+    Task update(EntityMap &entities, double delta)
     {
-        UNUSED(p_entities);
+        UNUSED(entities);
         UNUSED(delta);
         count++;
 
         return Task{};
     }
 
-    ComponentHandle createComponent(ComponentType p_type)
+    ComponentHandle createComponent(ComponentType type, std::shared_ptr<void> tuplePtr)
     {
+        UNUSED(tuplePtr);
+
         Handle h;
 
-        switch (p_type)
+        switch (type)
         {
-        case ComponentType::FOO:
+        case ComponentType::COMPONENT_1:
             h = emplaceObject<Foo>(Foo{});
             break;
         default:
@@ -48,17 +50,17 @@ class SystemA : public System
             break;
         }
 
-        return ComponentHandle{p_type, h};
+        return ComponentHandle{ type, h };
     }
 
-    bool removeComponent(ComponentHandle p_ch)
+    bool removeComponent(ComponentHandle ch)
     {
         Handle h;
 
-        switch (p_ch.first)
+        switch (ch.first)
         {
-        case ComponentType::FOO:
-            removeObject<Foo>(p_ch.second);
+        case ComponentType::COMPONENT_1:
+            removeObject<Foo>(ch.second);
             break;
         default:
             return false;
@@ -71,7 +73,7 @@ class SystemA : public System
     int count{};
 
   private:
-    std::string sysName{"SystemA"};
+    std::string sysName{ "SystemA" };
 };
 
 class SystemC : public System
@@ -80,29 +82,31 @@ class SystemC : public System
     SystemC() {}
     ~SystemC() {}
 
-    Task update(EntityMap &p_entities, double delta)
+    Task update(EntityMap &entities, double delta)
     {
-        UNUSED(p_entities);
+        UNUSED(entities);
         UNUSED(delta);
         count++;
         return Task{};
     }
 
-    ComponentHandle createComponent(ComponentType p_type)
+    ComponentHandle createComponent(ComponentType type, std::shared_ptr<void> tuplePtr)
     {
-        UNUSED(p_type);
+        UNUSED(type);
+        UNUSED(tuplePtr);
+
         return ComponentHandle{};
     }
-    bool removeComponent(ComponentHandle p_ch)
+    bool removeComponent(ComponentHandle ch)
     {
-        UNUSED(p_ch);
+        UNUSED(ch);
         return false;
     }
 
     int count{};
 
   private:
-    std::string sysName{"SystemC"};
+    std::string sysName{ "SystemC" };
 };
 
 class SystemD : public System
@@ -110,26 +114,28 @@ class SystemD : public System
   public:
     SystemD()
     {
-        m_componentTypes.insert(ComponentType::BAR);
+        _componentTypes.insert(ComponentType::COMPONENT_2);
     }
     ~SystemD() {}
 
-    Task update(EntityMap &p_entities, double delta)
+    Task update(EntityMap &entities, double delta)
     {
-        UNUSED(p_entities);
+        UNUSED(entities);
         UNUSED(delta);
         count++;
 
         return Task{};
     }
 
-    ComponentHandle createComponent(ComponentType p_type)
+    ComponentHandle createComponent(ComponentType type, std::shared_ptr<void> tuplePtr)
     {
+        UNUSED(tuplePtr);
+
         Handle h;
 
-        switch (p_type)
+        switch (type)
         {
-        case ComponentType::BAR:
+        case ComponentType::COMPONENT_2:
             h = emplaceObject<Bar>(Bar{});
             break;
         default:
@@ -137,17 +143,17 @@ class SystemD : public System
             break;
         }
 
-        return ComponentHandle{p_type, h};
+        return ComponentHandle{ type, h };
     }
 
-    bool removeComponent(ComponentHandle p_ch)
+    bool removeComponent(ComponentHandle ch)
     {
         Handle h;
 
-        switch (p_ch.first)
+        switch (ch.first)
         {
-        case ComponentType::BAR:
-            removeObject<Bar>(p_ch.second);
+        case ComponentType::COMPONENT_2:
+            removeObject<Bar>(ch.second);
             break;
         default:
             return false;
@@ -160,7 +166,7 @@ class SystemD : public System
     int count{};
 
   private:
-    std::string sysName{"SystemD"};
+    std::string sysName{ "SystemD" };
 };
 
 class SystemB : public System
@@ -169,29 +175,31 @@ class SystemB : public System
     SystemB() {}
     ~SystemB() {}
 
-    Task update(EntityMap &p_entities, double delta)
+    Task update(EntityMap &entities, double delta)
     {
-        UNUSED(p_entities);
+        UNUSED(entities);
         UNUSED(delta);
         count++;
         return Task{};
     }
 
-    ComponentHandle createComponent(ComponentType p_type)
+    ComponentHandle createComponent(ComponentType type, std::shared_ptr<void> tuplePtr)
     {
-        UNUSED(p_type);
+        UNUSED(type);
+        UNUSED(tuplePtr);
+
         return ComponentHandle{};
     }
-    bool removeComponent(ComponentHandle p_ch)
+    bool removeComponent(ComponentHandle ch)
     {
-        UNUSED(p_ch);
+        UNUSED(ch);
         return false;
     }
 
     int count{};
 
   private:
-    std::string sysName{"SystemB"};
+    std::string sysName{ "SystemB" };
 };
 
 class SystemE : public System
@@ -200,29 +208,31 @@ class SystemE : public System
     SystemE() {}
     ~SystemE() {}
 
-    Task update(EntityMap &p_entities, double delta)
+    Task update(EntityMap &entities, double delta)
     {
-        UNUSED(p_entities);
+        UNUSED(entities);
         UNUSED(delta);
         count++;
         return Task{};
     }
 
-    ComponentHandle createComponent(ComponentType p_type)
+    ComponentHandle createComponent(ComponentType type, std::shared_ptr<void> tuplePtr)
     {
-        UNUSED(p_type);
+        UNUSED(type);
+        UNUSED(tuplePtr);
+
         return ComponentHandle{};
     }
-    bool removeComponent(ComponentHandle p_ch)
+    bool removeComponent(ComponentHandle ch)
     {
-        UNUSED(p_ch);
+        UNUSED(ch);
         return false;
     }
 
     int count{};
 
   private:
-    std::string sysName{"SystemE"};
+    std::string sysName{ "SystemE" };
 };
 
 class SystemF : public System
@@ -231,27 +241,29 @@ class SystemF : public System
     SystemF() {}
     ~SystemF() {}
 
-    Task update(EntityMap &p_entities, double delta)
+    Task update(EntityMap &entities, double delta)
     {
-        UNUSED(p_entities);
+        UNUSED(entities);
         UNUSED(delta);
         count++;
         return Task{};
     }
 
-    ComponentHandle createComponent(ComponentType p_type)
+    ComponentHandle createComponent(ComponentType type, std::shared_ptr<void> tuplePtr)
     {
-        UNUSED(p_type);
+        UNUSED(type);
+        UNUSED(tuplePtr);
+        
         return ComponentHandle{};
     }
-    bool removeComponent(ComponentHandle p_ch)
+    bool removeComponent(ComponentHandle ch)
     {
-        UNUSED(p_ch);
+        UNUSED(ch);
         return false;
     }
 
     int count{};
 
   private:
-    std::string sysName{"SystemF"};
+    std::string sysName{ "SystemF" };
 };

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <list>
+#include <utility>
+#include <memory>
 
 #include "Component.hpp"
 
@@ -8,28 +10,35 @@ namespace razaron::eventdata
 {
     using namespace razaron::core::component;
 
+    using ComponentArgs = std::pair<ComponentType, std::shared_ptr<void>>;
+
     struct CREATE_ENTITY
     {
-        std::list<ComponentType> components;
+        std::list<ComponentArgs> components;
 
-        CREATE_ENTITY(std::list<ComponentType> p_components) : components{p_components} {}
+        CREATE_ENTITY(std::list<ComponentArgs> components) : components{components} {}
     };
 
     struct CREATE_COMPONENT
     {
         ComponentType type;
         Handle handle;
+        std::shared_ptr<void> argsPtr;
         bool isCreated{false};
 
-        CREATE_COMPONENT(ComponentType p_type) : type{p_type} {}
-        CREATE_COMPONENT(ComponentHandle p_ch, bool p_isCreated) : type{p_ch.first}, handle{p_ch.second}, isCreated{p_isCreated} {}
+        template <ComponentType Type, class... Args>
+        CREATE_COMPONENT(std::tuple<Args...> args) : type{Type}, argsPtr{std::make_shared<std::tuple<Args...>>(args)} {}
+
+        CREATE_COMPONENT(ComponentArgs args) : type{args.first}, argsPtr{args.second} {}
+
+        CREATE_COMPONENT(ComponentHandle ch, bool isCreated) : type{ch.first}, handle{ch.second}, isCreated{isCreated} {}
     };
 
     struct REMOVE_ENTITY
     {
         bool initial;
 
-        REMOVE_ENTITY(bool p_initial = true) : initial{p_initial} {}
+        REMOVE_ENTITY(bool initial = true) : initial{initial} {}
     };
 
     struct REMOVE_COMPONENT
@@ -37,8 +46,8 @@ namespace razaron::eventdata
         ComponentHandle ch;
         bool isRemoved{false};
 
-        REMOVE_COMPONENT(ComponentHandle p_ch) : ch{p_ch} {}
-        REMOVE_COMPONENT(ComponentHandle p_ch, bool p_isRemoved) : ch{p_ch}, isRemoved{p_isRemoved} {}
-        //REMOVE_COMPONENT(ComponentHandle p_ch, bool p_isRemoved = false) : ch{p_ch}, isRemoved{p_isRemoved} {}
+        REMOVE_COMPONENT(ComponentHandle ch) : ch{ch} {}
+        REMOVE_COMPONENT(ComponentHandle ch, bool isRemoved) : ch{ch}, isRemoved{isRemoved} {}
+        //REMOVE_COMPONENT(ComponentHandle ch, bool isRemoved = false) : ch{ch}, isRemoved{isRemoved} {}
     };
 }

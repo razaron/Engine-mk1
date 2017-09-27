@@ -1,4 +1,5 @@
 #include <thread>
+#include <array>
 
 #include <catch.hpp>
 

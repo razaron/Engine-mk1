@@ -1,5 +1,7 @@
 #pragma once
 
+#include <algorithm>
+
 #include "Graph.hpp"
 #include "System.hpp"
 
@@ -29,7 +31,7 @@ namespace razaron::core::space
     class Space
     {
       public:
-        Space(SystemGraph &p_systemGraph); /*!< Constructs a Space from the passed SystemGraph. */
+        Space(SystemGraph &systemGraph); /*!< Constructs a Space from the passed SystemGraph. */
         ~Space();                          /*!< Default destructor. */
 
         /*! Updates the related System%s with respect to `delta`.
@@ -40,7 +42,7 @@ namespace razaron::core::space
 		*/
         void update(double delta);
 
-        //TODO System* addSystem(System* p_system, System* p_root); /*!< Adds a System to the Space. */
+        //TODO System* addSystem(System* system, System* root); /*!< Adds a System to the Space. */
 
         /*!	Creates a new empty Entity.
 		*
@@ -52,37 +54,38 @@ namespace razaron::core::space
 		*
 		*	@returns    The number of Component%s remaining in the Entity.
 		*/
-        std::size_t removeEntity(unsigned int p_id); /*!< Deletes an Entity from the Space. */
+        std::size_t removeEntity(unsigned int id); /*!< Deletes an Entity from the Space. */
 
         //TODO Entity* moveEntity(); /*!< Moves an Entity into another Space. */
-        //TODO std::vector<Entity>* getEntities() { return &m_entities; } /*!<  */
+        //TODO std::vector<Entity>* getEntities() { return &_entities; } /*!<  */
 
         /*! Calls `registerHandler` on the member EventStream with the given arguments. */
-        void registerHandler(EventType p_type, EventHandler p_handler);
+        void registerHandler(EventType type, EventHandler handler);
 
         /*! Calls `pushEvents` on the member EventStream with the given arguments. */
-        void pushEvents(std::vector<Event> &p_events, StreamType p_streamType);
+        void pushEvents(std::vector<Event> &events, StreamType streamType);
 
         /*!	Gets the Entity mapped to the passed ID.
 		*
-		*	@param      p_id                    The ID of the Entity to search for.
+		*	@param      id                    The ID of the Entity to search for.
 		*
         *   @exception  std::invalid_argument   Throws if the ID maps to no Entity.
         *
 		*	@returns    A reference to the mapped Entity.
 		*/
-        Entity &operator[](unsigned short p_id);
+        Entity &operator[](unsigned short id);
 
-        EntityMap &getEntities() { return m_entities; };
+        EntityMap &getEntities() { return _entities; };
 
       private:
         void updateSystems(double delta);
         void propagateEvents();
 
-        unsigned m_id;
-        SystemGraph m_systemGraph;
-        double m_intervalMax{};
-        EntityMap m_entities;
-        EventStream m_eventStream;
+        unsigned _id;
+        SystemGraph _systemGraph;
+        double _intervalMax{};
+        EntityMap _entities;
+        EventStream _eventStream;
+        std::vector<unsigned> _deletingEntities;
     };
 }

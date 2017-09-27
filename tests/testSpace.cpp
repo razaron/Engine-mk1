@@ -47,7 +47,7 @@ SCENARIO("Spaces manage Systems and Events, updating them in BF order", "[space]
             REQUIRE(e->count == 1);
             REQUIRE(f->count == 1);
 
-            THEN("Updating the space with delta > m_maxInterval")
+            THEN("Updating the space with delta > _maxInterval")
             {
                 s.update(0.05 * 1.5);
 
@@ -106,9 +106,9 @@ SCENARIO("Spaces can add/remove enitities, generating relavant components in the
                     0, // Entity ID. 0 because unneeded
                     EventType::CREATE_ENTITY, // Event type enum
                     std::make_shared<eventdata::CREATE_ENTITY>(
-                        std::list<ComponentType>{
-                            ComponentType::FOO,
-                            ComponentType::BAR
+                        std::list<ComponentArgs>{
+                            ComponentArgs{ComponentType::COMPONENT_1, nullptr},
+                            ComponentArgs{ComponentType::COMPONENT_2, nullptr}
                         }
                     )
                 };

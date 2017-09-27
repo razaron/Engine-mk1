@@ -5,7 +5,7 @@ using namespace razaron::core::component;
 std::atomic<unsigned> razaron::core::component::g_nextID;
 
 Component::Component()
-	:m_id(g_nextID++)
+	:_id(g_nextID++)
 {
 }
 
@@ -25,7 +25,7 @@ Component::~Component()
 
 Component & Component::operator=(const Component & rhs)
 {
-	m_id = rhs.m_id;
+	_id = rhs._id;
 
 	return *this;
 }
@@ -34,9 +34,9 @@ Component & Component::operator=(Component && rhs)
 {
 	if (this != &rhs)
 	{
-		m_id = rhs.m_id;
+		_id = rhs._id;
 
-		rhs.m_id = std::numeric_limits<unsigned int>::max();
+		rhs._id = std::numeric_limits<unsigned int>::max();
 	}
 
 	return *this;

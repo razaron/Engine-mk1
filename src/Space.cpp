@@ -3,19 +3,19 @@
 using namespace razaron::core::space;
 using namespace razaron::core::entity;
 
-Space::Space(SystemGraph &p_systemGraph)
-    : m_id{g_nextID++}, m_systemGraph{std::move(p_systemGraph)}
+Space::Space(SystemGraph &systemGraph)
+    : _id{g_nextID++}, _systemGraph{std::move(systemGraph)}
 {
     // Finds the highest interval for given Systems
-    m_systemGraph.vertexFuncs[State::WHITE] = [&](SystemGraphVertex &v, SystemGraph &g) {
+    _systemGraph.vertexFuncs[State::WHITE] = [&](SystemGraphVertex &v, SystemGraph &g) {
         UNUSED(g);
 
-        if (m_intervalMax < v.data->getInterval())
-            m_intervalMax = v.data->getInterval();
+        if (_intervalMax < v.data->getInterval())
+            _intervalMax = v.data->getInterval();
     };
 
-    m_systemGraph.breadthFirstTraversal(0);
-    m_systemGraph.reset();
+    _systemGraph.breadthFirstTraversal(0);
+    _systemGraph.reset();
 
     // Starts the chain of events that will create a new Entity from a list of components
     registerHandler(EventType::CREATE_ENTITY, [&](Event & e) {
@@ -25,13 +25,13 @@ Space::Space(SystemGraph &p_systemGraph)
 
         std::vector<Event> events;
 
-        for(auto type : data->components)
+        for(auto args : data->components)
         {
             events.push_back(Event{
                 entity.getID(),
                 EventType::CREATE_COMPONENT,
-                std::make_shared<eventdata::CREATE_COMPONENT>(type)}
-            );
+                std::make_shared<eventdata::CREATE_COMPONENT>(args)
+            });
         }
 
         pushEvents(events, StreamType::OUTGOING);
@@ -54,6 +54,12 @@ Space::Space(SystemGraph &p_systemGraph)
         // If this is the initial request
         if(data->initial)
         {
+            // IF Entity is not being tracked for deletion, track it. ELSE return
+            if(std::find(_deletingEntities.begin(), _deletingEntities.end(), e.recipient) == _deletingEntities.end())
+                _deletingEntities.push_back(e.recipient);
+            else
+                return;
+
             // Creates a REMOVE_COMPONENT Event for each Component in the Entity
             auto entity = (*this)[e.recipient];
 
@@ -87,6 +93,9 @@ Space::Space(SystemGraph &p_systemGraph)
             if(!(*this)[e.recipient].getComponents().size())
             {
                 removeEntity(e.recipient);
+
+                // Stop tracking the Entity
+                _deletingEntities.erase(std::find(_deletingEntities.begin(), _deletingEntities.end(), e.recipient));
             }
             // Else resend the event
             else
@@ -116,112 +125,140 @@ Space::Space(SystemGraph &p_systemGraph)
 
 Space::~Space()
 {
-    m_systemGraph.reset();
+    _systemGraph.reset();
 
-    m_systemGraph.vertexFuncs[State::WHITE] = [](SystemGraphVertex &v, SystemGraph &g) {
+    _systemGraph.vertexFuncs[State::WHITE] = [](SystemGraphVertex &v, SystemGraph &g) {
         UNUSED(g);
 
         delete v.data;
     };
 
-    m_systemGraph.edgeFuncs[State::WHITE] = [](SystemGraphEdge &e, SystemGraph &g) {
+    _systemGraph.edgeFuncs[State::WHITE] = [](SystemGraphEdge &e, SystemGraph &g) {
         UNUSED(g);
 
         UNUSED(e); // delete e if necessary
     };
 
-    UNUSED(m_systemGraph.data); // delete data if necessary
+    UNUSED(_systemGraph.data); // delete data if necessary
 
-    m_systemGraph.breadthFirstTraversal(0);
+    _systemGraph.breadthFirstTraversal(0);
 }
 
 void Space::update(double delta)
 {
     double remaining = delta;
 
-    // Updates the SystemGraph N+1 times where N is the number of times m_intervalMax goes into delta
+    // Updates the SystemGraph N+1 times where N is the number of times _intervalMax goes into delta
     while (remaining >= 0)
     {
-        double elapsed = std::min(remaining, m_intervalMax);
+        double elapsed = std::min(remaining, _intervalMax);
 
-        m_eventStream.processEvents();
+        // Delete duplicate incoming Events
+        auto in = _eventStream.popEvents(StreamType::INCOMING);
+        auto lastIn = std::unique(in.begin(), in.end());
+        in.erase(lastIn, in.end());
+        _eventStream.pushEvents(in, StreamType::INCOMING);
+
+        // Delete duplicate outgoing Events
+        auto out = _eventStream.popEvents(StreamType::OUTGOING);
+        auto lastOut = std::unique(out.begin(), out.end());
+        out.erase(lastOut, out.end());
+        _eventStream.pushEvents(out, StreamType::OUTGOING);
+
+        _eventStream.processEvents();
 
         updateSystems(elapsed);
 
         propagateEvents();
 
-        remaining -= m_intervalMax;
+        remaining -= _intervalMax;
     }
 }
 
 void Space::propagateEvents()
 {
-    auto events = m_eventStream.popEvents(StreamType::OUTGOING);
+    auto events = _eventStream.popEvents(StreamType::OUTGOING);
 
-    m_systemGraph[0].data->pushEvents(events);
+    _systemGraph[0].data->pushEvents(events);
 
     // Reset SystemGraph and propogate Events down the graph
-    m_systemGraph.reset();
-    m_systemGraph.edgeFuncs[State::WHITE] = [space = this](SystemGraphEdge & e, SystemGraph & g)
+    _systemGraph.reset();
+    _systemGraph.edgeFuncs[State::WHITE] = [&](SystemGraphEdge & e, SystemGraph & g)
     {
         g[e.source].data->propogateEvents(*g[e.target].data);
 
         // If e.target is at the bottom of the graph, propogate it's events to the Space
         if (!g[e.target].adjacencyList.size())
         {
-            auto events = g[e.target].data->popEvents();
+            g[e.target].data->propogateEvents(_eventStream);
 
-            // Push copy of events back onto e.target
-            g[e.target].data->pushEvents(events);
+            // TODO Whitelist repeat events. For now I'm just deleting everything.
+            std::vector<Event> events = _eventStream.popEvents(StreamType::OUTGOING);
+            std::vector<Event> liveEvents;
 
-            // Only pushing to incoming to stop Events looping around SystemGraph
-            space->pushEvents(events, StreamType::INCOMING);
+            for(auto &event : events)
+            {
+                if(event.lifetime)
+                {
+                    event.lifetime--;
+                    liveEvents.push_back(event);
+                }
+            }
+
+            _eventStream.pushEvents(liveEvents, StreamType::OUTGOING);
         }
     };
-    m_systemGraph.breadthFirstTraversal(0);
+    _systemGraph.breadthFirstTraversal(0);
 }
 
 void Space::updateSystems(double delta)
 {
+    auto entities = _entities;
+
+    for(auto& id : _deletingEntities)
+    {
+        entities.erase(id);
+    }
+
     // Reset SystemGraph and update all Systems
-    m_systemGraph.reset();
-    m_systemGraph.vertexFuncs[State::WHITE] = [ entities = &this->m_entities, delta ](SystemGraphVertex & v, SystemGraph & g)
+    _systemGraph.reset();
+    _systemGraph.vertexFuncs[State::WHITE] = [ &entities, delta ](SystemGraphVertex & v, SystemGraph & g)
     {
         UNUSED(g);
 
         v.data->processEvents();
-        v.data->update(*entities, delta);
+        v.data->update(entities, delta);
     };
-    m_systemGraph.breadthFirstTraversal(0);
+    _systemGraph.breadthFirstTraversal(0);
 }
 
-void Space::pushEvents(std::vector<Event> &p_events, StreamType p_streamType)
+void Space::pushEvents(std::vector<Event> &events, StreamType streamType)
 {
-    m_eventStream.pushEvents(p_events, p_streamType);
+    _eventStream.pushEvents(events, streamType);
 }
 
-void Space::registerHandler(razaron::eventstream::EventType p_type, EventHandler p_handler)
+void Space::registerHandler(razaron::eventstream::EventType type, EventHandler handler)
 {
-    m_eventStream.registerHandler(p_type, p_handler);
+    _eventStream.registerHandler(type, handler);
 }
 
 Entity &Space::createEntity()
 {
     Entity e{};
-    return m_entities[e.getID()] = e;
+    return _entities[e.getID()] = e;
 }
 
-std::size_t Space::removeEntity(unsigned int p_id)
+std::size_t Space::removeEntity(unsigned int id)
 {
-    m_entities.erase(p_id);
+    _entities.erase(id);
 
-    return m_entities.size();
+    return _entities.size();
 }
 
-Entity &Space::operator[](unsigned short p_id)
+Entity &Space::operator[](unsigned short id)
 {
-    if (m_entities.count(p_id))
-        return m_entities[p_id];
+    if (_entities.count(id))
+        return _entities[id];
     else
-        throw std::invalid_argument("Entity: " + std::to_string(p_id) + " is not in Space: " + std::to_string(m_id));
+        throw std::invalid_argument("Entity: " + std::to_string(id) + " is not in Space: " + std::to_string(_id));
 }
