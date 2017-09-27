@@ -166,6 +166,10 @@ void EventStream::processEvents()
 
     auto events = popEvents(StreamType::INCOMING);
 
+    // Delete duplicate incoming Events
+    auto lastEvent = std::unique(events.begin(), events.end());
+    events.erase(lastEvent, events.end());
+
     for (auto &e : events)
     {
         auto it = _eventHandlers.find(e.type);

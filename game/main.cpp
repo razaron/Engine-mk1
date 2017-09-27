@@ -55,7 +55,7 @@ int main()
         frameCount++;
         if(elapsed.count() > 1.0)
         {
-            std::clog << "FPS: " << frameCount / elapsed.count() << " delta: " << delta.count() <<std::endl;
+            std::clog << "FPS: " << frameCount / elapsed.count() << "\tEntities: " << space.getEntities().size() <<std::endl;
             elapsed = elapsed.zero();
             frameCount = 0;
         }

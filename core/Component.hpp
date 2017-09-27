@@ -10,6 +10,14 @@
 /*! Components carry the data for a specific feature. */
 namespace razaron::core::component
 {
+    enum class ComponentType;
+
+    /*! Combines the size and position info of a Handle with the type information of a ComponentType. */
+    using ComponentHandle = std::pair<ComponentType, Handle>;
+
+    /*! A std::map type mapping Component Handle%s to their ComponentType%s. */
+    using ComponentMap = std::map<ComponentType, Handle>;
+
     /*! Denotes the type of a derived Component object. */
     enum class ComponentType
     {
@@ -23,15 +31,6 @@ namespace razaron::core::component
         COMPONENT_4,
         ENUM_SIZE
     };
-
-    /*! A unique unsigned int representing the next available unique ID. */
-    extern std::atomic<unsigned> g_nextID;
-
-    /*! Combines the size and position info of a Handle with the type information of a ComponentType. */
-    using ComponentHandle = std::pair<ComponentType, Handle>;
-
-    /*! A std::map type mapping Component Handle%s to their ComponentType%s. */
-    using ComponentMap = std::map<ComponentType, Handle>;
 
     /*! The base class for a Component. */
     class Component

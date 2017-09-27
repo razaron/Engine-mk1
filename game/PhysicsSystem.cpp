@@ -47,31 +47,31 @@ Task PhysicsSystem::update(EntityMap &entities, double delta)
 
         if (_behaviours.size() && _behaviours.find(id) != _behaviours.end() && bodies.find(_behaviours[id].first) != bodies.end())
         {
-            auto targetBody = bodies[_behaviours[id].first];
+            auto[otherT, otherM] = bodies[_behaviours[id].first];
 
             switch (_behaviours[id].second)
             {
-            case SteeringBehaviour::SEEK:
-            {
-                seek(static_cast<float>(delta), t, m, targetBody.first);
-
-                if (glm::length(t->translation - targetBody.first->translation) < 1)
+                case SteeringBehaviour::SEEK:
                 {
-                    Event e{
-                        _behaviours[id].first, // Entity ID.
-                        EventType::REMOVE_ENTITY, // Event type enum
-                        std::make_shared<eventdata::REMOVE_ENTITY>()
-                    };
-                    pushEvent(e);
+                    if (glm::length(t->translation - otherT->translation) < 1)
+                    {
+                        Event e{
+                            _behaviours[id].first,    // Entity ID.
+                            EventType::REMOVE_ENTITY, // Event type enum
+                            std::make_shared<eventdata::REMOVE_ENTITY>()
+                        };
+                        pushEvent(e);
+                    }
+                    else
+                        seek(static_cast<float>(delta), t, m, otherT);
+
+                    break;
                 }
+                case SteeringBehaviour::FLEE:
+                {
 
-                break;
-            }
-            case SteeringBehaviour::FLEE:
-            {
-
-                break;
-            }
+                    break;
+                }
             }
 
             if (m->getVelocity().x != 0.f && m->getVelocity().y != 0.f)
@@ -115,25 +115,25 @@ ComponentHandle PhysicsSystem::createComponent(ComponentType type, std::shared_p
 
     switch (type)
     {
-    case ComponentType::TRANSFORM:
-    {
-        TransformArgs args = *(std::static_pointer_cast<TransformArgs>(tuplePtr));
+        case ComponentType::TRANSFORM:
+        {
+            TransformArgs args = *(std::static_pointer_cast<TransformArgs>(tuplePtr));
 
-        h = emplaceObject<TransformComponent>(std::get<0>(args), std::get<1>(args), std::get<2>(args));
-        break;
-    }
-    case ComponentType::MOTION:
-    {
-        MotionArgs args = *(std::static_pointer_cast<MotionArgs>(tuplePtr));
+            h = emplaceObject<TransformComponent>(std::get<0>(args), std::get<1>(args), std::get<2>(args));
+            break;
+        }
+        case ComponentType::MOTION:
+        {
+            MotionArgs args = *(std::static_pointer_cast<MotionArgs>(tuplePtr));
 
-        h = emplaceObject<MotionComponent>(std::get<0>(args), std::get<1>(args), std::get<2>(args));
-        break;
-    }
-    default:
-    {
-        h = Handle{};
-        break;
-    }
+            h = emplaceObject<MotionComponent>(std::get<0>(args), std::get<1>(args), std::get<2>(args));
+            break;
+        }
+        default:
+        {
+            h = Handle{};
+            break;
+        }
     }
 
     return ComponentHandle{ type, h };
@@ -145,21 +145,21 @@ bool PhysicsSystem::removeComponent(ComponentHandle ch)
 
     switch (ch.first)
     {
-    case ComponentType::TRANSFORM:
-    {
-        removeObject<TransformComponent>(ch.second);
-        break;
-    }
-    case ComponentType::MOTION:
-    {
-        removeObject<MotionComponent>(ch.second);
-        break;
-    }
-    default:
-    {
-        return false;
-        break;
-    }
+        case ComponentType::TRANSFORM:
+        {
+            removeObject<TransformComponent>(ch.second);
+            break;
+        }
+        case ComponentType::MOTION:
+        {
+            removeObject<MotionComponent>(ch.second);
+            break;
+        }
+        default:
+        {
+            return false;
+            break;
+        }
     }
 
     return true;

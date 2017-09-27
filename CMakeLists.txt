@@ -9,19 +9,19 @@ SET(TEST_NAME "NULL" CACHE STRING "Build option. 32 or 64")
 SET(TEST_SOURCES "NULL" CACHE STRING "Build option. 32 or 64")
 
 # Setup includes
-include_directories (${MY_INCLUDES} ${PROJECT_SOURCE_DIR}/src)
+include_directories (${MY_INCLUDES} ${PROJECT_SOURCE_DIR}/core)
 
 # For -lpthread
 find_package (Threads)
 
 # Create engine-mk1-lib
-add_subdirectory (src)
+add_subdirectory (core)
 
 # connect all libs
-set (REQUIRED_LIBS ${REQUIRED_LIBS} engine-mk1 ${CMAKE_THREAD_LIBS_INIT})
+set (REQUIRED_LIBS ${REQUIRED_LIBS} engine-core ${CMAKE_THREAD_LIBS_INIT})
 
 # Create the test exe
 add_subdirectory (tests)
 
 # Create the game_v1 exe
-add_subdirectory (game_v1)
+add_subdirectory (game)
