@@ -28,6 +28,7 @@ namespace razaron::game
         bool removeComponent(ComponentHandle ch);
 
         void initGame();
+        Event createAnimal(glm::vec2 pos, glm::vec2 scale, AnimalDiet diet, glm::vec4 colour);
 
       private:
         std::map<unsigned short, glm::mat4> _models;

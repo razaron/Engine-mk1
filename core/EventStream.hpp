@@ -8,6 +8,8 @@
 #include <vector>
 #include <mutex>
 
+#include "Misc.hpp"
+
 /*! %Event streams are used to queue up events to be consumed at a later time. */
 namespace razaron::eventstream
 {
@@ -44,6 +46,7 @@ namespace razaron::eventstream
         EventType type;             /*!< The EventType. */
         std::shared_ptr<void> data; /*!< A pointer to the data being sent. */
         unsigned lifetime{0};       /*!< How long the Event will live for. */
+        unsigned id{g_nextID++};    /*!< This Events unique id. */
 
         /*! Evaluates deep equality between two Event structs. */
         bool operator==(const Event &rhs)

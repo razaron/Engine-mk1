@@ -153,18 +153,6 @@ void Space::update(double delta)
     {
         double elapsed = std::min(remaining, _intervalMax);
 
-        // Delete duplicate incoming Events
-        auto in = _eventStream.popEvents(StreamType::INCOMING);
-        auto lastIn = std::unique(in.begin(), in.end());
-        in.erase(lastIn, in.end());
-        _eventStream.pushEvents(in, StreamType::INCOMING);
-
-        // Delete duplicate outgoing Events
-        auto out = _eventStream.popEvents(StreamType::OUTGOING);
-        auto lastOut = std::unique(out.begin(), out.end());
-        out.erase(lastOut, out.end());
-        _eventStream.pushEvents(out, StreamType::OUTGOING);
-
         _eventStream.processEvents();
 
         updateSystems(elapsed);
@@ -178,6 +166,11 @@ void Space::update(double delta)
 void Space::propagateEvents()
 {
     auto events = _eventStream.popEvents(StreamType::OUTGOING);
+
+    // Delete duplicate outgoing Events
+    auto last = std::unique(events.begin(), events.end());
+    events.erase(last, events.end());
+    _eventStream.pushEvents(events, StreamType::OUTGOING);
 
     _systemGraph[0].data->pushEvents(events);
 

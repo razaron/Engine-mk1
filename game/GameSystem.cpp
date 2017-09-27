@@ -37,47 +37,9 @@ GameSystem::GameSystem()
                 auto target = glm::vec2{ i.rangeX, i.rangeY };
                 target = target / g_cameraZoom + g_cameraPos;
 
-                std::list<ComponentArgs> list;
+                Event e = createAnimal(target, glm::vec2{ 0.25f, 0.25f }, AnimalDiet::HERBIVORE, glm::vec4{ 0.f, 1.f, 0.f, 1.f });
 
-                list.push_back(ComponentArgs{
-                    ComponentType::TRANSFORM,
-                    std::make_shared<TransformArgs>(
-                        target, // translation
-                        glm::vec2{ 0.25f, 0.25f },                     // scale
-                        0.f                                            // rotation (radians)
-                    )
-                });
-
-                list.push_back(ComponentArgs{
-                    ComponentType::MOTION,
-                    std::make_shared<MotionArgs>(
-                        3.f, // maxVelocity
-                        10.f, // maxAcceleration
-                        1.f  // mass
-                    )
-                });
-
-                list.push_back(ComponentArgs{
-                    COMPONENT_ANIMAL,
-                    std::make_shared<AnimalArgs>(
-                        AnimalDiet::HERBIVORE
-                    )
-                });
-
-                list.push_back(ComponentArgs{
-                    ComponentType::SHAPE,
-                    std::make_shared<ShapeArgs>(
-                        glm::vec4{0.f,1.f,0.f,1.f}
-                    )
-                });
-
-                Event a{
-                    0u,
-                    EventType::CREATE_ENTITY,
-                    std::make_shared<razaron::eventdata::CREATE_ENTITY>(list)
-                };
-
-                pushEvent(a);
+                pushEvent(e);
 
                 break;
             }
@@ -255,48 +217,77 @@ void GameSystem::initGame()
 
     for (auto i = 0; i < 10; i++)
     {
-        std::list<ComponentArgs> list;
+        auto pos = glm::vec2{ i * 1.f, i * 1.f };
+        auto scale = glm::vec2{ 0.25f, 0.25f };
+        auto colour = glm::vec4{ 1.f, 0.f, 0.f, 1.f };
 
-        list.push_back(ComponentArgs{
-            ComponentType::TRANSFORM,
-            std::make_shared<TransformArgs>(
-                glm::vec2{ i * (10.f/10), i * (10.f/10) }, // translation
-                glm::vec2{ 0.25f, 0.25f },                     // scale
-                0.f                                            // rotation (radians)
-            )
-        });
+        auto e = createAnimal(pos, scale, AnimalDiet::CARNIVORE, colour);
 
-        list.push_back(ComponentArgs{
-            ComponentType::MOTION,
-            std::make_shared<MotionArgs>(
-                5.f, // maxVelocity
-                1.f, // maxAcceleration
-                1.f  // mass
-            )
-        });
+        events.push_back(e);
+    }
 
-        list.push_back(ComponentArgs{
-            COMPONENT_ANIMAL,
-            std::make_shared<AnimalArgs>(
-                AnimalDiet::CARNIVORE
-            )
-        });
+    const float max = 100;
+    for (auto x = 0.f; x < std::sqrt(max); x++)
+    {
+        for (auto y = 0.f; y < std::sqrt(max); y++)
+        {
+            //if(x == y)
+            //    continue;
 
-        list.push_back(ComponentArgs{
-            ComponentType::SHAPE,
-            std::make_shared<ShapeArgs>(
-                glm::vec4{1.f,0.f,0.f,1.f}
-            )
-        });
+            auto pos = glm::vec2{ x * 10.f / std::sqrt(max), y * 10.f / std::sqrt(max) };
+            auto scale = glm::vec2{ 0.25f, 0.25f };
+            auto colour = glm::vec4{ 0.f, 1.f, 0.f, 1.f };
 
-        Event a{
-            0u,
-            EventType::CREATE_ENTITY,
-            std::make_shared<razaron::eventdata::CREATE_ENTITY>(list)
-        };
+            auto e = createAnimal(pos, scale, AnimalDiet::HERBIVORE, colour);
 
-        events.push_back(a);
+            events.push_back(e);
+        }
     }
 
     pushEvents(events);
+}
+
+Event GameSystem::createAnimal(glm::vec2 pos, glm::vec2 scale, AnimalDiet diet, glm::vec4 colour)
+{
+    std::list<ComponentArgs> list;
+
+    list.push_back(ComponentArgs{
+        ComponentType::TRANSFORM,
+        std::make_shared<TransformArgs>(
+            glm::vec2{ pos.x, pos.y },      // translation
+            glm::vec2{ scale.x, scale.y },  // scale
+            0.f                             // rotation (radians)
+        )
+    });
+
+    list.push_back(ComponentArgs{
+        ComponentType::MOTION,
+        std::make_shared<MotionArgs>(
+            5.f,                            // maxVelocity
+            1.f,                            // maxAcceleration
+            1.f                             // mass
+        )
+    });
+
+    list.push_back(ComponentArgs{
+        COMPONENT_ANIMAL,
+        std::make_shared<AnimalArgs>(
+            diet
+        )
+    });
+
+    list.push_back(ComponentArgs{
+        ComponentType::SHAPE,
+        std::make_shared<ShapeArgs>(
+            colour
+        )
+    });
+
+    Event e{
+        0u,
+        EventType::CREATE_ENTITY,
+        std::make_shared<razaron::eventdata::CREATE_ENTITY>(list)
+    };
+
+    return e;
 }
