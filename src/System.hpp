@@ -20,19 +20,6 @@ namespace razaron::core::system
     using namespace razaron::core::entity;
     using namespace razaron::eventdata;
 
-    /*! Denotes the type of a derived System. */
-    enum class SystemType
-    {
-        CONSOLE,
-        RENDER,
-        PHYSICS,
-        AI,
-        UI,
-        CONTROLLER,
-        GAMEPLAY,
-        ENUM_SIZE
-    };
-
     /*! The abstract base class for a System. */
     class System
     {

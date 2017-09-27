@@ -28,10 +28,11 @@ namespace razaron::input
         bool removeComponent(ComponentHandle ch);
 
         Context createContext(ContextType type, std::set<InputType> inputTypes);
-        std::list<Input> mapInputs();
+        std::list<Input> mapInputs(double delta);
 
       private:
         std::list<Context> _contexts;
         sf::Window* _windowPtr;
+        const double _polling;
     };
 }

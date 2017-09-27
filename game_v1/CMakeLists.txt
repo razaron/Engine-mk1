@@ -1,5 +1,5 @@
 set (GAME_V1_SOURCES main.cpp InputSystem.cpp RenderSystem.cpp PhysicsSystem.cpp GameSystem.cpp)
-set (GAME_V1_SOURCES ${GAME_V1_SOURCES} TransformComponent.cpp MotionComponent.cpp AnimalComponent.cpp)
+set (GAME_V1_SOURCES ${GAME_V1_SOURCES} TransformComponent.cpp MotionComponent.cpp ShapeComponent.cpp AnimalComponent.cpp)
 # Detect and add SFML
 set (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules" ${CMAKE_MODULE_PATH})
 find_package (SFML 2.4 REQUIRED system window graphics network audio)

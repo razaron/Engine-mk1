@@ -54,6 +54,12 @@ Space::Space(SystemGraph &systemGraph)
         // If this is the initial request
         if(data->initial)
         {
+            // IF Entity is not being tracked for deletion, track it. ELSE return
+            if(std::find(_deletingEntities.begin(), _deletingEntities.end(), e.recipient) == _deletingEntities.end())
+                _deletingEntities.push_back(e.recipient);
+            else
+                return;
+
             // Creates a REMOVE_COMPONENT Event for each Component in the Entity
             auto entity = (*this)[e.recipient];
 
@@ -87,6 +93,9 @@ Space::Space(SystemGraph &systemGraph)
             if(!(*this)[e.recipient].getComponents().size())
             {
                 removeEntity(e.recipient);
+
+                // Stop tracking the Entity
+                _deletingEntities.erase(std::find(_deletingEntities.begin(), _deletingEntities.end(), e.recipient));
             }
             // Else resend the event
             else
@@ -144,6 +153,18 @@ void Space::update(double delta)
     {
         double elapsed = std::min(remaining, _intervalMax);
 
+        // Delete duplicate incoming Events
+        auto in = _eventStream.popEvents(StreamType::INCOMING);
+        auto lastIn = std::unique(in.begin(), in.end());
+        in.erase(lastIn, in.end());
+        _eventStream.pushEvents(in, StreamType::INCOMING);
+
+        // Delete duplicate outgoing Events
+        auto out = _eventStream.popEvents(StreamType::OUTGOING);
+        auto lastOut = std::unique(out.begin(), out.end());
+        out.erase(lastOut, out.end());
+        _eventStream.pushEvents(out, StreamType::OUTGOING);
+
         _eventStream.processEvents();
 
         updateSystems(elapsed);
@@ -192,14 +213,21 @@ void Space::propagateEvents()
 
 void Space::updateSystems(double delta)
 {
+    auto entities = _entities;
+
+    for(auto& id : _deletingEntities)
+    {
+        entities.erase(id);
+    }
+
     // Reset SystemGraph and update all Systems
     _systemGraph.reset();
-    _systemGraph.vertexFuncs[State::WHITE] = [ entities = &this->_entities, delta ](SystemGraphVertex & v, SystemGraph & g)
+    _systemGraph.vertexFuncs[State::WHITE] = [ &entities, delta ](SystemGraphVertex & v, SystemGraph & g)
     {
         UNUSED(g);
 
         v.data->processEvents();
-        v.data->update(*entities, delta);
+        v.data->update(entities, delta);
     };
     _systemGraph.breadthFirstTraversal(0);
 }

@@ -3,7 +3,7 @@
 using namespace razaron::input;
 
 InputSystem::InputSystem(sf::Window *window)
-    : _windowPtr(window)
+    : _windowPtr(window), _polling{ 0.1 }
 {
     createContext(ContextType::DEFAULT, std::set<InputType>{ InputType::MOUSE_LEFT, InputType::MOUSE_RIGHT, InputType::KEY_ESCAPE, InputType::KEY_W, InputType::KEY_A, InputType::KEY_S, InputType::KEY_D });
 }
@@ -16,21 +16,8 @@ Task InputSystem::update(EntityMap &entities, double delta)
 {
     UNUSED(entities);
 
-    static double delay{0};
-
-    if((delay += delta) < _interval)
-        return {};
-    else
-        delay = 0;
-
     // Get list of all Inputs this frame
-    auto inputs = mapInputs();
-
-    if (inputs.size())
-    {
-        int ads = 2;
-        ads++;
-    }
+    auto inputs = mapInputs(delta);
 
     // Create event for each sublist of Inputs that apply to a context
     std::vector<Event> events;
@@ -94,56 +81,75 @@ Context InputSystem::createContext(ContextType type, std::set<InputType> inputTy
     return context;
 }
 
-std::list<Input> InputSystem::mapInputs()
+std::list<Input> InputSystem::mapInputs(double delta)
 {
     std::list<Input> inputs;
 
-    if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
+    static double elapsed1{ 0 };
+    if (sf::Mouse::isButtonPressed(sf::Mouse::Left) && (elapsed1 += delta) > _polling)
     {
+        elapsed1 = 0;
+
         auto pos = sf::Mouse::getPosition(*_windowPtr);
 
         inputs.push_back(Input{
             InputType::MOUSE_LEFT,
             true,
-            static_cast<float>(pos.x)/SCREEN_WIDTH,
-            static_cast<float>(pos.y)/SCREEN_HEIGHT
-        });
+            static_cast<float>(pos.x) / SCREEN_WIDTH,
+            static_cast<float>(pos.y) / SCREEN_HEIGHT });
     }
 
-    if (sf::Mouse::isButtonPressed(sf::Mouse::Right))
+    static double elapsed2{ 0 };
+    if (sf::Mouse::isButtonPressed(sf::Mouse::Right) && (elapsed2 += delta) > _polling)
     {
+        elapsed2 = 0;
+
         auto pos = sf::Mouse::getPosition(*_windowPtr);
 
         inputs.push_back(Input{
             InputType::MOUSE_RIGHT,
             true,
-            static_cast<float>(pos.x)/_windowPtr->getSize().x,
-            static_cast<float>(pos.y)/_windowPtr->getSize().y
-        });
+            static_cast<float>(pos.x) / _windowPtr->getSize().x,
+            static_cast<float>(pos.y) / _windowPtr->getSize().y });
     }
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
+    static double elapsed3{ 0 };
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape) && (elapsed3 += delta) > _polling)
     {
+        elapsed3 = 0;
+
         inputs.push_back(Input{ InputType::KEY_ESCAPE });
     }
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
+    static double elapsed4{ 0 };
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::W) && (elapsed4 += delta) > _polling)
     {
+        elapsed4 = 0;
+
         inputs.push_back(Input{ InputType::KEY_W });
     }
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+    static double elapsed5{ 0 };
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::A) && (elapsed5 += delta) > _polling)
     {
+        elapsed5 = 0;
+
         inputs.push_back(Input{ InputType::KEY_A });
     }
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
+    static double elapsed6{ 0 };
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::S) && (elapsed6 += delta) > _polling)
     {
+        elapsed6 = 0;
+
         inputs.push_back(Input{ InputType::KEY_S });
     }
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
+    static double elapsed7{ 0 };
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::D) && (elapsed7 += delta) > _polling)
     {
+        elapsed7 = 0;
+
         inputs.push_back(Input{ InputType::KEY_D });
     }
 

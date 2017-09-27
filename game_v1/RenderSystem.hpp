@@ -7,6 +7,7 @@
 #include <glm/gtx/transform.hpp>
 
 #include "System.hpp"
+#include "ShapeComponent.hpp"
 #include "config.hpp"
 
 namespace razaron::render

@@ -53,7 +53,7 @@ int main()
         start = end;
 
         frameCount++;
-        if(elapsed.count() > 10.0)
+        if(elapsed.count() > 1.0)
         {
             std::clog << "FPS: " << frameCount / elapsed.count() << " delta: " << delta.count() <<std::endl;
             elapsed = elapsed.zero();

@@ -9,31 +9,6 @@ PhysicsSystem::PhysicsSystem()
     _componentTypes.insert(ComponentType::TRANSFORM);
     _componentTypes.insert(ComponentType::MOTION);
 
-    registerHandler(EVENT_INPUT, [&](Event &e) {
-        auto data = std::static_pointer_cast<EVENTDATA_INPUT>(e.data);
-
-        for (auto &i : data->inputs)
-        {
-            switch (i.type)
-            {
-
-            case InputType::MOUSE_LEFT:
-            {
-                auto target = glm::vec2{ i.rangeX, i.rangeY };
-                target = target / g_cameraZoom + g_cameraPos;
-
-                std::cout << "target: " << target.x << ", " << target.y << std::endl;
-                std::cout << "g_cameraPos: " << g_cameraPos.x << ", " << g_cameraPos.y << std::endl;
-
-                break;
-            }
-
-            default:
-                break;
-            }
-        }
-    });
-
     registerHandler(EVENT_STEERING, [&](Event &e) {
         auto data = std::static_pointer_cast<EVENTDATA_STEERING>(e.data);
 
@@ -74,14 +49,42 @@ Task PhysicsSystem::update(EntityMap &entities, double delta)
         {
             auto targetBody = bodies[_behaviours[id].first];
 
-            seek(static_cast<float>(delta), t, m, targetBody.first);
+            switch (_behaviours[id].second)
+            {
+            case SteeringBehaviour::SEEK:
+            {
+                seek(static_cast<float>(delta), t, m, targetBody.first);
 
-            // calculate angle to face target
-            glm::vec2 v1{ 0.f, 1.f };
-            glm::vec2 v2 = glm::normalize(m->getVelocity());
-            float theta = glm::acos(glm::dot(v1, v2));
+                if (glm::length(t->translation - targetBody.first->translation) < 1)
+                {
+                    Event e{
+                        _behaviours[id].first, // Entity ID.
+                        EventType::REMOVE_ENTITY, // Event type enum
+                        std::make_shared<eventdata::REMOVE_ENTITY>()
+                    };
+                    pushEvent(e);
+                }
 
-            t->setRotation((v1.x < v2.x) ? pi - theta : theta - pi);
+                break;
+            }
+            case SteeringBehaviour::FLEE:
+            {
+
+                break;
+            }
+            }
+
+            if (m->getVelocity().x != 0.f && m->getVelocity().y != 0.f)
+            {
+                // calculate angle to face target
+                glm::vec2 v1{ 0.f, 1.f };
+                glm::vec2 v2 = glm::normalize(m->getVelocity());
+
+                auto dot = glm::dot(v1, v2);
+                float theta = std::acos(std::max(std::min(dot, 1.f), -1.f));
+
+                t->setRotation((v1.x < v2.x) ? pi - theta : theta - pi);
+            }
         }
 
         // Send model matrix to the RenderSystem
@@ -143,11 +146,20 @@ bool PhysicsSystem::removeComponent(ComponentHandle ch)
     switch (ch.first)
     {
     case ComponentType::TRANSFORM:
+    {
         removeObject<TransformComponent>(ch.second);
         break;
+    }
+    case ComponentType::MOTION:
+    {
+        removeObject<MotionComponent>(ch.second);
+        break;
+    }
     default:
+    {
         return false;
         break;
+    }
     }
 
     return true;

@@ -2,6 +2,7 @@
 
 using namespace razaron::game;
 using namespace razaron::physics;
+using namespace razaron::render;
 
 /*constexpr ComponentArgs trasformComponentArgs(glm::vec2 t, glm::vec2 s, float r)
 {
@@ -18,7 +19,7 @@ GameSystem::GameSystem()
     registerHandler(EVENT_MODEL, [&](Event &e) {
         if(e.lifetime)
             return;
-            
+
         auto data = std::static_pointer_cast<EVENTDATA_MODEL>(e.data);
 
         _models[e.recipient] = data->model;
@@ -31,6 +32,55 @@ GameSystem::GameSystem()
         {
             switch (i.type)
             {
+            case InputType::MOUSE_RIGHT:
+            {
+                auto target = glm::vec2{ i.rangeX, i.rangeY };
+                target = target / g_cameraZoom + g_cameraPos;
+
+                std::list<ComponentArgs> list;
+
+                list.push_back(ComponentArgs{
+                    ComponentType::TRANSFORM,
+                    std::make_shared<TransformArgs>(
+                        target, // translation
+                        glm::vec2{ 0.25f, 0.25f },                     // scale
+                        0.f                                            // rotation (radians)
+                    )
+                });
+
+                list.push_back(ComponentArgs{
+                    ComponentType::MOTION,
+                    std::make_shared<MotionArgs>(
+                        3.f, // maxVelocity
+                        10.f, // maxAcceleration
+                        1.f  // mass
+                    )
+                });
+
+                list.push_back(ComponentArgs{
+                    COMPONENT_ANIMAL,
+                    std::make_shared<AnimalArgs>(
+                        AnimalDiet::HERBIVORE
+                    )
+                });
+
+                list.push_back(ComponentArgs{
+                    ComponentType::SHAPE,
+                    std::make_shared<ShapeArgs>(
+                        glm::vec4{0.f,1.f,0.f,1.f}
+                    )
+                });
+
+                Event a{
+                    0u,
+                    EventType::CREATE_ENTITY,
+                    std::make_shared<razaron::eventdata::CREATE_ENTITY>(list)
+                };
+
+                pushEvent(a);
+
+                break;
+            }
             case InputType::KEY_W:
             {
                 g_cameraPos += glm::vec2{ 0.f, -0.1f };
@@ -60,6 +110,17 @@ GameSystem::GameSystem()
             }
         }
     });
+
+    auto lambda = [&](Event & e) {
+        auto data = std::static_pointer_cast<eventdata::REMOVE_COMPONENT>(e.data);
+
+        if(data->ch.first == ComponentType::TRANSFORM)
+        {
+            _models.erase(e.recipient);
+        }
+    };
+
+    _eventStream.extendHandler(EventType::REMOVE_COMPONENT, lambda);
 
     initGame();
 }
@@ -102,7 +163,7 @@ Task GameSystem::update(EntityMap &entities, double delta)
 
     // Create steering events for closest carnivore-herbivore pairs
     std::vector<Event> events;
-    for (auto &carnivore : carnivores)
+    for (auto &predator : carnivores)
     {
         std::pair<unsigned, AnimalComponent *> prey;
         float distance = std::numeric_limits<float>::max();
@@ -110,7 +171,7 @@ Task GameSystem::update(EntityMap &entities, double delta)
         // Find closest prey
         for (auto &herbivore : herbivores)
         {
-            glm::vec2 p1 = glm::vec2((_models[carnivore.first])[3]);
+            glm::vec2 p1 = glm::vec2((_models[predator.first])[3]);
             glm::vec2 p2 = glm::vec2((_models[herbivore.first])[3]);
 
             if (glm::length(p2 - p1) < distance)
@@ -120,13 +181,20 @@ Task GameSystem::update(EntityMap &entities, double delta)
             }
         }
 
-        Event e{
-            carnivore.first,
+        Event e1{
+            predator.first,
             EVENT_STEERING,
             std::make_shared<EVENTDATA_STEERING>(SteeringBehaviour::SEEK, prey.first)
         };
 
-        events.push_back(e);
+        Event e2{
+            prey.first,
+            EVENT_STEERING,
+            std::make_shared<EVENTDATA_STEERING>(SteeringBehaviour::FLEE, predator.first)
+        };
+
+        events.push_back(e1);
+        events.push_back(e2);
     }
 
     pushEvents(events);
@@ -165,9 +233,16 @@ bool GameSystem::removeComponent(ComponentHandle ch)
 
     switch (ch.first)
     {
+    case COMPONENT_ANIMAL:
+    {
+        removeObject<AnimalComponent>(ch.second);
+        break;
+    }
     default:
+    {
         return false;
         break;
+    }
     }
 
     return true;
@@ -178,17 +253,18 @@ void GameSystem::initGame()
     // Create new entity
     std::vector<Event> events;
 
-    for (auto i = 0; i < 100; i++)
+    for (auto i = 0; i < 10; i++)
     {
         std::list<ComponentArgs> list;
 
         list.push_back(ComponentArgs{
             ComponentType::TRANSFORM,
             std::make_shared<TransformArgs>(
-                glm::vec2{ i * (10.f/1000), i * (10.f/1000) }, // translation
-                glm::vec2{ 0.25f, 0.25f },     // scale
-                0.f                            // rotation (radians)
-                ) });
+                glm::vec2{ i * (10.f/10), i * (10.f/10) }, // translation
+                glm::vec2{ 0.25f, 0.25f },                     // scale
+                0.f                                            // rotation (radians)
+            )
+        });
 
         list.push_back(ComponentArgs{
             ComponentType::MOTION,
@@ -196,12 +272,22 @@ void GameSystem::initGame()
                 5.f, // maxVelocity
                 1.f, // maxAcceleration
                 1.f  // mass
-                ) });
+            )
+        });
 
         list.push_back(ComponentArgs{
             COMPONENT_ANIMAL,
             std::make_shared<AnimalArgs>(
-                (i % 2) ? AnimalDiet::CARNIVORE : AnimalDiet::HERBIVORE) });
+                AnimalDiet::CARNIVORE
+            )
+        });
+
+        list.push_back(ComponentArgs{
+            ComponentType::SHAPE,
+            std::make_shared<ShapeArgs>(
+                glm::vec4{1.f,0.f,0.f,1.f}
+            )
+        });
 
         Event a{
             0u,

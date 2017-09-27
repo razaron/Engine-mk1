@@ -33,7 +33,8 @@ namespace razaron::eventstream
         EVENT_1,
         EVENT_2,
         EVENT_3,
-        EVENT_4
+        EVENT_4,
+        ENUM_SIZE
     };
 
     /*! Contains the data required to receive and process an Event. */
@@ -94,9 +95,15 @@ namespace razaron::eventstream
 
         /*!< Register an EventHandler to the passed EventType.
         *
-        *   @remark Thread-safe, blocking. Allows for 1 thread to registed an EventHandler at a time.
+        *   @remark Thread-safe, blocking. Allows for 1 thread to register an EventHandler at a time.
         */
         void registerHandler(EventType type, EventHandler handler);
+
+        /*!< Extend the EventHandler of the passed EventType by calling
+        *
+        *   @remark Thread-safe, blocking. Allows for 1 thread to register an EventHandler at a time.
+        */
+        void extendHandler(EventType type, EventHandler handler);
 
         /*!< Processes all incoming Event%s with their respective handlers.
         *

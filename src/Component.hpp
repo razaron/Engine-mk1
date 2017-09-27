@@ -14,15 +14,9 @@ namespace razaron::core::component
     enum class ComponentType
     {
         DEFAULT,
-        FOO,
-        BAR,
-        RENDER,
-        MESH,
         TRANSFORM,
         MOTION,
-        COLLIDER,
-        CONTROLLER,
-        STEERING,
+        SHAPE,
         COMPONENT_1,
         COMPONENT_2,
         COMPONENT_3,

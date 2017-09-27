@@ -3,13 +3,15 @@
 using namespace razaron::render;
 
 RenderSystem::RenderSystem()
-    : _window{ sf::VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT), "Game_V1" }
+    : _window{ sf::VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT), "Game_V1", sf::Style::Titlebar | sf::Style::Close }
 {
+    _componentTypes.insert(ComponentType::SHAPE);
+
     // Update or insert a new model matrix into the map of models
     registerHandler(EVENT_MODEL, [&](Event &e) {
-        if(e.lifetime)
+        if (e.lifetime)
             return;
-            
+
         auto data = std::static_pointer_cast<EVENTDATA_MODEL>(e.data);
 
         _models[e.recipient] = data->model;
@@ -27,6 +29,17 @@ RenderSystem::RenderSystem()
             }
         }
     });
+
+    auto lambda = [&](Event & e) {
+        auto data = std::static_pointer_cast<eventdata::REMOVE_COMPONENT>(e.data);
+
+        if(data->ch.first == ComponentType::TRANSFORM)
+        {
+            _models.erase(e.recipient);
+        }
+    };
+
+    _eventStream.extendHandler(EventType::REMOVE_COMPONENT, lambda);
 }
 
 RenderSystem::~RenderSystem()
@@ -35,7 +48,6 @@ RenderSystem::~RenderSystem()
 
 Task RenderSystem::update(EntityMap &entities, double delta)
 {
-    UNUSED(entities);
     UNUSED(delta);
 
     // check all the window's events that were triggered since the last iteration of the loop
@@ -53,12 +65,32 @@ Task RenderSystem::update(EntityMap &entities, double delta)
     // Clear window to black
     _window.clear(sf::Color::Black);
 
-    glm::mat4 view = glm::translate(glm::vec3{ -g_cameraPos*g_cameraZoom, 0.f }) * glm::scale(glm::vec3{g_cameraZoom, g_cameraZoom, 1.f});
+    // Get model/ShapeComponent pairs
+    std::map<unsigned, std::pair<glm::mat4, ShapeComponent *>> renderData;
+    for (auto & [ id, components ] : entities)
+    {
+        try
+        {
+            if(_models.find(id) == _models.end())
+                throw std::exception();
+
+            auto model = _models[id];
+            auto shape = getObject<ShapeComponent>(components[ComponentType::SHAPE]);
+
+            renderData[id] = std::make_pair(model, shape);
+        }
+        catch (const std::exception &e)
+        {
+        }
+    }
+
+    glm::mat4 view = glm::translate(glm::vec3{ -g_cameraPos * g_cameraZoom, 0.f }) * glm::scale(glm::vec3{ g_cameraZoom, g_cameraZoom, 1.f });
     glm::mat4 proj = glm::scale(glm::vec3{ SCREEN_WIDTH, SCREEN_HEIGHT, 1.f });
 
-    for (auto & [ id, model ] : _models)
+    for (auto & [ id, modelShape ] : renderData)
     {
         UNUSED(id);
+        auto [model, shape] = modelShape;
 
         auto mvp = proj * view * model;
 
@@ -77,7 +109,7 @@ Task RenderSystem::update(EntityMap &entities, double delta)
 
         // Triangle
         sf::ConvexShape convex;
-        convex.setFillColor(sf::Color::Blue);
+        convex.setFillColor(sf::Color{static_cast<sf::Uint8>(shape->getColour().r*255), static_cast<sf::Uint8>(shape->getColour().g*255), static_cast<sf::Uint8>(shape->getColour().b*255)});
         convex.setPointCount(3);
         convex.setPoint(0, sf::Vector2f{ points[0].x, points[0].y });
         convex.setPoint(1, sf::Vector2f{ points[1].x, points[1].y });
@@ -106,6 +138,13 @@ ComponentHandle RenderSystem::createComponent(ComponentType type, std::shared_pt
 
     switch (type)
     {
+    case ComponentType::SHAPE:
+    {
+        ShapeArgs args = *(std::static_pointer_cast<ShapeArgs>(tuplePtr));
+
+        h = emplaceObject<ShapeComponent>(std::get<0>(args));
+        break;
+    }
     default:
     {
         h = Handle{};
@@ -118,7 +157,21 @@ ComponentHandle RenderSystem::createComponent(ComponentType type, std::shared_pt
 
 bool RenderSystem::removeComponent(ComponentHandle ch)
 {
-    UNUSED(ch);
+    Handle h;
 
-    return false;
+    switch (ch.first)
+    {
+    case ComponentType::SHAPE:
+    {
+        removeObject<ShapeComponent>(ch.second);
+        break;
+    }
+    default:
+    {
+        return false;
+        break;
+    }
+    }
+
+    return true;
 }

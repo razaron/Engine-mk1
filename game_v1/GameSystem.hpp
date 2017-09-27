@@ -5,6 +5,7 @@
 #include "MotionComponent.hpp"
 #include "System.hpp"
 #include "TransformComponent.hpp"
+#include "ShapeComponent.hpp"
 #include "AnimalComponent.hpp"
 #include "config.hpp"
 

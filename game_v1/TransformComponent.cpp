@@ -29,10 +29,10 @@ float TransformComponent::setRotation(float rotation)
 {
     _rotation = rotation;
 
-    if (_rotation > 2 * glm::pi<float>())
-        _rotation -= 2 * glm::pi<float>();
+    if (_rotation >= 2 * glm::pi<float>())
+        _rotation = std::fmod(_rotation, 2 * glm::pi<float>());
     else if (_rotation < 0)
-        _rotation += 2 * glm::pi<float>();
+        _rotation = 2 * glm::pi<float>() + std::fmod(_rotation, 2 * glm::pi<float>());
 
     return _rotation;
 }

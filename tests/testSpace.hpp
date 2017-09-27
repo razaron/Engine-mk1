@@ -20,7 +20,7 @@ class SystemA : public System
   public:
     SystemA()
     {
-        _componentTypes.insert(ComponentType::FOO);
+        _componentTypes.insert(ComponentType::COMPONENT_1);
     }
 
     ~SystemA() {}
@@ -42,7 +42,7 @@ class SystemA : public System
 
         switch (type)
         {
-        case ComponentType::FOO:
+        case ComponentType::COMPONENT_1:
             h = emplaceObject<Foo>(Foo{});
             break;
         default:
@@ -59,7 +59,7 @@ class SystemA : public System
 
         switch (ch.first)
         {
-        case ComponentType::FOO:
+        case ComponentType::COMPONENT_1:
             removeObject<Foo>(ch.second);
             break;
         default:
@@ -114,7 +114,7 @@ class SystemD : public System
   public:
     SystemD()
     {
-        _componentTypes.insert(ComponentType::BAR);
+        _componentTypes.insert(ComponentType::COMPONENT_2);
     }
     ~SystemD() {}
 
@@ -135,7 +135,7 @@ class SystemD : public System
 
         switch (type)
         {
-        case ComponentType::BAR:
+        case ComponentType::COMPONENT_2:
             h = emplaceObject<Bar>(Bar{});
             break;
         default:
@@ -152,7 +152,7 @@ class SystemD : public System
 
         switch (ch.first)
         {
-        case ComponentType::BAR:
+        case ComponentType::COMPONENT_2:
             removeObject<Bar>(ch.second);
             break;
         default:

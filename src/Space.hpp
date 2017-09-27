@@ -1,5 +1,7 @@
 #pragma once
 
+#include <algorithm>
+
 #include "Graph.hpp"
 #include "System.hpp"
 
@@ -84,5 +86,6 @@ namespace razaron::core::space
         double _intervalMax{};
         EntityMap _entities;
         EventStream _eventStream;
+        std::vector<unsigned> _deletingEntities;
     };
 }

@@ -320,7 +320,7 @@ SCENARIO("You removes objects from anywhere in the ObjectPool", "[objectpool]")
 }
 
 
-SCENARIO("ObjectPools can reorder objects to earlier free positions, then remove unnecessary pages")
+SCENARIO("ObjectPools can reorder objects to earlier free positions, then remove unnecessary pages", "[objectpool]")
 {
     GIVEN("An object pool  with 2 empty pages followed by 2 full pages and 1 (reserved) empty page")
     {
@@ -423,7 +423,7 @@ SCENARIO("ObjectPools can reorder objects to earlier free positions, then remove
 template <typename T>
 void emplacer(ObjectPool &pool, T value, std::vector<Handle> &handles, std::mutex &mutex)
 {
-    for (auto i = 0; i < 1000; i++)
+    for (auto i = 0; i < 10000; i++)
     {
         Handle h{};
         if (i % 2)
@@ -441,7 +441,7 @@ void emplacer(ObjectPool &pool, T value, std::vector<Handle> &handles, std::mute
 template <typename T>
 void eraser(ObjectPool &pool, std::vector<Handle> &handles, std::mutex &mutex, std::atomic<unsigned> &counter)
 {
-    for (auto i = 0; i < 1000; i++)
+    for (auto i = 0; i < 10000; i++)
     {
         Handle h{};
 
@@ -466,7 +466,7 @@ void eraser(ObjectPool &pool, std::vector<Handle> &handles, std::mutex &mutex, s
 template <typename T>
 void reorderer(ObjectPool &pool, std::vector<Handle> &handles, std::mutex &mutex)
 {
-    for (auto i = 0; i < 1000; i++)
+    for (auto i = 0; i < 10000; i++)
     {
         Handle h{};
 
@@ -521,7 +521,7 @@ SCENARIO("ObjectPools can be safely accessed from multiple threads.", "[objectpo
                 t2.join();
                 t3.join();
 
-                REQUIRE(vecSize2.size() + counterSize2 == 2000);
+                REQUIRE(vecSize2.size() + counterSize2 == 20000);
             }
 
             THEN("If 2 threads are erasing and 1 thread is emplacing")
@@ -534,7 +534,7 @@ SCENARIO("ObjectPools can be safely accessed from multiple threads.", "[objectpo
                 t2.join();
                 t3.join();
 
-                REQUIRE(vecSize2.size() + counterSize2 == 1000);
+                REQUIRE(vecSize2.size() + counterSize2 == 10000);
             }
 
             THEN("If 1 thread is emplacing, 1 thread is erasing and 1 thread is reordering")
@@ -547,7 +547,7 @@ SCENARIO("ObjectPools can be safely accessed from multiple threads.", "[objectpo
                 t2.join();
                 t3.join();
 
-                REQUIRE(vecSize2.size() + counterSize2 == 1000);
+                REQUIRE(vecSize2.size() + counterSize2 == 10000);
             }
         }
 
@@ -585,9 +585,9 @@ SCENARIO("ObjectPools can be safely accessed from multiple threads.", "[objectpo
                 t8.join();
                 t9.join();
 
-                REQUIRE(vecSize2.size() + counterSize2 == 2000);
-                REQUIRE(vecSize8.size() + counterSize8 == 2000);
-                REQUIRE(vecSize32.size() + counterSize32 == 2000);
+                REQUIRE(vecSize2.size() + counterSize2 == 20000);
+                REQUIRE(vecSize8.size() + counterSize8 == 20000);
+                REQUIRE(vecSize32.size() + counterSize32 == 20000);
             }
 
             THEN("If 6 threads are erasing and 3 threads are emplacing")
@@ -612,9 +612,9 @@ SCENARIO("ObjectPools can be safely accessed from multiple threads.", "[objectpo
                 t8.join();
                 t9.join();
 
-                REQUIRE(vecSize2.size() + counterSize2 == 1000);
-                REQUIRE(vecSize8.size() + counterSize8 == 1000);
-                REQUIRE(vecSize32.size() + counterSize32 == 1000);
+                REQUIRE(vecSize2.size() + counterSize2 == 10000);
+                REQUIRE(vecSize8.size() + counterSize8 == 10000);
+                REQUIRE(vecSize32.size() + counterSize32 == 10000);
             }
 
             THEN("If 3 threads are emplacing, 3 threads are erasing and 3 threads are reordering")
@@ -639,9 +639,9 @@ SCENARIO("ObjectPools can be safely accessed from multiple threads.", "[objectpo
                 t8.join();
                 t9.join();
 
-                REQUIRE(vecSize2.size() + counterSize2 == 1000);
-                REQUIRE(vecSize8.size() + counterSize8 == 1000);
-                REQUIRE(vecSize32.size() + counterSize32 == 1000);
+                REQUIRE(vecSize2.size() + counterSize2 == 10000);
+                REQUIRE(vecSize8.size() + counterSize8 == 10000);
+                REQUIRE(vecSize32.size() + counterSize32 == 10000);
             }
         }
     }
