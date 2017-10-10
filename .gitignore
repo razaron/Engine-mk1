@@ -53,7 +53,7 @@ Temporary Items
 
 # FILES
 # =========================
-src/main.cpp
+core/main.cpp
 results.txt
 
 # FOLDERS
@@ -70,3 +70,5 @@ docs/doxylocal
 *.odg
 *.exe
 *.gch
+
+callgraph\.sh

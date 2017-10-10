@@ -2,6 +2,8 @@
 
 using namespace razaron::eventstream;
 
+unsigned Event::uid{0};
+
 EventStream::EventStream()
 {
 }

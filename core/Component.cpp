@@ -2,7 +2,7 @@
 
 using namespace razaron::core::component;
 
-std::atomic<unsigned> g_nextID;
+std::atomic<unsigned> razaron::core::component::g_nextID;
 
 Component::Component()
 	:_id(g_nextID++)

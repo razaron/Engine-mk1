@@ -4,9 +4,9 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <queue>
 #include <vector>
-#include <mutex>
 
 #include "Misc.hpp"
 
@@ -31,7 +31,7 @@ namespace razaron::eventstream
         CREATE_ENTITY,    /*!< Lets a Space know to create an Entity. */
         CREATE_COMPONENT, /*!< Lets a System know to create a Component. */
         REMOVE_ENTITY,    /*!< Tells Systems to remove relevant Components, then removes Entity. */
-        REMOVE_COMPONENT,  /*!< Tells a System to remove a Component or tells a Space a Component has been removed. */
+        REMOVE_COMPONENT, /*!< Tells a System to remove a Component or tells a Space a Component has been removed. */
         EVENT_1,
         EVENT_2,
         EVENT_3,
@@ -45,8 +45,8 @@ namespace razaron::eventstream
         unsigned recipient;         /*!< The unique id of the recipient. */
         EventType type;             /*!< The EventType. */
         std::shared_ptr<void> data; /*!< A pointer to the data being sent. */
-        unsigned lifetime{0};       /*!< How long the Event will live for. */
-        unsigned id{g_nextID++};    /*!< This Events unique id. */
+        unsigned lifetime{ 0 };     /*!< How long the Event will live for. */
+        unsigned id{ uid++ };       /*!< This Events unique id. */
 
         /*! Evaluates deep equality between two Event structs. */
         bool operator==(const Event &rhs)
@@ -59,6 +59,9 @@ namespace razaron::eventstream
         {
             return !(*this == rhs);
         }
+
+      private:
+        static unsigned uid;
     };
 
     /*! Handles receiving and sending Event%s to and from EventStream%s. */
