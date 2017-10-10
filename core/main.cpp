@@ -1,64 +1,84 @@
-#include <iostream>
-#include <map>
+#include <unordered_map>
+#include <vector>
+#include <bitset>
 #include <string>
-#include <tuple>
 #include <utility>
 
-#include "EventStream.hpp"
-
-template <typename T, std::size_t... Ind>
-void printTuple(T tuple, std::index_sequence<Ind...>)
-{
-    // ((expression), ...);
-    ((std::cout << std::get<Ind>(tuple) << " "), ...);
-    std::cout << std::endl;
-}
-
-template <typename T, std::size_t N, typename Indices = std::make_index_sequence<N>>
-decltype(auto) print(const T &t)
-{
-    return printTuple(t, Indices{});
-}
-
-class Test
-{
-  public:
-    template <class... Args>
-    Test(Args... p_args);
-    Test(int i);
+struct Key {
+    std::string first;
+    std::string second;
 };
 
-template <class... Args>
-Test::Test(Args... p_args)
-{
-    auto t = std::make_tuple(p_args...);
+struct KeyHash {
+ std::size_t operator()(const Key& k) const
+ {
+     return std::hash<std::string>()(k.first) ^
+            (std::hash<std::string>()(k.second) << 1);
+ }
+};
 
-    print<decltype(t), std::tuple_size<decltype(t)>::value>(t);
-}
+struct KeyEqual {
+ bool operator()(const Key& lhs, const Key& rhs) const
+ {
+    return lhs.first == rhs.first && lhs.second == rhs.second;
+ }
+};
 
-Test::Test(int i)
-{
-    std::cout << "ping " << i << std::endl;
+struct Foo {
+    Foo(int val_) : val(val_) {}
+    int val;
+    bool operator==(const Foo &rhs) const { return val == rhs.val; }
+};
+
+namespace std {
+    template<> struct hash<Foo> {
+        std::size_t operator()(const Foo &f) const {
+            return std::hash<int>{}(f.val);
+        }
+    };
 }
 
 int main()
 {
-    //Test a{1, "a", "lol"};
-    //Test b{1};
+    // default constructor: empty map
+    std::unordered_map<std::string, std::string> m1;
 
-    std::map<unsigned, std::pair<float, double>> map;
-    map[1u] = std::make_pair(1.f, 1.0);
-    map[2u] = std::make_pair(2.f, 2.0);
-    map[3u] = std::make_pair(3.f, 3.0);
-    map[4u] = std::make_pair(4.f, 4.0);
+    // list constructor
+    std::unordered_map<int, std::string> m2 =
+    {
+        {1, "foo"},
+        {3, "bar"},
+        {2, "baz"},
+    };
 
-    using namespace razaron::eventstream;
-    EventStream e{};
-    e.registerHandler(EventType::EVENT_1, [](Event &e) { std::cout << "Hello"; });
-    e.extendHandler(EventType::EVENT_1, [](Event &e) { std::cout << " World!!!!!\n"; });
+    // copy constructor
+    std::unordered_map<int, std::string> m3 = m2;
 
-    e.pushEvent(Event{ 0u, EventType::EVENT_1, nullptr }, StreamType::INCOMING);
-    e.processEvents();
+    // move constructor
+    std::unordered_map<int, std::string> m4 = std::move(m2);
 
-    return 0;
+    // range constructor
+    std::vector<std::pair<std::bitset<8>, int>> v = { {0x12, 1}, {0x01,-1} };
+    std::unordered_map<std::bitset<8>, double> m5(v.begin(), v.end());
+
+    //Option 1 for a constructor with a custom Key type
+    // Define the KeyHash and KeyEqual structs and use them in the template
+    std::unordered_map<Key, std::string, KeyHash, KeyEqual> m6 = {
+            { {"John", "Doe"}, "example"},
+            { {"Mary", "Sue"}, "another"}
+    };
+
+    //Option 2 for a constructor with a custom Key type
+    // Define a const == operator for the class/struct and specialize std::hash
+    // structure in the std namespace
+    std::unordered_map<Foo, std::string> m7 = {
+        { Foo(1), "One"}, { 2, "Two"}, { 3, "Three"}
+    };
+
+    //Option 3: Use lambdas
+    // Note that the initial bucket count has to be passed to the constructor
+    struct Goo {int val; };
+    auto hash = [](const Goo &g){ return std::hash<int>{}(g.val); };
+    auto comp = [](const Goo &l, const Goo &r){ return l.val == r.val; };
+    std::unordered_map<Goo, double, decltype(hash), decltype(comp)> m8(10, hash, comp);
 }

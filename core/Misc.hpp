@@ -43,18 +43,6 @@ using expand_type = int[];
     		)(x)...);          	     	  \
     }, TUPLE);
 
-// EXPRESSION is a brace enclosed function body
-#define FOR_EACH_TUPLE_ORDERED_VOID(EXPRESSION, TUPLE) 	\
-    std::apply([](auto... x) {					 		\
-        VARIADIC_EXPANDER( 								\
-            ([](auto element)							\
-                EXPRESSION 								\
-            )(x)); 										\
-    }, TUPLE);
-
-/*! A unique unsigned int representing the next available unique ID. */
-extern std::atomic<unsigned> g_nextID;
-
 // Handling for pointers etc.
 using HandleSize = std::size_t; /*!< Represents the size of Handle%d objects. */
 using HandleIndex = unsigned short; /*!< Represents the indexed location of Handle%d objects. */

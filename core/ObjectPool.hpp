@@ -24,6 +24,7 @@
 #include <sstream>
 #include <tuple>
 #include <typeinfo>
+#include <unordered_map>
 #include <vector>
 
 #include "Misc.hpp"
@@ -56,7 +57,28 @@ namespace razaron::objectpool
                         typename std::conditional <sizeof(T) <= OBJECT_SIZE_16, PoolD,
                         typename std::conditional <sizeof(T) <= OBJECT_SIZE_32, PoolE, PoolF>::type>::type>::type>::type>;
     // clang-format on
+
+    struct HandleHash
+    {
+        std::size_t operator()(const Handle &h) const
+        {
+            auto hash1 = std::hash<HandleSize>()(h.size);
+            auto hash2 = std::hash<HandleIndex>()(h.index);
+            return hash1 ^= hash2 + 0x9e3779b9 + (hash1 << 6) + (hash1 >> 2);
+        }
+    };
+
+    struct HandleEqual
+    {
+        bool operator()(const Handle &lhs, const Handle &rhs) const
+        {
+            return lhs.size == rhs.size && lhs.index == rhs.index;
+        }
+    };
     /*! @endcond */
+
+    /*! Hashmap for mapping Handle%s to pointers. */
+    using HandleMap = std::unordered_map<Handle, void *, HandleHash, HandleEqual>;
 
     /*!	Stores objects of any type with size upto \c sizeof(std::size_t)*64 Bytes in contiguous aligned memory.
     *   For more information and examples, see page \ref objectpool.
@@ -116,8 +138,7 @@ namespace razaron::objectpool
 		*
 		*	@tparam	T			               The type of the object to get from the ObjectPool.
 		*
-        *	@param	handle	               The Handle used to search for the object in the ObjectPool.
-		*	@param	isNaive	               If true, check if handle belongs to a free position.
+        *	@param	handle	                   The Handle used to search for the object in the ObjectPool.
 		*
         *	@exception	std::invalid_argument  T and handle are mismatched.
 		*	@exception	std::length_error      T is too large for ObjectPool.
@@ -126,9 +147,9 @@ namespace razaron::objectpool
 		*	@retval nullptr                    On failure, a nullptr.
 		*/
         template <class T>
-        T *get(const Handle &handle, bool isNaive = false);
+        T *get(const Handle &handle);
 
-        //TODO template<class T> T* getObjects(std::vector<Handle> handles);
+        //TODO template<class T> std::vector<T*> get(std::vector<Handle> handles);
 
         /*!	Removes an object from the ObjectPool and free's the space for reuse.
 		*	It calls the destructor for non-trivially destructible objects.
@@ -160,6 +181,8 @@ namespace razaron::objectpool
 
       private:
         PoolTuple _pools;
+        HandleMap _hashMap;
+        std::mutex _hashMapMutex;
 
         template <class T, class Pool, class... Args>
         Handle allocateConstruct(Args... args);
@@ -173,8 +196,11 @@ namespace razaron::objectpool
         template <class Pool>
         typename std::tuple_element<1, Pool>::type::value_type getPage(HandleIndex index);
 
+        template <class T>
+        T *getObject(const Handle &handle);
+
         template <class T, class Pool>
-        T *getObject(const Handle &handle, bool isNaive = false);
+        T *getPointer(const Handle &handle);
 
         template <class Pool, typename T>
         typename std::enable_if<std::is_pointer<T>::value, HandleIndex>::type getIndex(T ptr);
@@ -197,7 +223,8 @@ namespace razaron::objectpool
             std::get<2>(element) = std::make_shared<std::recursive_mutex>();
 
             return element;
-        }, _pools);
+        },
+                                _pools);
     }
 
     inline ObjectPool::~ObjectPool()
@@ -207,7 +234,8 @@ namespace razaron::objectpool
                 delete arr;
 
             return element;
-        }, _pools);
+        },
+                                _pools);
     }
 
     template <class T>
@@ -272,11 +300,8 @@ namespace razaron::objectpool
     }
 
     template <class T>
-    inline T *ObjectPool::get(const Handle &handle, bool isNaive)
+    inline T *ObjectPool::get(const Handle &handle)
     {
-        // Find the pool that fits T
-        using Pool = typename PoolCond1<T>::type;
-
         if (handle.size != sizeof(T))
         {
             std::stringstream message;
@@ -286,7 +311,7 @@ namespace razaron::objectpool
         }
         else if (sizeof(T) <= OBJECT_SIZE_64)
         {
-            return getObject<T, Pool>(handle, isNaive);
+            return getObject<T>(handle);
         }
         else
         {
@@ -347,8 +372,8 @@ namespace razaron::objectpool
         T temp;
 
         // If no object currently exists for handle, returm null
-        if(getObject<T, Pool>(handle))
-            temp = *getObject<T, Pool>(handle);
+        if (getObject<T>(handle))
+            temp = *getObject<T>(handle);
         else
             return {};
 
@@ -407,7 +432,7 @@ namespace razaron::objectpool
 
         // Get pointers to the current and next free elements
         Handle *curFree = std::get<0>(*pool);
-        Handle *nextFree = getObject<Handle, Pool>(*curFree, true);
+        Handle *nextFree = getPointer<Handle, Pool>(*curFree);
 
         // Copy object data to the location current free pointer
         std::memcpy(curFree, &object, sizeof(T));
@@ -417,6 +442,13 @@ namespace razaron::objectpool
 
         // Configure a Handle for the newly placed object
         Handle h{ HandleSize{ sizeof(T) }, HandleIndex{ getIndex<Pool>(curFree) }, false };
+
+        // Adds the new object to the ObjectPools hashmap
+        {
+            std::lock_guard<std::mutex> lk{ _hashMapMutex };
+
+            _hashMap[h] = static_cast<void *>(curFree);
+        }
 
         return h;
     }
@@ -473,8 +505,23 @@ namespace razaron::objectpool
         return page;
     }
 
+    template <class T>
+    inline T *ObjectPool::getObject(const Handle &handle)
+    {
+        std::lock_guard<std::mutex> lk{ _hashMapMutex };
+
+        auto it = _hashMap.find(handle);
+
+        if (it != _hashMap.end())
+        {
+            return static_cast<T *>(_hashMap[handle]);
+        }
+        else
+            return nullptr;
+    }
+
     template <class T, class Pool>
-    inline T *ObjectPool::getObject(const Handle &handle, bool isNaive)
+    inline T *ObjectPool::getPointer(const Handle &handle)
     {
         typedef typename std::tuple_element<1, Pool>::type::value_type PagePtr;
 
@@ -491,27 +538,7 @@ namespace razaron::objectpool
         // Find and cast the element refering to objects first byte
         auto objectPtr = reinterpret_cast<T *>(&page->data()[d.rem * std::get<0>(*pool)->size]);
 
-        // Loop through free pointers to see if objectPtr is one of them
-        if (!isNaive && std::get<0>(*pool)->index <= handle.index)
-        {
-            Handle *freePtr = std::get<0>(*pool);
-            while (freePtr->index <= handle.index)
-            {
-                freePtr = getObject<Handle, Pool>(
-                    Handle{
-                        HandleSize{ freePtr->size },
-                        HandleIndex{ freePtr->index },
-                        true },
-                    true);
-            }
-
-            if (freePtr != reinterpret_cast<Handle *>(objectPtr))
-                return objectPtr;
-            else
-                return nullptr;
-        }
-        else
-            return objectPtr;
+        return objectPtr;
     }
 
     template <class Pool, typename T>
@@ -579,7 +606,7 @@ namespace razaron::objectpool
         // Fail if first free position and object being removed are the same
         if (handle.index == posCurFree) return;
 
-        Handle *ptrToRemove = getObject<Handle, Pool>(handle, true);
+        Handle *ptrToRemove = getObject<Handle>(handle);
 
         // Call object destructor if it is manually set
         if (std::is_destructible<T>::value && !std::is_trivially_destructible<T>::value)
@@ -598,32 +625,46 @@ namespace razaron::objectpool
             ptrToRemove->index = posCurFree;
 
             std::get<0>(*pool) = ptrToRemove;
-
-            return;
         }
-
         // If the object being removed is located AFTER the first free position
-        Handle *ptrPrevFree = nullptr;
-        Handle *ptrNextFree = std::get<0>(*pool);
-
-        std::size_t posNextFree = getIndex<Pool>(ptrNextFree);
-
-        // Loop through free positions until handle is inbetween prevFree and nextFree
-        while (posNextFree < handle.index)
+        else
         {
-            ptrPrevFree = ptrNextFree;
+            Handle *ptrPrevFree = nullptr;
+            Handle *ptrNextFree = std::get<0>(*pool);
 
-            ptrNextFree = getObject<Handle, Pool>(*ptrNextFree, true);
-            posNextFree = getIndex<Pool>(ptrNextFree);
+            std::size_t posNextFree = getIndex<Pool>(ptrNextFree);
+
+            // Loop through free positions until handle is inbetween prevFree and nextFree
+            while (posNextFree < handle.index)
+            {
+                ptrPrevFree = ptrNextFree;
+
+                ptrNextFree = getPointer<Handle, Pool>(*ptrNextFree);
+                posNextFree = getIndex<Pool>(ptrNextFree);
+            }
+
+            // Currently, ptrToRemove is set to some value (e.g. "hello"), so I have to use handle
+            ptrPrevFree->index = handle.index;
+
+            // Setup the ptr being removed to be inbetween ptrPrevFree and ptrNextFree
+            ptrToRemove->isFree = true;
+            ptrToRemove->size = std::get<0>(*pool)->size;
+            ptrToRemove->index = static_cast<HandleIndex>(posNextFree);
         }
 
-        // Currently, ptrToRemove is set to some value (e.g. "hello"), so I have to use handle
-        ptrPrevFree->index = handle.index;
+        // Removes object from the hashmap.
+        {
+            std::lock_guard<std::mutex> lk{ _hashMapMutex };
 
-        // Setup the ptr being removed to be inbetween ptrPrevFree and ptrNextFree
-        ptrToRemove->isFree = true;
-        ptrToRemove->size = std::get<0>(*pool)->size;
-        ptrToRemove->index = static_cast<HandleIndex>(posNextFree);
+            if (!_hashMap.erase(handle))
+            {
+                std::stringstream message;
+                message << "Handle{ size: " << handle.size << ", index: " << handle.index << " }"
+                        << " not found in ObjectPool::_hashMap.";
+
+                throw std::out_of_range(message.str());
+            }
+        }
 
         return;
     }
@@ -637,7 +678,7 @@ namespace razaron::objectpool
 
         auto pages = &std::get<1>(*pool);
 
-        if(!std::get<0>(*pool))
+        if (!std::get<0>(*pool))
             return;
 
         std::vector<Handle *> freePtrs{ std::get<0>(*pool) };
@@ -647,7 +688,7 @@ namespace razaron::objectpool
         // loop through all free handles
         while (freePtrs.back()->index != lastPos)
         {
-            freePtrs.push_back(getObject<Handle, Pool>(*freePtrs.back(), true));
+            freePtrs.push_back(getPointer<Handle, Pool>(*freePtrs.back()));
         }
 
         if (freePtrs.size() < OBJECT_POOL_PAGE_LENGTH)
