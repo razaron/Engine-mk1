@@ -15,7 +15,7 @@ using namespace razaron::physics;
 using namespace razaron::game;
 using namespace razaron::render;
 
-float g_cameraZoom = 1.f/10;
+float g_cameraZoom = 1.f/25;
 glm::vec2 g_cameraPos{0.f, 0.f};
 
 int main()

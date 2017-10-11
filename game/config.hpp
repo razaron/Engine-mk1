@@ -67,7 +67,8 @@ namespace razaron::eventdata
     enum class SteeringBehaviour
     {
         SEEK,
-        FLEE
+        FLEE,
+        STOP
     };
 
     struct EVENTDATA_INPUT

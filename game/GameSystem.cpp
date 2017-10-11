@@ -109,59 +109,121 @@ Task GameSystem::update(EntityMap &entities, double delta)
         }
     }
 
-    if(_models.size() != animals.size())
-        return Task{};
-
     // Seperate the animals into carnivores and herbivores
     std::vector<std::pair<unsigned, AnimalComponent *>> carnivores;
     std::vector<std::pair<unsigned, AnimalComponent *>> herbivores;
     for (auto &a : animals)
     {
-        if (a.second->getDiet() == AnimalDiet::CARNIVORE)
+        if (a.second->getDiet() == AnimalDiet::CARNIVORE && _models.find(a.first) != _models.end())
             carnivores.push_back(a);
-        else if (a.second->getDiet() == AnimalDiet::HERBIVORE)
+        else if (a.second->getDiet() == AnimalDiet::HERBIVORE && _models.find(a.first) != _models.end())
             herbivores.push_back(a);
     }
 
-    // Create steering events for closest carnivore-herbivore pairs
+    if(!carnivores.size())
+        return Task{};
+
+    // move camera to first carnivore
+    g_cameraPos = glm::vec2((_models[(carnivores[0]).first])[3]) - glm::vec2{0.5f/g_cameraZoom, 0.5f/g_cameraZoom};
+
+    if(!herbivores.size())
+        return Task{};
+
+    // Create SEEK events for closest carnivore-herbivore pairs
+    updateSteering(herbivores, carnivores);
+
+    return Task{};
+}
+
+void GameSystem::updateSteering(std::vector<Animal> herbivores, std::vector<Animal> carnivores)
+{
+    // Finds closest prey, and SEEKs it
     std::vector<Event> events;
-    for (auto &predator : carnivores)
+    for (auto &carnivore : carnivores)
     {
-        std::pair<unsigned, AnimalComponent *> prey;
-        float distance = std::numeric_limits<float>::max();
-
-        // Find closest prey
-        for (auto &herbivore : herbivores)
+        Animal prey;
+        while((prey = findNearestAnimal(carnivore, herbivores)) != Animal{})
         {
-            glm::vec2 p1 = glm::vec2((_models[predator.first])[3]);
-            glm::vec2 p2 = glm::vec2((_models[herbivore.first])[3]);
+            glm::vec2 p1 = glm::vec2((_models[prey.first])[3]);
+            glm::vec2 p2 = glm::vec2((_models[carnivore.first])[3]);
 
-            if (glm::length(p2 - p1) < distance)
+            if (glm::length(p2 - p1) <= 1.f)
             {
-                prey = herbivore;
-                distance = glm::length(p2 - p1) < distance;
+                Event e{
+                    prey.first,    // Entity ID.
+                    EventType::REMOVE_ENTITY, // Event type enum
+                    std::make_shared<eventdata::REMOVE_ENTITY>()
+                };
+
+                events.push_back(e);
+                //std::remove(herbivores.begin(), herbivores.end(), prey);
+                herbivores.erase(std::remove(herbivores.begin(), herbivores.end(), prey), herbivores.end());
+            }
+            else
+            {
+                Event e{
+                    carnivore.first,
+                    EVENT_STEERING,
+                    std::make_shared<EVENTDATA_STEERING>(SteeringBehaviour::SEEK, prey.first)
+                };
+
+                events.push_back(e);
+
+                break;
             }
         }
 
-        Event e1{
-            predator.first,
-            EVENT_STEERING,
-            std::make_shared<EVENTDATA_STEERING>(SteeringBehaviour::SEEK, prey.first)
-        };
+    }
 
-        Event e2{
-            prey.first,
-            EVENT_STEERING,
-            std::make_shared<EVENTDATA_STEERING>(SteeringBehaviour::FLEE, predator.first)
-        };
+    // Run from nearby predators or eat if safe
+    for (auto &herbivore : herbivores)
+    {
+        // Find nearby predator predator
+        Animal predator = findNearestAnimal(herbivore, carnivores, 5.f);
 
-        events.push_back(e1);
-        events.push_back(e2);
+        if(predator != Animal{})
+        {
+            Event e{
+                herbivore.first,
+                EVENT_STEERING,
+                std::make_shared<EVENTDATA_STEERING>(SteeringBehaviour::FLEE, predator.first)
+            };
+
+            events.push_back(e);
+        }
+        else
+        {
+            Event e{
+                herbivore.first,
+                EVENT_STEERING,
+                std::make_shared<EVENTDATA_STEERING>(SteeringBehaviour::STOP, 0)
+            };
+
+            events.push_back(e);
+        }
     }
 
     pushEvents(events);
+}
 
-    return Task{};
+Animal GameSystem::findNearestAnimal(const Animal &me, std::vector<Animal> others, float maxDist)
+{
+    Animal a{};
+    float distance = maxDist;
+
+    for (const auto &other : others)
+    {
+        glm::vec2 p1 = glm::vec2((_models[me.first])[3]);
+        glm::vec2 p2 = glm::vec2((_models[other.first])[3]);
+
+        if (glm::length(p2 - p1) < distance)
+        {
+            a = other;
+            distance = glm::length(p2 - p1);
+        }
+    }
+
+    return a;
 }
 
 ComponentHandle GameSystem::createComponent(ComponentType type, std::shared_ptr<void> tuplePtr)
@@ -215,7 +277,7 @@ void GameSystem::initGame()
     // Create new entity
     std::vector<Event> events;
 
-    for (auto i = 0; i < 10; i++)
+    for (auto i = 0; i < 1; i++)
     {
         auto pos = glm::vec2{ i * 1.f, i * 1.f };
         auto scale = glm::vec2{ 0.25f, 0.25f };
@@ -240,7 +302,7 @@ void GameSystem::initGame()
 
             auto e = createAnimal(pos, scale, AnimalDiet::HERBIVORE, colour);
 
-            events.push_back(e);
+            //events.push_back(e);
         }
     }
 
@@ -263,9 +325,9 @@ Event GameSystem::createAnimal(glm::vec2 pos, glm::vec2 scale, AnimalDiet diet, 
     list.push_back(ComponentArgs{
         ComponentType::MOTION,
         std::make_shared<MotionArgs>(
-            5.f,                            // maxVelocity
-            1.f,                            // maxAcceleration
-            1.f                             // mass
+            (diet == AnimalDiet::HERBIVORE) ? .5f : 5.f, // maxVelocity
+            (diet == AnimalDiet::HERBIVORE) ? .1f : 100000.f,  // maxAcceleration
+            1.f                                           // mass
         )
     });
 

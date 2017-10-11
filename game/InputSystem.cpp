@@ -3,7 +3,7 @@
 using namespace razaron::input;
 
 InputSystem::InputSystem(sf::Window *window)
-    : _windowPtr(window), _polling{ 0.1 }
+    : _windowPtr(window), _polling{ 0.01 }
 {
     createContext(ContextType::DEFAULT, std::set<InputType>{ InputType::MOUSE_LEFT, InputType::MOUSE_RIGHT, InputType::KEY_ESCAPE, InputType::KEY_W, InputType::KEY_A, InputType::KEY_S, InputType::KEY_D });
 }

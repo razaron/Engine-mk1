@@ -87,6 +87,30 @@ Task RenderSystem::update(EntityMap &entities, double delta)
     glm::mat4 view = glm::translate(glm::vec3{ -g_cameraPos * g_cameraZoom, 0.f }) * glm::scale(glm::vec3{ g_cameraZoom, g_cameraZoom, 1.f });
     glm::mat4 proj = glm::scale(glm::vec3{ SCREEN_WIDTH, SCREEN_HEIGHT, 1.f });
 
+    std::vector<sf::Vertex> vertices;
+    for(auto i=0.f;i<1000;i++)
+    {
+        std::array<glm::vec4, 4> p{ {
+            { i-500, -500, 0.f, 1.f },
+            { i-500, 500, 0.f, 1.f },
+            { -500, i-500, 1.f, 1.f },
+            { 500, i-500, 0.f, 1.f }
+        } };
+
+        // Transform triangle using model matrix
+        for (auto &vec : p)
+        {
+            vec = proj * view * vec;
+        }
+
+        vertices.emplace_back(sf::Vector2f(p[0].x, p[0].y));
+        vertices.emplace_back(sf::Vector2f(p[1].x, p[1].y));
+        vertices.emplace_back(sf::Vector2f(p[2].x, p[2].y));
+        vertices.emplace_back(sf::Vector2f(p[3].x, p[3].y));
+    }
+
+    _window.draw(vertices.data(), 4000, sf::Lines);
+
     for (auto & [ id, modelShape ] : renderData)
     {
         UNUSED(id);
@@ -101,7 +125,6 @@ Task RenderSystem::update(EntityMap &entities, double delta)
                                            { 0.f, 0.f, 0.f, 1.f } } };
 
         // Transform triangle using model matrix
-        //std::for_each(points.begin(), points.end(), [model](glm::vec4 &n){ n = model * n; });
         for (auto &vec : points)
         {
             vec = mvp * vec;

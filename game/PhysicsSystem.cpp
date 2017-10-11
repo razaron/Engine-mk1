@@ -48,28 +48,24 @@ Task PhysicsSystem::update(EntityMap &entities, double delta)
         if (_behaviours.size() && _behaviours.find(id) != _behaviours.end() && bodies.find(_behaviours[id].first) != bodies.end())
         {
             auto[otherT, otherM] = bodies[_behaviours[id].first];
+            UNUSED(otherM);
 
             switch (_behaviours[id].second)
             {
                 case SteeringBehaviour::SEEK:
                 {
-                    if (glm::length(t->translation - otherT->translation) < 1)
-                    {
-                        Event e{
-                            _behaviours[id].first,    // Entity ID.
-                            EventType::REMOVE_ENTITY, // Event type enum
-                            std::make_shared<eventdata::REMOVE_ENTITY>()
-                        };
-                        pushEvent(e);
-                    }
-                    else
-                        seek(static_cast<float>(delta), t, m, otherT);
-
+                    seek(static_cast<float>(delta), t, m, otherT);
                     break;
                 }
                 case SteeringBehaviour::FLEE:
                 {
-
+                    flee(static_cast<float>(delta), t, m, otherT);
+                    break;
+                }
+                case SteeringBehaviour::STOP:
+                {
+                    m->applyForce(-m->getVelocity());
+                    m->updateVelocity(delta);
                     break;
                 }
             }
@@ -101,6 +97,17 @@ Task PhysicsSystem::update(EntityMap &entities, double delta)
 void PhysicsSystem::seek(float delta, TransformComponent *t, MotionComponent *m, TransformComponent *target)
 {
     glm::vec2 desiredVelocity = glm::normalize(target->translation - t->translation) * m->getMaxVelocity();
+    glm::vec2 steering = desiredVelocity - m->getVelocity();
+
+    m->applyForce(steering);
+    m->updateVelocity(delta);
+
+    t->translation += m->getVelocity() * delta;
+}
+
+void PhysicsSystem::flee(float delta, TransformComponent *t, MotionComponent *m, TransformComponent *target)
+{
+    glm::vec2 desiredVelocity = glm::normalize(t->translation - target->translation) * m->getMaxVelocity();
     glm::vec2 steering = desiredVelocity - m->getVelocity();
 
     m->applyForce(steering);
