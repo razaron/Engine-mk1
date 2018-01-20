@@ -91,6 +91,8 @@ namespace razaron::graph
 		*/
         void breadthFirstTraversal(unsigned short origin);
 
+		void depthFirstTraversal(unsigned short origin);
+
         /*!	Constructs and adds a new Edge to the Graph.
 		*
 		*	If no Vertex objects exist with the IDs `source` or `target`, constructs and adds new Vertex
@@ -122,6 +124,8 @@ namespace razaron::graph
 
       private:
         std::vector<Vertex<V, E>> _vertices;
+
+		void dfsHelper(unsigned short id);
     };
 
     // Default constructor
@@ -190,6 +194,38 @@ namespace razaron::graph
             }
         }
     }
+
+
+
+	template<class V, class E, class G>
+	inline void Graph<V, E, G>::depthFirstTraversal(unsigned short origin)
+	{
+		auto v = (*this)[origin];
+
+		// Exit if vertex already visited
+		if ((*this)[v.id].state == State::GREY)
+			return;
+
+		// Run the vertices discovery function
+		if (vertexFuncs[(*this)[v.id].state])
+			vertexFuncs[(*this)[v.id].state]((*this)[v.id], *this);
+
+		if ((*this)[v.id].state == State::WHITE)
+			(*this)[v.id].state = State::GREY;
+
+		// Loop through adjacent edges
+		for (auto &e : (*this)[v.id].adjacencyList)
+		{
+			// Run the edges discovery function
+			if (edgeFuncs[e.state])
+				edgeFuncs[e.state](e, *this);
+
+			if (e.state == State::WHITE)
+				e.state = State::GREY;
+
+			depthFirstTraversal(e.target);
+		}
+	}
 
     template <class V, class E, class G>
     inline void Graph<V, E, G>::addEdge(unsigned short source, unsigned short target, E data)
@@ -280,4 +316,10 @@ namespace razaron::graph
             }
         }
     }
+
+	template<class V, class E, class G>
+	inline void Graph<V, E, G>::dfsHelper(unsigned short id)
+	{
+
+	}
 }

@@ -2,6 +2,7 @@
 
 #include <array>
 #include <atomic>
+#include <algorithm>
 
 // Check windows
 #if _WIN32 || _WIN64
@@ -24,24 +25,12 @@
 // For removing unused parameter warnings
 #define UNUSED(x) (void)(x)
 
-using expand_type = int[];
-
-/* PATTERN is with the form:
-	function(args)
-	or
-	(lambda)(args)
-*/
-#define VARIADIC_EXPANDER(PATTERN) 				\
-    expand_type { 0, ((PATTERN), void(), 0)... }
-
-// Returns a tuple of results. EXPRESSION is a brace enclosed function body
-#define FOR_EACH_TUPLE(EXPRESSION, TUPLE) \
-    std::apply([](auto... x) {            \
-        return std::make_tuple(           \
-            ([](auto element)      	      \
-                EXPRESSION                \
-    		)(x)...);          	     	  \
-    }, TUPLE);
+// Helper function
+template <typename T>
+bool includes(T a, T b)
+{
+	return std::includes(a.begin(), a.end(), b.begin(), b.end());
+}
 
 // Handling for pointers etc.
 using HandleSize = std::size_t; /*!< Represents the size of Handle%d objects. */
