@@ -8,11 +8,11 @@ ActionList Planner::plan(Action goal, ActionList availableActions)
 
 	g.addEdge(0,0,0);
 	g[0].data = Action();
+	g[0].data.name = "GOAL: " + goal.name;
 
 	genTree(&g, 0, goal, availableActions);
 
 	auto it = g.data.plans.begin();
-	
 	g.vertexFuncs[State::WHITE] = [&it](ActionVertex &v, ActionGraph &g) {
 		std::clog << v.id << ": " << v.data.name << std::endl;
 
@@ -31,6 +31,8 @@ ActionList Planner::plan(Action goal, ActionList availableActions)
 		if (!v.adjacencyList.size())
 		{
 			std::clog << "END" << std::endl;
+
+			v.state = State::RED;
 
 			it->clear();
 		}
@@ -86,7 +88,53 @@ ActionList Planner::plan(Action goal, ActionList availableActions)
 	if(bestPlan.size())
 		bestPlan.reverse();
 
+	_lastPlan = g;
+
 	return bestPlan;
+}
+
+void razaron::planner::Planner::toDOT(std::string filename)
+{
+	auto vAttr = [](const ActionVertex &v) {
+		auto id = v.id;
+		auto name = v.data.name;
+		auto cost = v.data.cost;
+
+		auto colour = "white";
+		switch (v.state)
+		{
+		case State::GREEN:
+		{
+			colour = "green";
+			break;
+		}
+		case State::RED:
+		{
+			colour = "red";
+			break;
+		}
+		}
+
+		std::stringstream attributes;
+		attributes << std::to_string(id) << "[label = \"" << name << "\" style=filled fillcolor=" << colour <<"];\n";
+
+		return attributes.str();
+	};
+
+	auto eAttr = [&](const ActionEdge &e) {
+		std::stringstream attr;
+
+		auto action = _lastPlan[e.target].data;
+
+		attr << "[dir=back label=\"" << std::to_string(action.cost) << "\"]\n";
+		
+		return attr.str();
+	};
+
+	std::ofstream dotFile(filename);
+	auto dotStr = _lastPlan.getDOT(vAttr, eAttr);
+
+	dotFile << dotStr;
 }
 
 void Planner::genTree(ActionGraph *g, int where, Action goal, ActionList actions)
@@ -126,7 +174,7 @@ void Planner::genTree(ActionGraph *g, int where, Action goal, ActionList actions
 		checkProcedural(a.proceduralPostconditions); // post conditions affect the blackboard
 		aToGDynamic = checkProcedural(goal.proceduralPreconditions); // compares blackboard against real current values
 
-		// CHECK IF BRANCH ENDS
+		// CHECK IF BRANCH ENDS WITH VALID ACTION
 		if (wToAStatic && wToADynamic && aToGStatic && aToGDynamic)
 		{
 			g->addEdge(where, index, 0);

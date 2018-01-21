@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <functional>
 #include <iostream>
+#include <sstream>
 #include <list>
 #include <map>
 #include <vector>
@@ -109,6 +110,8 @@ namespace razaron::graph
 
         /*! Returns the number of Vertex objects. */
         std::size_t size() { return _vertices.size(); }
+
+		std::string getDOT(std::function<std::string(const Vertex<V, E>&)> vertexAttributes = nullptr, std::function<std::string(const Edge<E>&)> edgeAttributes = nullptr);
 
         /*!	Get's a reference to the Vertex with `id == index`.
 		*
@@ -287,6 +290,46 @@ namespace razaron::graph
             {State::RED, nullptr},
             {State::GREEN, nullptr}};
     }
+
+	template<class V, class E, class G>
+	inline std::string Graph<V, E, G>::getDOT(std::function<std::string(const Vertex<V, E>&)> vertexAttributes, std::function<std::string(const Edge<E>&)> edgeAttributes)
+	{
+		std::list<Edge<E>> edges;
+
+		for (auto &v : _vertices)
+		{
+			for(auto &e : v.adjacencyList)
+				if(!(e.source == 0 && e.target == 0))
+					edges.push_back(e);
+		}
+
+		std::stringstream dot;
+		dot << "digraph G {\n";
+
+		for (auto &e : edges)
+		{
+			dot << std::to_string(e.source) << " -> " << std::to_string(e.target);
+
+			if (edgeAttributes)
+			{
+				dot << edgeAttributes(e);
+			}
+			else
+				dot << ";\n";
+		}
+
+		if (vertexAttributes)
+		{
+			for (auto &v : _vertices)
+			{
+				dot << vertexAttributes(v);
+			}
+		}
+
+		dot << "}";
+
+		return dot.str();
+	}
 
     template <class V, class E, class G>
     inline Vertex<V, E> &graph::Graph<V, E, G>::operator[](unsigned short index)

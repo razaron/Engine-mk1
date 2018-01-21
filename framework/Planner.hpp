@@ -6,6 +6,7 @@
 #include <set>
 #include <list>
 #include <iostream>
+#include <fstream>
 #include <string>
 
 namespace razaron::planner
@@ -65,9 +66,12 @@ namespace razaron::planner
 
 		ActionList plan(Action goal, ActionList availableActions);
 
+		void toDOT(std::string filename);
+
 	private:
 		ConditionSet _worldState;
 		std::function<void()> _reset;
+		ActionGraph _lastPlan;
 
 		void genTree(ActionGraph *g, int where, Action goal, ActionList actions);
 	};
