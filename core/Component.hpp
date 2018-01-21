@@ -32,6 +32,9 @@ namespace razaron::core::component
         ENUM_SIZE
     };
 
+    /*! A unique unsigned int representing the next available unique ID. */
+    extern std::atomic<unsigned> g_nextID;
+
     /*! The base class for a Component. */
     class Component
     {

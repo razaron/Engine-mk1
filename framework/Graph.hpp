@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <functional>
 #include <iostream>
+#include <sstream>
 #include <list>
 #include <map>
 #include <vector>
@@ -91,6 +92,8 @@ namespace razaron::graph
 		*/
         void breadthFirstTraversal(unsigned short origin);
 
+		void depthFirstTraversal(unsigned short origin);
+
         /*!	Constructs and adds a new Edge to the Graph.
 		*
 		*	If no Vertex objects exist with the IDs `source` or `target`, constructs and adds new Vertex
@@ -108,6 +111,8 @@ namespace razaron::graph
         /*! Returns the number of Vertex objects. */
         std::size_t size() { return _vertices.size(); }
 
+		std::string getDOT(std::function<std::string(const Vertex<V, E>&)> vertexAttributes = nullptr, std::function<std::string(const Edge<E>&)> edgeAttributes = nullptr);
+
         /*!	Get's a reference to the Vertex with `id == index`.
 		*
 		*	@exception	std::out_of_range	index out of range for _vertices.
@@ -122,6 +127,8 @@ namespace razaron::graph
 
       private:
         std::vector<Vertex<V, E>> _vertices;
+
+		void dfsHelper(unsigned short id);
     };
 
     // Default constructor
@@ -191,6 +198,38 @@ namespace razaron::graph
         }
     }
 
+
+
+	template<class V, class E, class G>
+	inline void Graph<V, E, G>::depthFirstTraversal(unsigned short origin)
+	{
+		auto v = (*this)[origin];
+
+		// Exit if vertex already visited
+		if ((*this)[v.id].state == State::GREY)
+			return;
+
+		// Run the vertices discovery function
+		if (vertexFuncs[(*this)[v.id].state])
+			vertexFuncs[(*this)[v.id].state]((*this)[v.id], *this);
+
+		if ((*this)[v.id].state == State::WHITE)
+			(*this)[v.id].state = State::GREY;
+
+		// Loop through adjacent edges
+		for (auto &e : (*this)[v.id].adjacencyList)
+		{
+			// Run the edges discovery function
+			if (edgeFuncs[e.state])
+				edgeFuncs[e.state](e, *this);
+
+			if (e.state == State::WHITE)
+				e.state = State::GREY;
+
+			depthFirstTraversal(e.target);
+		}
+	}
+
     template <class V, class E, class G>
     inline void Graph<V, E, G>::addEdge(unsigned short source, unsigned short target, E data)
     {
@@ -252,6 +291,46 @@ namespace razaron::graph
             {State::GREEN, nullptr}};
     }
 
+	template<class V, class E, class G>
+	inline std::string Graph<V, E, G>::getDOT(std::function<std::string(const Vertex<V, E>&)> vertexAttributes, std::function<std::string(const Edge<E>&)> edgeAttributes)
+	{
+		std::list<Edge<E>> edges;
+
+		for (auto &v : _vertices)
+		{
+			for(auto &e : v.adjacencyList)
+				if(!(e.source == 0 && e.target == 0))
+					edges.push_back(e);
+		}
+
+		std::stringstream dot;
+		dot << "digraph G {\n";
+
+		for (auto &e : edges)
+		{
+			dot << std::to_string(e.source) << " -> " << std::to_string(e.target);
+
+			if (edgeAttributes)
+			{
+				dot << edgeAttributes(e);
+			}
+			else
+				dot << ";\n";
+		}
+
+		if (vertexAttributes)
+		{
+			for (auto &v : _vertices)
+			{
+				dot << vertexAttributes(v);
+			}
+		}
+
+		dot << "}";
+
+		return dot.str();
+	}
+
     template <class V, class E, class G>
     inline Vertex<V, E> &graph::Graph<V, E, G>::operator[](unsigned short index)
     {
@@ -280,4 +359,10 @@ namespace razaron::graph
             }
         }
     }
+
+	template<class V, class E, class G>
+	inline void Graph<V, E, G>::dfsHelper(unsigned short id)
+	{
+
+	}
 }
