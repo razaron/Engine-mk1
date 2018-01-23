@@ -13,7 +13,9 @@ namespace razaron::core::entity
 
 	using EntityMap = std::map<unsigned short, Entity>;
 
-	/*!	The Entity class used for storing and getting Component Handle%s. */
+	/*!	The Entity class used for storing and getting Component Handle%s. 
+    *   For more information and examples, see page \ref core.
+	*/
 	class Entity {
 	public:
 		Entity() /*! Default constructor. */

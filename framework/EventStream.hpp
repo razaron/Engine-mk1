@@ -45,18 +45,18 @@ namespace razaron::eventstream
         unsigned recipient;         /*!< The unique id of the recipient. */
         EventType type;             /*!< The EventType. */
         std::shared_ptr<void> data; /*!< A pointer to the data being sent. */
-        unsigned lifetime;     /*!< How long the Event will live for. */
+        unsigned lifetime;			/*!< How long the Event will live for. */
         unsigned id{ uid++ };       /*!< This Events unique id. */
 
 		Event(unsigned recipient = 0, EventType type = EventType::DEFAULT, std::shared_ptr<void> data = std::shared_ptr<void>{}, unsigned lifetime = 0) : recipient(recipient), type(type), data(data), lifetime(lifetime) {}
 
-        /*! Evaluates deep equality between two Event structs. */
+        /*! Evaluates equality between two Event structs. */
         bool operator==(const Event &rhs)
         {
             return (recipient == rhs.recipient) && (type == rhs.type) && (data == rhs.data);
         }
 
-        /*! Evaluates deep inequality between two Event structs. */
+        /*! Evaluates inequality between two Event structs. */
         bool operator!=(const Event &rhs)
         {
             return !(*this == rhs);

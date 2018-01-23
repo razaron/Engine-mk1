@@ -92,7 +92,31 @@ namespace razaron::graph
 		*/
         void breadthFirstTraversal(unsigned short origin);
 
+		/*!	Performs a depth first traversal of the Graph.
+		*
+		*	Starting at the Vertex with the ID `origin`, traverses the Graph in depth first order. Never repeats 
+		*	visited nodes, so works for cyclic graphs.
+		*	Runs the defined discovery function for every Vertex and Edge.
+		*
+		*	By default, sets the state of every touched Vertex and Edge with `State::WHITE` to `State::GREY`
+		*   unless specified otherwise in their discovery functions.
+		*
+		*	@param	origin	The ID of the Vertex to start the traversal from.
+		*/
 		void depthFirstTraversal(unsigned short origin);
+
+		/*!	Performs a branch-by-branch traversal of the Graph.
+		*
+		*	Starting at the Vertex with the ID `origin`, traverses the Graph in depth first order. However, instead
+		*	of ignoring visited nodes, it retraces its steps from the origin to the last unvisited node. 
+		*	Runs the defined discovery function for every Vertex and Edge.
+		*
+		*	Sets the state of every Vertex and Edge that won't be visited again to `State::GREY`
+		*   unless specified otherwise in their discovery functions.
+		*
+		*	@param	origin	The ID of the Vertex to start the traversal from.
+		*/
+		void branchTraversal(unsigned short origin);
 
         /*!	Constructs and adds a new Edge to the Graph.
 		*
@@ -103,7 +127,7 @@ namespace razaron::graph
 		*	@param	source	The ID of the source Vertex.
 		*	@param	target	The ID of the target Vertex.
 		*/
-        void addEdge(unsigned short source, unsigned short target, E data = E{});
+		void addEdge(unsigned short source, unsigned short target, E data = E{});
 
         /*! Resets the state of all Edge and Vertex objects belonging to the Graph to `State::WHITE`. */
         void reset();
@@ -111,6 +135,14 @@ namespace razaron::graph
         /*! Returns the number of Vertex objects. */
         std::size_t size() { return _vertices.size(); }
 
+		/*!	Converts the graph into a string representing a directed graph in the DOT language.
+		*	Unless otherwise specified: Styling is default, vertices are labeled with their ID and edges have no label.
+
+		*	@param	vertexAttributes	A functor to add tags to the vertices. Must return in the format `[tag=value tag=value]`
+		*	@param	edgeAttributes		A functor to add tags to the edges. Must return in the format `[tag=value tag=value]`
+		*
+		*	@return	The graph converted into the DOT language.
+		*/
 		std::string getDOT(std::function<std::string(const Vertex<V, E>&)> vertexAttributes = nullptr, std::function<std::string(const Edge<E>&)> edgeAttributes = nullptr);
 
         /*!	Get's a reference to the Vertex with `id == index`.
@@ -128,7 +160,7 @@ namespace razaron::graph
       private:
         std::vector<Vertex<V, E>> _vertices;
 
-		void dfsHelper(unsigned short id);
+		void branchHelper(unsigned short origin);
     };
 
     // Default constructor
@@ -198,8 +230,6 @@ namespace razaron::graph
         }
     }
 
-
-
 	template<class V, class E, class G>
 	inline void Graph<V, E, G>::depthFirstTraversal(unsigned short origin)
 	{
@@ -227,6 +257,15 @@ namespace razaron::graph
 				e.state = State::GREY;
 
 			depthFirstTraversal(e.target);
+		}
+	}
+
+	template<class V, class E, class G>
+	inline void Graph<V, E, G>::branchTraversal(unsigned short origin)
+	{
+		while ((*this)[origin].state == State::WHITE)
+		{
+			branchHelper(origin);
 		}
 	}
 
@@ -361,8 +400,34 @@ namespace razaron::graph
     }
 
 	template<class V, class E, class G>
-	inline void Graph<V, E, G>::dfsHelper(unsigned short id)
+	inline void Graph<V, E, G>::branchHelper(unsigned short origin)
 	{
+		// Run the vertices discovery function
+		if (vertexFuncs[(*this)[origin].state])
+			vertexFuncs[(*this)[origin].state]((*this)[origin], *this);
 
+		// recurse on the first non-grey child vertex
+		for (auto &e : (*this)[origin].adjacencyList)
+		{
+			if ((*this)[e.target].state != State::GREY)
+			{
+				// Run the edges discovery function
+				if (edgeFuncs[e.state])
+					edgeFuncs[e.state](e, *this);
+
+				branchHelper(e.target);
+				break;
+			}
+		}
+
+		bool unvisited = false;
+		for (auto &e : (*this)[origin].adjacencyList)
+		{
+			if ((*this)[e.target].state != State::GREY)
+				unvisited = true;
+		}
+
+		if (!unvisited)
+			(*this)[origin].state = State::GREY;
 	}
 }
