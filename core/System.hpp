@@ -10,7 +10,9 @@
 #include "ObjectPool.hpp"
 #include "TaskScheduler.hpp"
 
-/*! Systems manage the memory, events and logic for related components. */
+/*! Systems manage the memory, events and logic for related components.
+*   For more information and examples, see page \ref core.
+*/
 namespace razaron::core::system
 {
     using namespace razaron::eventstream;

@@ -29,7 +29,14 @@
 template <typename T>
 bool includes(T a, T b)
 {
-	return std::includes(a.begin(), a.end(), b.begin(), b.end());
+	int rem = b.size();
+	for (auto &c : a)
+	{
+		if (b.find(c) != b.end())
+			rem--;
+	}
+
+	return !rem;
 }
 
 // Handling for pointers etc.

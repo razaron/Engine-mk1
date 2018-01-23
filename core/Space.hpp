@@ -26,7 +26,7 @@ namespace razaron::core::space
     };
 
     /*! The Space class handles processing of System updates.
-    *   For more information and examples, see page \ref space.
+    *   For more information and examples, see page \ref core.
     */
     class Space
     {
