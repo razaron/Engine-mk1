@@ -131,7 +131,7 @@ Task TaskScheduler::pushGraph(WorkGraph workGraph, Task dependency)
     std::map<unsigned, Task> parents;
 
     auto fillTaskList = [this, &tasks, &parents, &dependency](WorkGraphVertex &v, WorkGraph &g) {
-        unsigned depth = v.data.first;
+		const unsigned depth = v.data.first;
         std::vector<WorkGraphVertex> dependencies;
 
         // Get all dependency work groups
@@ -208,7 +208,7 @@ Task TaskScheduler::pushGraph(WorkGraph workGraph, Task dependency)
             };
 
             // For each dependency, set its parent to the dummy
-            for (auto &dep : dependencies)
+            for (const auto &dep : dependencies)
             {
                 auto it = std::find(tasks.begin(), tasks.end(), parents[dep.id]);
 

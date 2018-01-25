@@ -123,11 +123,11 @@ namespace razaron::graph
 		*	If no Vertex objects exist with the IDs `source` or `target`, constructs and adds new Vertex
         *   objects for the missing IDs to the Graph.
 		*
-		*	@param	data		The data held by the edge.
-		*	@param	source	The ID of the source Vertex.
-		*	@param	target	The ID of the target Vertex.
+		*	@param	edgeData	The data held by the edge.
+		*	@param	source		The ID of the source Vertex.
+		*	@param	target		The ID of the target Vertex.
 		*/
-		void addEdge(unsigned short source, unsigned short target, E data = E{});
+		void addEdge(unsigned short source, unsigned short target, E edgeData = E{});
 
         /*! Resets the state of all Edge and Vertex objects belonging to the Graph to `State::WHITE`. */
         void reset();
@@ -270,7 +270,7 @@ namespace razaron::graph
 	}
 
     template <class V, class E, class G>
-    inline void Graph<V, E, G>::addEdge(unsigned short source, unsigned short target, E data)
+    inline void Graph<V, E, G>::addEdge(unsigned short source, unsigned short target, E edgeData)
     {
         // look for vertex with ID source
         try
@@ -299,7 +299,7 @@ namespace razaron::graph
                 _vertices.emplace(_vertices.begin() + target, target);
         }
 
-        (*this)[source].adjacencyList.push_back({data, source, target, State::WHITE});
+        (*this)[source].adjacencyList.push_back({edgeData, source, target, State::WHITE});
     }
 
     template <class V, class E, class G>
@@ -335,9 +335,9 @@ namespace razaron::graph
 	{
 		std::list<Edge<E>> edges;
 
-		for (auto &v : _vertices)
+		for (const auto &v : _vertices)
 		{
-			for(auto &e : v.adjacencyList)
+			for(const auto &e : v.adjacencyList)
 				if(!(e.source == 0 && e.target == 0))
 					edges.push_back(e);
 		}
@@ -345,7 +345,7 @@ namespace razaron::graph
 		std::stringstream dot;
 		dot << "digraph G {\n";
 
-		for (auto &e : edges)
+		for (const auto &e : edges)
 		{
 			dot << std::to_string(e.source) << " -> " << std::to_string(e.target);
 
@@ -359,7 +359,7 @@ namespace razaron::graph
 
 		if (vertexAttributes)
 		{
-			for (auto &v : _vertices)
+			for (const auto &v : _vertices)
 			{
 				dot << vertexAttributes(v);
 			}

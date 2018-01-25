@@ -69,7 +69,7 @@ ActionList Planner::plan(ActionList actions, Action goal)
 
 void Planner::toDOT(std::string filename)
 {
-	_lastPlan.vertexFuncs[State::WHITE] = [&](ActionVertex &v, ActionGraph &g) {
+	_lastPlan.vertexFuncs[State::WHITE] = [&](ActionVertex &v, ActionGraph &) {
 		if (!v.adjacencyList.size())
 		{
 			if (std::count(_validNodes.begin(), _validNodes.end(), v.data))
@@ -81,10 +81,9 @@ void Planner::toDOT(std::string filename)
 
 	_lastPlan.breadthFirstTraversal(0);
 
-	auto vAttr = [](const ActionVertex &v) {
-		auto id = v.id;
-		auto name = v.data.action.name;
-		auto cost = v.data.action.cost;
+	const auto vAttr = [](const ActionVertex &v) {
+		const auto id = v.id;
+		const auto name = v.data.action.name;
 
 		auto colour = "white";
 		switch (v.state)
@@ -112,7 +111,7 @@ void Planner::toDOT(std::string filename)
 		return attributes.str();
 	};
 
-	auto eAttr = [&](const ActionEdge &e) {
+	const auto eAttr = [&](const ActionEdge &e) {
 		std::stringstream attr;
 
 		auto node = _lastPlan[e.target].data;
@@ -207,8 +206,8 @@ NodeList Planner::genAdjacent(Node *parent, ActionList actions)
 			}
 
 			// Recalculate distance to goal
-			int before = after;
-			int after = calculateDistanceToGoal(goal, current);
+			before = after;
+			after = calculateDistanceToGoal(goal, current);
 
 			if (temp.size() == 0 && after == 0)
 			{

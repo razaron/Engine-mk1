@@ -11,11 +11,11 @@
 #include <variant>
 
 #ifndef PLANNER_G_MOD
-	#define PLANNER_G_MOD 1
+#define PLANNER_G_MOD 1
 #endif
 
 #ifndef PLANNER_H_MOD
-	#define PLANNER_H_MOD 1
+#define PLANNER_H_MOD 1
 #endif
 
 /*! Planners are used to generate a sequence of Action%s that satisfy a goal */
@@ -24,7 +24,7 @@ namespace razaron::planner
 	using namespace razaron::graph;
 
 	/*! The range of Operation%s available to the Planner. */
-	enum class Operation : std::size_t
+	enum class Operation
 	{
 		NONE,
 		EQUAL,
@@ -45,7 +45,7 @@ namespace razaron::planner
 	using ConditionSet = std::list<Condition>;
 	using ActionList = std::list<Action>;
 
-	/*! Represents a world state property, condition or modifier in a format interpretable by the planner. 
+	/*! Represents a world state property, condition or modifier in a format interpretable by the planner.
 	*	Properties have an `op` value of `Operation::NONE` while all other `op` values denote a condition or modifier.
 	*/
 	struct Condition
@@ -60,12 +60,12 @@ namespace razaron::planner
 		std::string debugID;
 		std::string debugType;
 
-		Condition() :id(0), type(0), value(false) {}
+		Condition() :id(0), type(0), value(false), op(Operation::NONE) {}
 		Condition(std::string id, std::string type, ConditionValue value, Operation op = Operation::NONE)
 			:id(std::hash<std::string>{}(id)), type(std::hash<std::string>{}(type)), value(value), op(op), debugID(id), debugType(type) {}
 
 		/*!	Applies a modifier to this property. Can also be used to add conditions (e.g. `x>2` + `x>4` = `x>6`).
-		*	Follows the format: `this.value modifier.op modifier.value`. 
+		*	Follows the format: `this.value modifier.op modifier.value`.
 		*	E.g. If `this.value = 5`, `modifier.op = Operation::PLUS` and `modifier.value = 2` the function would perform `this.value = 5 + 2`.
 		*
 		*	@param		modifier				The modifier to apply to this condition or property.
@@ -76,20 +76,24 @@ namespace razaron::planner
 		*/
 		void apply(const Condition &modifier)
 		{
-			auto index = value.index();
+			const auto index = value.index();
 
 			switch (index)
 			{
-			case 0:
-			{
-				apply<bool>(modifier);
-				break;
-			}
-			case 1:
-			{
-				apply<int>(modifier);
-				break;
-			}
+				case 0:
+				{
+					apply<bool>(modifier);
+					break;
+				}
+				case 1:
+				{
+					apply<int>(modifier);
+					break;
+				}
+				default:
+				{
+					throw std::exception("This should be impossible.");
+				}
 			}
 		}
 
@@ -97,75 +101,98 @@ namespace razaron::planner
 		void apply(const Condition &modifier)
 		{
 			T v = std::get<T>(value);
-			T m = std::get<T>(modifier.value);
+			const T m = std::get<T>(modifier.value);
 
 			switch (modifier.op)
 			{
-			case Operation::ASSIGN:
-			{
-				v = m;
-				break;
-			}
-			case Operation::PLUS:
-			{
-				v = v + m;
-				break;
-			}
-			case Operation::MINUS:
-			{
-				v = v - m;
-				break;
-			}
-			case Operation::TIMES:
-			{
-				v = v * m;
-				break;
-			}
-			case Operation::DIVIDE:
-			{
-				v = v / m;
-				break;
-			}
-			case Operation::LESS:
-			{
-				v = v - m;
-				break;
-			}
-			case Operation::LESS_EQUAL:
-			{
-				v = v - m;
-				break;
-			}
-			case Operation::GREATER:
-			{
-				v = v + m;
-				break;
-			}
-			case Operation::GREATER_EQUAL:
-			{
-				v = v + m;
-				break;
-			}
-			case Operation::EQUAL:
-			{
-				if(v != m)
-					throw std::logic_error("Invalid operation in Condition::apply. Logical falicy.");
+				case Operation::ASSIGN:
+				{
+					v = m;
+					break;
+				}
+				case Operation::PLUS:
+				{
+					v = v + m;
+					break;
+				}
+				case Operation::MINUS:
+				{
+					v = v - m;
+					break;
+				}
+				case Operation::TIMES:
+				{
+					v = v * m;
+					break;
+				}
+				case Operation::DIVIDE:
+				{
+					v = v / m;
+					break;
+				}
+				case Operation::LESS:
+				{
+					v = v - m;
+					break;
+				}
+				case Operation::LESS_EQUAL:
+				{
+					v = v - m;
+					break;
+				}
+				case Operation::GREATER:
+				{
+					v = v + m;
+					break;
+				}
+				case Operation::GREATER_EQUAL:
+				{
+					v = v + m;
+					break;
+				}
+				case Operation::EQUAL:
+				{
+					if (v != m)
+						throw std::logic_error("Invalid operation in Condition::apply. Logical falicy.");
 
-				v = v;
-				break;
+					v = v;
+					break;
+				}
+				default:
+				{
+					throw std::invalid_argument("Invalid operation in Condition::apply. Operation not handled.");
+					break;
+				}
 			}
-			default:
+
+			value = ConditionValue{ v };
+		}
+
+		template <>
+		void apply<bool>(const Condition &modifier)
+		{
+			bool v = std::get<bool>(value);
+			const bool m = std::get<bool>(modifier.value);
+
+			switch (modifier.op)
 			{
-				throw std::invalid_argument("Invalid operation in Condition::apply. Operation not handled.");
-				break;
-			}
+				case Operation::ASSIGN:
+				{
+					v = m;
+					break;
+				}
+				default:
+				{
+					throw std::invalid_argument("Invalid operation in Condition::apply. Operation not handled.");
+					break;
+				}
 			}
 
 			value = ConditionValue{ v };
 		}
 
 		/*	Evaluates a condition using this against this property.
-		*	Follows the format: `this.value modifier.op modifier.value`. 
+		*	Follows the format: `this.value modifier.op modifier.value`.
 		*	E.g. If `this.value = 5`, `modifier.op = Operation::PLUS` and `modifier.value = 2` the function would perform `this.value = 5 + 2`.
 		*
 		*	@param		condition				The condition to evaluate against this property.
@@ -176,61 +203,65 @@ namespace razaron::planner
 		*/
 		bool satisfies(const Condition &condition) const
 		{
-			auto index = value.index();
+			const auto index = value.index();
 
 			switch (index)
 			{
-			case 0:
-			{
-				return satisfies<bool>(condition);
-				break;
-			}
-			case 1:
-			{
-				return satisfies<int>(condition);
-				break;
-			}
+				case 0:
+				{
+					return satisfies<bool>(condition);
+					break;
+				}
+				case 1:
+				{
+					return satisfies<int>(condition);
+					break;
+				}
+				default:
+				{
+					throw std::exception("This should be impossible.");
+				}
 			}
 		}
 
 		template <typename T>
 		bool satisfies(const Condition &condition) const
 		{
-			T v = std::get<T>(value);
-			T c = std::get<T>(condition.value);
+			const T v = std::get<T>(value);
+			const T c = std::get<T>(condition.value);
 
 			switch (condition.op)
 			{
-			case Operation::EQUAL:
-			{
-				return v == c;
-				break;
-			}
-			case Operation::LESS:
-			{
-				return v < c;
-				break;
-			}
-			case Operation::LESS_EQUAL:
-			{
-				return v <= c;
-				break;
-			}
-			case Operation::GREATER:
-			{
-				return v > c;
-				break;
-			}
-			case Operation::GREATER_EQUAL:
-			{
-				return v >= c;
-				break;
-			}
-			default:
-			{
-				throw std::invalid_argument("Invalid operation in Condition::satisfies.");
-				break;
-			}
+				case Operation::EQUAL:
+				{
+					return v == c;
+					break;
+				}
+				case Operation::LESS:
+				{
+					return v < c;
+					break;
+				}
+				case Operation::LESS_EQUAL:
+				{
+					return v <= c;
+					break;
+				}
+				case Operation::GREATER:
+				{
+					return v > c;
+					break;
+				}
+				case Operation::GREATER_EQUAL:
+				{
+					return v >= c;
+					break;
+				}
+				default:
+				{
+					throw std::invalid_argument("Invalid operation in Condition::satisfies.");
+					break;
+				}
 			}
 		}
 
@@ -244,94 +275,98 @@ namespace razaron::planner
 		*/
 		int distToSatisfy(const Condition &condition) const
 		{
-			auto index = value.index();
+			const auto index = value.index();
 
 			switch (index)
 			{
-			case 0:
-			{
-				bool c = std::get<bool>(value);
-				bool v = std::get<bool>(condition.value);
-				return c != v;
-				break;
-			}
-			case 1:
-			{
-				return distToSatisfy<int>(condition);
-				break;
-			}
+				case 0:
+				{
+					const bool c = std::get<bool>(value);
+					const bool v = std::get<bool>(condition.value);
+					return c != v;
+					break;
+				}
+				case 1:
+				{
+					return distToSatisfy<int>(condition);
+					break;
+				}
+				default:
+				{
+					throw std::exception("This should be impossible.");
+				}
 			}
 		}
 
 		template <typename T>
 		int distToSatisfy(const Condition &condition) const
 		{
-			T v = std::get<T>(value);
-			T c = std::get<T>(condition.value);
+			const T v = std::get<T>(value);
+			const T c = std::get<T>(condition.value);
 
 			switch (condition.op)
 			{
-			case Operation::EQUAL:
-			{
-				return std::abs(v - c);
-				break;
-			}
-			case Operation::LESS:
-			{
-				if (v < c)
-					return 0;
-				else
-					return std::abs(v - c) + 1;
-				break;
-			}
-			case Operation::LESS_EQUAL:
-			{
-				if (v <= c)
-					return 0;
-				else
+				case Operation::EQUAL:
+				{
 					return std::abs(v - c);
-				break;
-			}
-			case Operation::GREATER:
-			{
-				if (v > c)
+					break;
+				}
+				case Operation::LESS:
+				{
+					if (v < c)
+						return 0;
+					else
+						return std::abs(v - c) + 1;
+					break;
+				}
+				case Operation::LESS_EQUAL:
+				{
+					if (v <= c)
+						return 0;
+					else
+						return std::abs(v - c);
+					break;
+				}
+				case Operation::GREATER:
+				{
+					if (v > c)
+						return 0;
+					else
+						return std::abs(v - c) + 1;
+					break;
+				}
+				case Operation::GREATER_EQUAL:
+				{
+					if (v >= c)
+						return 0;
+					else
+						return std::abs(v - c);
+					break;
+				}
+				default:
+				{
 					return 0;
-				else
-					return std::abs(v - c) + 1;
-				break;
-			}
-			case Operation::GREATER_EQUAL:
-			{
-				if (v >= c)
-					return 0;
-				else
-					return std::abs(v - c);
-				break;
-			}
-			default:
-			{
-				return 0;
-				break;
-			}
+					break;
+				}
 			}
 		}
 
 		void zero()
 		{
-			auto index = value.index();
+			const auto index = value.index();
 
 			switch (index)
 			{
-			case 0:
-			{
-				value = ConditionValue{ false };
-				break;
-			}
-			case 1:
-			{
-				value = ConditionValue{ 0 };
-				break;
-			}
+				case 0:
+				{
+					value = ConditionValue{ false };
+					break;
+				}
+				case 1:
+				{
+					value = ConditionValue{ 0 };
+					break;
+				}
 			}
 		}
 
@@ -377,12 +412,12 @@ namespace razaron::planner
 	/*! @cond */
 	struct Node
 	{
-		unsigned id{ 0 };
-		int f{ 0 }, g{ 0 }, h{ 0 };
+		unsigned short id{};
+		int f{}, g{}, h{};
 		Action action{};
 		ConditionSet currentState{}; // Operation::NONE for all.
 		ConditionSet goalState{};
-		Node *parent{ nullptr };
+		Node *parent{};
 
 		bool operator==(const Node &rhs) const
 		{
@@ -422,7 +457,7 @@ namespace razaron::planner
 		*	@param	filename	The filename to save the file to.
 		*/
 		void toDOT(std::string filename);
-		
+
 		ConditionSet &getWorldState() { return _worldState; };
 		ConditionSet &setWorldState(const ConditionSet &worldState) { return _worldState = worldState; };
 
@@ -430,7 +465,7 @@ namespace razaron::planner
 		ConditionSet _worldState;
 		NodeList _validNodes;
 		ActionGraph _lastPlan;
-		unsigned _nextID{ 0 };
+		unsigned short _nextID{ 0 };
 
 		NodeList genAdjacent(Node * parent, ActionList actions);
 		int calculateDistanceToGoal(const ConditionSet & current, const ConditionSet & goal);

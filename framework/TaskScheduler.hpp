@@ -39,11 +39,11 @@ namespace razaron::taskscheduler
     /*! A data structure for representing a Task. */
     struct Task
     {
-        std::size_t taskID;        /*!< The ID of this Task. */
-        std::size_t parentID;      /*!< The parents Task ID. */
-        std::size_t dependencyID;  /*!< The ID of the Task that must finish as a prerequisite. */
-        WorkFunc work;             /*!< The work function to run. */
-        std::size_t openWorkItems; /*!< The remaing work items equal to N+1 where N is the number of children Task%s. */
+		std::size_t taskID{};        /*!< The ID of this Task. */
+        std::size_t parentID{};      /*!< The parents Task ID. */
+        std::size_t dependencyID{};  /*!< The ID of the Task that must finish as a prerequisite. */
+        WorkFunc work{};             /*!< The work function to run. */
+        std::size_t openWorkItems{}; /*!< The remaing work items equal to N+1 where N is the number of children Task%s. */
 
         /*! Basic equality comparator. */
         bool operator==(const Task &rhs) const

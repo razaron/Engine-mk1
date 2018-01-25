@@ -109,7 +109,8 @@ std::vector<Event> EventStream::popEvents(StreamType streamType)
 
         std::vector<Event> events = {};
 
-        for (std::size_t i = 0, max = _incomingEvents.size(); i < max; i++)
+		const std::size_t max = _incomingEvents.size();
+        for (std::size_t i = 0; i < max; i++)
         {
             Event e = _incomingEvents.front();
             _incomingEvents.pop();
@@ -125,7 +126,8 @@ std::vector<Event> EventStream::popEvents(StreamType streamType)
 
         std::vector<Event> events = {};
 
-        for (std::size_t i = 0, max = _outgoingEvents.size(); i < max; i++)
+		const std::size_t max = _outgoingEvents.size();
+        for (std::size_t i = 0; i < max; i++)
         {
             Event e = _outgoingEvents.front();
             _outgoingEvents.pop();
