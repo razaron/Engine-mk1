@@ -149,18 +149,18 @@ void EventStream::registerHandler(EventType type, EventHandler handler)
     _eventHandlers[type] = handler;
 }
 
-void EventStream::extendHandler(EventType type, EventHandler handler)
+void EventStream::extendHandler(EventType type, EventHandler extensionHandler)
 {
     std::lock_guard<std::mutex> lk{ _eventHandlersMutex };
 
     if (_eventHandlers.find(type) != _eventHandlers.end())
     {
-        EventHandler temp = _eventHandlers[type];
-        _eventHandlers[type] = [temp, handler](Event &e) { temp(e); handler(e); };
+        EventHandler originalHandler = _eventHandlers[type];
+        _eventHandlers[type] = [originalHandler, extensionHandler](const Event &e) { originalHandler(e); extensionHandler(e); };
     }
     else
     {
-        _eventHandlers[type] = handler;
+        _eventHandlers[type] = extensionHandler;
     }
 }
 

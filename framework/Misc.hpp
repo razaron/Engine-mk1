@@ -3,6 +3,8 @@
 #include <array>
 #include <atomic>
 #include <algorithm>
+#include <bitset>
+#include <random>
 
 // Check windows
 #if _WIN32 || _WIN64
@@ -89,4 +91,54 @@ public:
 
 private:
 	std::array<T, S> _array{};
+};
+
+// UUID struct 64 bits
+struct UUID64
+{
+	std::bitset<64> uuid;
+
+	UUID64()
+	{
+		std::random_device r;
+		std::seed_seq s{ r(), r(), r(), r(), r(), r(), r(), r() };
+		std::mt19937_64 e{ s };
+
+		auto random = e();
+		uuid = std::bitset<64>{ random };
+	}
+
+	UUID64(int) : uuid(std::bitset<64>{}) {}
+
+	template <std::size_t N>
+	UUID64(std::bitset<N> mask)
+	{
+		std::random_device r;
+		std::seed_seq s{ r(), r(), r(), r(), r(), r(), r(), r() };
+		std::mt19937_64 e{ s };
+
+		auto random = e();
+		uuid = std::bitset<64>{ random };
+
+		for (std::size_t i = 0; i < mask.size(); i++)
+		{
+			uuid[i] = mask[i];
+		}
+	}
+
+	bool operator==(const UUID64 &rhs) const
+	{
+		return uuid == rhs.uuid;
+	}
+
+	bool operator!=(const UUID64 &rhs) const
+	{
+		return uuid != rhs.uuid;
+	}
+};
+
+struct UUID64Cmp {
+	bool operator()(const UUID64& lhs, const UUID64& rhs) const {
+		return lhs.uuid.to_ullong() < rhs.uuid.to_ullong();
+	}
 };

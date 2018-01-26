@@ -213,7 +213,7 @@ NodeList Planner::genAdjacent(Node *parent, ActionList actions)
 			{
 				n.g = parent->g + a.cost;
 				n.g *= PLANNER_G_MOD;
-				n.h = temp.size();
+				n.h = 0;
 				n.h *= PLANNER_H_MOD;
 				n.f = n.g + n.h;
 

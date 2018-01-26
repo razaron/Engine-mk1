@@ -20,7 +20,7 @@ namespace razaron::core::system
     using namespace razaron::taskscheduler;
     using namespace razaron::graph;
     using namespace razaron::core::entity;
-    using namespace razaron::eventdata;
+    using namespace razaron::core::eventdata;
 
     /*! The abstract base class for a System. */
     class System

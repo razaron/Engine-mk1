@@ -54,7 +54,7 @@ namespace razaron::core::space
 		*
 		*	@returns    The number of Component%s remaining in the Entity.
 		*/
-        std::size_t removeEntity(unsigned int id); /*!< Deletes an Entity from the Space. */
+        std::size_t removeEntity(UUID64 id); /*!< Deletes an Entity from the Space. */
 
         //TODO Entity* moveEntity(); /*!< Moves an Entity into another Space. */
         //TODO std::vector<Entity>* getEntities() { return &_entities; } /*!<  */
@@ -73,7 +73,7 @@ namespace razaron::core::space
         *
 		*	@returns    A reference to the mapped Entity.
 		*/
-        Entity &operator[](unsigned short id);
+        Entity &operator[](UUID64 id);
 
         EntityMap &getEntities() { return _entities; };
 
@@ -81,11 +81,11 @@ namespace razaron::core::space
         void updateSystems(double delta);
         void propagateEvents();
 
-        unsigned _id;
+		UUID64 _id;
         SystemGraph _systemGraph;
         double _intervalMax{};
         EntityMap _entities;
         EventStream _eventStream;
-        std::vector<unsigned> _deletingEntities;
+        std::vector<UUID64> _deletingEntities;
     };
 }

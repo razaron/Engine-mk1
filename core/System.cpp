@@ -4,7 +4,7 @@ using namespace razaron::core::system;
 
 
 System::System(){
-    registerHandler(EventType::CREATE_COMPONENT, [system = this](Event & e) {
+    registerHandler(EventType::CREATE_COMPONENT, [system = this](const Event & e) {
         auto data = std::static_pointer_cast<eventdata::CREATE_COMPONENT>(e.data);
 
         // If ComponentType is valid, do something
@@ -22,7 +22,7 @@ System::System(){
         }
     });
 
-    registerHandler(EventType::REMOVE_COMPONENT, [system = this](Event & e) {
+    registerHandler(EventType::REMOVE_COMPONENT, [system = this](const Event & e) {
         auto data = std::static_pointer_cast<eventdata::REMOVE_COMPONENT>(e.data);
 
         // If ComponentType is valid, do something

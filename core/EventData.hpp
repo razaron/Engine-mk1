@@ -6,7 +6,7 @@
 
 #include "Component.hpp"
 
-namespace razaron::eventdata
+namespace razaron::core::eventdata
 {
     using namespace razaron::core::component;
 

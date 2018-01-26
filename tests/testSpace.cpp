@@ -103,9 +103,9 @@ SCENARIO("Spaces can add/remove enitities, generating relavant components in the
             for(auto i=0;i<10;i++)
             {
                 Event e{
-                    0, // Entity ID. 0 because unneeded
+					UUID64{0}, // Entity ID. 0 because unneeded
                     EventType::CREATE_ENTITY, // Event type enum
-                    std::make_shared<eventdata::CREATE_ENTITY>(
+                    std::make_shared<core::eventdata::CREATE_ENTITY>(
                         std::list<ComponentArgs>{
                             ComponentArgs{ComponentType::COMPONENT_1, nullptr},
                             ComponentArgs{ComponentType::COMPONENT_2, nullptr}
@@ -134,7 +134,7 @@ SCENARIO("Spaces can add/remove enitities, generating relavant components in the
                     Event e{
                         id, // Entity ID.
                         EventType::REMOVE_ENTITY, // Event type enum
-                        std::make_shared<eventdata::REMOVE_ENTITY>()
+                        std::make_shared<core::eventdata::REMOVE_ENTITY>()
                     };
 
                     events.push_back(e);

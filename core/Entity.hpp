@@ -11,7 +11,7 @@ namespace razaron::core::entity
 
 	class Entity;
 
-	using EntityMap = std::map<unsigned short, Entity>;
+	using EntityMap = std::map < UUID64, Entity, UUID64Cmp > ;
 
 	/*!	The Entity class used for storing and getting Component Handle%s. 
     *   For more information and examples, see page \ref core.
@@ -19,14 +19,14 @@ namespace razaron::core::entity
 	class Entity {
 	public:
 		Entity() /*! Default constructor. */
-			:_id{g_nextID++}, _components{} {}
+			:_id(UUID64{}), _components{} {}
 
 		/*!	Constructs an Entity object from a pre-constructed map of Component objects.
 		*
 		*	@param	components	The ComponentMap of components to initialize this Entity with.
 		*/
 		Entity(ComponentMap components)
-			:_id(g_nextID++), _components(components) {}
+			:_id(UUID64{}), _components(components) {}
 
 		~Entity() {} /*! Default destructor */
 
@@ -65,7 +65,7 @@ namespace razaron::core::entity
 		*
 		*	@returns	The unique id of this Entity.
 		*/
-		unsigned int getID() { return _id; }
+		UUID64 getID() { return _id; }
 
 		/*!	Gets the Handle mapped to the passed ComponentType.
 		*
@@ -80,11 +80,11 @@ namespace razaron::core::entity
 			if(_components.find(type) != _components.end())
 				return _components[type];
 			else
-				throw std::invalid_argument("ComponentType not found in Entity: " + std::to_string(_id));
+				throw std::invalid_argument("ComponentType not found in Entity: " + std::to_string(_id.uuid.to_ullong()));
 		}
 
 	private:
-		unsigned _id;
+		UUID64 _id;
 		ComponentMap _components;
 	};
 }
