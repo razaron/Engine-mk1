@@ -26,8 +26,6 @@ namespace razaron::core::system
     class System
     {
       public:
-        virtual ~System() = 0;
-
         /*! Generates a TaskGraph used to update all relevant Component objects.
 		*
 		*	@param		entities	A vector of all Entity objects to access relevant Component objects from.
@@ -69,23 +67,24 @@ namespace razaron::core::system
         void pushEvent(Event event);
 
         /*! Pushes Events onto the incoming stream. */
-        void pushEvents(std::vector<Event> &event);
+        void pushEvents(const std::vector<Event> &event);
 
         /*! Pops all Event objects from the incoming stream. */
         std::vector<Event> popEvents();
 
         /*! Gets the set interval (in ms) between updates for this System. */
-        double getInterval() { return _interval; }
+        double getInterval() noexcept { return _interval; }
 
         /*! Gets the current TaskGraph of this System. */
-        double getTaskGraph() { return static_cast<double>(_interval) / 1000; }
+        double getTaskGraph() noexcept { return static_cast<double>(_interval) / 1000; }
 
       protected:
-        System();
+        System() noexcept;
 
-        ObjectPool _pool;               /*!< The ObjectPool used to manage the memory of this System. */
-        double _interval = 0.05;        /*!< The interval (in seconds) between updates for this System. */
-        EventStream _eventStream;       /*!< The EventStream belonging to this System. */
-        std::set<ComponentType> _componentTypes; /*!< The set of ComponentType%s supported by this System. */
+		UUID64 _id;									/*!< The unique id of this system. */
+        ObjectPool _pool;							/*!< The ObjectPool used to manage the memory of this System. */
+        double _interval;							/*!< The interval (in seconds) between updates for this System. */
+        EventStream _eventStream;					/*!< The EventStream belonging to this System. */
+        std::set<ComponentType> _componentTypes;	/*!< The set of ComponentType%s supported by this System. */
     };
 }

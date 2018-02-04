@@ -52,13 +52,32 @@ struct Handle
 	bool isFree{true};/*!< Whether the index denotes a free or occupied location. */
 
     /*! Basic equality comparator. */
-    bool operator==(const Handle &rhs)
+    bool operator==(const Handle &rhs) noexcept
     {
         return (size == rhs.size && index == rhs.index && isFree == rhs.isFree);
     }
 };
 
-inline void* aligned_malloc(size_t size, size_t align) {
+struct HandleHash
+{
+	std::size_t operator()(const Handle &h) const noexcept
+	{
+		auto hash1 = std::hash<HandleSize>()(h.size);
+		auto hash2 = std::hash<HandleIndex>()(h.index);
+		return hash1 ^= hash2 + 0x9e3779b9 + (hash1 << 6) + (hash1 >> 2);
+	}
+};
+
+struct HandleEqual
+{
+	bool operator()(const Handle &lhs, const Handle &rhs) const noexcept
+	{
+		return lhs.size == rhs.size && lhs.index == rhs.index;
+	}
+};
+
+inline void* aligned_malloc(size_t size, size_t align) noexcept
+{
     void *result;
     #ifdef _WIN32
     result = _aligned_malloc(size, align);
@@ -68,7 +87,8 @@ inline void* aligned_malloc(size_t size, size_t align) {
     return result;
 }
 
-inline void aligned_free(void *ptr) {
+inline void aligned_free(void *ptr) noexcept
+{
     #ifdef _WIN32
     _aligned_free(ptr);
     #else
@@ -81,9 +101,9 @@ template <class T, std::size_t S, std::size_t A>
 struct alignas(A) alignedArray
 {
 public:
-	T* data() { return _array.data(); }
-	std::size_t size() { return S; }
-	std::size_t alignment() { return A; }
+	T* data() noexcept { return _array.data(); }
+	std::size_t size() noexcept { return S; }
+	std::size_t alignment() noexcept { return A; }
 
 	T& operator [](std::size_t i) { return _array[i]; }
 	void* operator new(std::size_t sz) { return aligned_malloc(sz, A); }
@@ -98,7 +118,7 @@ struct UUID64
 {
 	std::bitset<64> uuid;
 
-	UUID64()
+	UUID64() noexcept
 	{
 		std::random_device r;
 		std::seed_seq s{ r(), r(), r(), r(), r(), r(), r(), r() };
@@ -108,7 +128,7 @@ struct UUID64
 		uuid = std::bitset<64>{ random };
 	}
 
-	UUID64(int) : uuid(std::bitset<64>{}) {}
+	UUID64(int) noexcept : uuid{} {}
 
 	template <std::size_t N>
 	UUID64(std::bitset<N> mask)
@@ -126,12 +146,12 @@ struct UUID64
 		}
 	}
 
-	bool operator==(const UUID64 &rhs) const
+	bool operator==(const UUID64 &rhs) const noexcept
 	{
 		return uuid == rhs.uuid;
 	}
 
-	bool operator!=(const UUID64 &rhs) const
+	bool operator!=(const UUID64 &rhs) const noexcept
 	{
 		return uuid != rhs.uuid;
 	}

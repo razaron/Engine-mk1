@@ -36,13 +36,13 @@ namespace razaron::core::component
 	class Component
 	{
 	public:
-		Component() : _id(UUID64{}) {}				/*!< Default constructor. */
+		Component() noexcept : _id{} {}						/*!< Default constructor. */
 		Component(Component &&other) = default;		/*!< Move constructor. */
 		Component(const Component &other) = default;/*!< Copy constructor. */
 		~Component() {}								/*!< Default destructor. */
 
 		/*! Copy assignment operator overload that copies the ID of rhs into this Component. */
-		Component &operator=(const Component &rhs)
+		Component &operator=(const Component &rhs) noexcept
 		{
 			_id = rhs._id;
 
@@ -50,7 +50,7 @@ namespace razaron::core::component
 		}
 
 		/*! Move assignment operator overload that moves the ID of rhs into this Component. */
-		Component &operator=(Component &&rhs)
+		Component &operator=(Component &&rhs) noexcept
 		{
 			if (this != &rhs)
 			{
@@ -66,7 +66,7 @@ namespace razaron::core::component
 		*
 		*	@returns The unique id of this Component.
 		*/
-		UUID64 getID() { return _id; }
+		UUID64 getID() noexcept { return _id; }
 
 	private:
 		UUID64 _id;

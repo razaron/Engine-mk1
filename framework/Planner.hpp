@@ -21,8 +21,6 @@
 /*! Planners are used to generate a sequence of Action%s that satisfy a goal */
 namespace razaron::planner
 {
-	using namespace razaron::graph;
-
 	/*! The range of Operation%s available to the Planner. */
 	enum class Operation
 	{
@@ -43,7 +41,7 @@ namespace razaron::planner
 	struct Condition;
 
 	using ConditionSet = std::list<Condition>;
-	using ActionList = std::list<Action>;
+	using ActionSet = std::list<Action>;
 
 	/*! Represents a world state property, condition or modifier in a format interpretable by the planner.
 	*	Properties have an `op` value of `Operation::NONE` while all other `op` values denote a condition or modifier.
@@ -60,10 +58,15 @@ namespace razaron::planner
 		std::string debugID;
 		std::string debugType;
 
-		Condition() :id(0), type(0), value(false), op(Operation::NONE) {}
+		Condition() noexcept :id{}, type{}, value{}, op{} {}
 		Condition(std::string id, std::string type, ConditionValue value, Operation op = Operation::NONE)
-			:id(std::hash<std::string>{}(id)), type(std::hash<std::string>{}(type)), value(value), op(op), debugID(id), debugType(type) {}
+			:id{ std::hash<std::string>{}(id) }, type{ std::hash<std::string>{}(type) }, value{ value }, op{ op }, debugID{ id }, debugType{ type } {}
 
+		bool operator==(const Condition &rhs) const noexcept
+		{
+			return id == rhs.id && type == rhs.type;
+		}
+		
 		/*!	Applies a modifier to this property. Can also be used to add conditions (e.g. `x>2` + `x>4` = `x>6`).
 		*	Follows the format: `this.value modifier.op modifier.value`.
 		*	E.g. If `this.value = 5`, `modifier.op = Operation::PLUS` and `modifier.value = 2` the function would perform `this.value = 5 + 2`.
@@ -351,7 +354,7 @@ namespace razaron::planner
 			}
 		}
 
-		void zero()
+		void zero() noexcept
 		{
 			const auto index = value.index();
 
@@ -359,27 +362,23 @@ namespace razaron::planner
 			{
 				case 0:
 				{
-					value = ConditionValue{ false };
+					value = ConditionValue{ bool{} };
 					break;
 				}
 				case 1:
 				{
-					value = ConditionValue{ 0 };
+					value = ConditionValue{ int{} };
 					break;
 				}
 			}
 		}
 
-		bool operator==(const Condition &rhs) const
-		{
-			return id == rhs.id && type == rhs.type;
-		}
 	};
 
 	/*! @cond */
 	struct ConditionHash
 	{
-		std::size_t operator()(const Condition& p) const
+		std::size_t operator()(const Condition& p) const noexcept
 		{
 			return p.id ^ (p.type ^ (static_cast<std::size_t>(p.op) << 1));
 		}
@@ -387,7 +386,7 @@ namespace razaron::planner
 
 	struct ConditionEqual
 	{
-		bool operator()(const Condition& lhs, const Condition& rhs) const
+		bool operator()(const Condition& lhs, const Condition& rhs) const noexcept
 		{
 			return lhs.id == rhs.id && lhs.type == rhs.type;
 		}
@@ -405,8 +404,8 @@ namespace razaron::planner
 
 		std::function<void()> effect;	/*!< A function the runs the logic for this Action. Not used during planning. */
 
-		Action(std::string name = "DEFAULT", unsigned cost = 0, ConditionSet preconditions = ConditionSet{}, ConditionSet postconditions = ConditionSet{}, std::function<void()> effect = nullptr)
-			: name(name), cost(cost), preconditions(preconditions), postconditions(postconditions), effect(effect) {}
+		Action(std::string name = "DEFAULT", unsigned cost = unsigned{}, ConditionSet preconditions = ConditionSet{}, ConditionSet postconditions = ConditionSet{}, std::function<void()> effect = nullptr) noexcept
+			: name{ name }, cost{ cost }, preconditions{ preconditions }, postconditions{ postconditions }, effect{ effect } {}
 	};
 
 	/*! @cond */
@@ -419,7 +418,7 @@ namespace razaron::planner
 		ConditionSet goalState{};
 		Node *parent{};
 
-		bool operator==(const Node &rhs) const
+		bool operator==(const Node &rhs) const noexcept
 		{
 			return id == rhs.id;
 		}
@@ -427,9 +426,9 @@ namespace razaron::planner
 
 	using NodeList = std::list<Node>;
 
-	using ActionGraph = Graph<Node, int, int>;
-	using ActionVertex = Vertex<Node, int>;
-	using ActionEdge = Edge<int>;
+	using ActionGraph = razaron::graph::Graph<Node, int, int>;
+	using ActionVertex = razaron::graph::Vertex<Node, int>;
+	using ActionEdge = razaron::graph::Edge<int>;
 	/*! @endcond */
 
 	/*! Implements goal oriented action planning.
@@ -438,36 +437,38 @@ namespace razaron::planner
 	class Planner
 	{
 	public:
-		Planner() {}															/*!< Default Constructor. */
-		Planner(const ConditionSet &worldState) : _worldState(worldState) {}	/*!< Constructs the Planner with the passed initial world state. */
-		~Planner() {}															/*!< Default Destructor. */
+		Planner() noexcept							/*!< Default Constructor. */
+			: _worldState{}, _validNodes{}, _lastPlan{}, _nextID{ 0 } {}
+		
+		Planner(const ConditionSet &worldState)		/*!< Constructs the Planner with the passed initial world state. */
+			: _worldState{ worldState }, _validNodes{}, _lastPlan{}, _nextID{ 0 } {}
 
 		/*!	Determines the series of Action%s that will take the world state from it's current state to the state required by the goal.
 		*
 		*	@param	actions		The Action%s available for the Planner to use to formulate plans.
 		*	@param	goal		An Action that can only run in the desired goal state.
 		*
-		*	@return	ActionList	The series of actions that will take you from the current world state to the goal world state.
+		*	@return	ActionSet	The series of actions that will take you from the current world state to the goal world state.
 		*/
-		ActionList plan(ActionList actions, Action goal);
+		ActionSet plan(ActionSet actions, Action goal);
 
 		/*!	Saves the graph of Action%s generated during the last call to `Planner::plan`.
 		*	The graph is saved in the DOT language.
 		*
 		*	@param	filename	The filename to save the file to.
 		*/
-		void toDOT(std::string filename);
+		void savePlan(std::string filename);
 
-		ConditionSet &getWorldState() { return _worldState; };
+		ConditionSet &getWorldState() noexcept { return _worldState; };
 		ConditionSet &setWorldState(const ConditionSet &worldState) { return _worldState = worldState; };
 
 	private:
+		NodeList genAdjacent(Node * parent, ActionSet actions);
+		int calculateDistanceToGoal(const ConditionSet & current, const ConditionSet & goal);
+
 		ConditionSet _worldState;
 		NodeList _validNodes;
 		ActionGraph _lastPlan;
-		unsigned short _nextID{ 0 };
-
-		NodeList genAdjacent(Node * parent, ActionList actions);
-		int calculateDistanceToGoal(const ConditionSet & current, const ConditionSet & goal);
+		unsigned short _nextID;
 	};
 }

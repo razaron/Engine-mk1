@@ -48,16 +48,17 @@ namespace razaron::eventstream
         unsigned lifetime;			/*!< How long the Event will live for. */
         unsigned id{ uid++ };       /*!< This Events unique id. */
 
-		Event(UUID64 recipient = UUID64{0}, EventType type = EventType::DEFAULT, std::shared_ptr<void> data = std::shared_ptr<void>{}, unsigned lifetime = 0) : recipient(recipient), type(type), data(data), lifetime(lifetime) {}
+		Event(UUID64 recipient = UUID64{ 0 }, EventType type = EventType{}, std::shared_ptr<void> data = nullptr, unsigned lifetime = 0) noexcept
+			: recipient{ recipient }, type{ type }, data{ data }, lifetime{ lifetime } {}
 
         /*! Evaluates equality between two Event structs. */
-        bool operator==(const Event &rhs)
+        bool operator==(const Event &rhs) noexcept
         {
             return (recipient == rhs.recipient) && (type == rhs.type) && (data == rhs.data);
         }
 
         /*! Evaluates inequality between two Event structs. */
-        bool operator!=(const Event &rhs)
+        bool operator!=(const Event &rhs) noexcept
         {
             return !(*this == rhs);
         }
@@ -70,8 +71,7 @@ namespace razaron::eventstream
     class EventStream
     {
       public:
-        EventStream();  /*!< Default constructor. */
-        ~EventStream(); /*!< Default destructor. */
+        EventStream() noexcept;  /*!< Default constructor. */
 
         /*! Pushes an Event onto this EventStream.
         *

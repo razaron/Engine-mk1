@@ -38,7 +38,7 @@ namespace razaron::core::eventdata
     {
         bool initial;
 
-        REMOVE_ENTITY(bool initial = true) : initial{initial} {}
+        REMOVE_ENTITY(bool initial = true) noexcept : initial{initial} {}
     };
 
     struct REMOVE_COMPONENT

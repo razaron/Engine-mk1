@@ -35,7 +35,7 @@ SCENARIO("Graphs can be traversed in several ways", "[graph]")
         g[3].data = 3;
         g[4].data = 4;
 
-        REQUIRE(g.size() == 5);
+        REQUIRE(g.order() == 5);
 
         WHEN("Performing depth first search")
         {
@@ -45,7 +45,7 @@ SCENARIO("Graphs can be traversed in several ways", "[graph]")
 
             g.breadthFirstTraversal(0);
 
-            REQUIRE((g.data.v.size() == g.size() && g.size() == 5));
+            REQUIRE((g.data.v.size() == g.order() && g.order() == 5));
             REQUIRE((g.data.v[0] == 0 && g.data.v[1] == 1 && g.data.v[2] == 2 && g.data.v[3] == 3 && g.data.v[4] == 4));
         }
     }
@@ -68,7 +68,7 @@ SCENARIO("Graphs can call user defined functions on Vertex and Edge discovery", 
     g[3].data = 3;
     g[4].data = 4;
 
-    REQUIRE(g.size() == 5);
+    REQUIRE(g.order() == 5);
 
     GIVEN("The graph {{0,1}, {0,2}, {1,3}, {2,3}, {3,4}}")
     {

@@ -1,23 +1,23 @@
 #pragma once
 
-#include <algorithm>
-
 #include "Graph.hpp"
 #include "System.hpp"
+
+#include <algorithm>
+#include <memory>
 
 /*! A space is an abstract partition for a group of entities and their related systems. */
 namespace razaron::core::space
 {
-    using namespace razaron::graph;
     using namespace razaron::core::system;
     using namespace razaron::core::component;
     using namespace razaron::core::entity;
 
     struct SystemGraphData;
 
-    using SystemGraph = Graph<System *, char, SystemGraphData>;
-    using SystemGraphVertex = Vertex<System *, char>;
-    using SystemGraphEdge = Edge<char>;
+    using SystemGraph = razaron::graph::Graph<std::shared_ptr<System>, char, SystemGraphData>;
+    using SystemGraphVertex = razaron::graph::Vertex<std::shared_ptr<System>, char>;
+    using SystemGraphEdge = razaron::graph::Edge<char>;
 
     /*! The data to be held by the SystemGraph. */
     struct SystemGraphData
@@ -31,8 +31,17 @@ namespace razaron::core::space
     class Space
     {
       public:
-        Space(SystemGraph &systemGraph); /*!< Constructs a Space from the passed SystemGraph. */
-        ~Space();                          /*!< Default destructor. */
+        Space(const SystemGraph &systemGraph); /*!< Constructs a Space from the passed SystemGraph. */
+
+        /*!	Gets the Entity mapped to the passed ID.
+		*
+		*	@param      id                    The ID of the Entity to search for.
+		*
+        *   @exception  std::invalid_argument   Throws if the ID maps to no Entity.
+        *
+		*	@returns    A reference to the mapped Entity.
+		*/
+        Entity &operator[](UUID64 id);
 
         /*! Updates the related System%s with respect to `delta`.
 		*
@@ -63,19 +72,9 @@ namespace razaron::core::space
         void registerHandler(EventType type, EventHandler handler);
 
         /*! Calls `pushEvents` on the member EventStream with the given arguments. */
-        void pushEvents(std::vector<Event> &events, StreamType streamType);
+        void pushEvents(const std::vector<Event> &events, StreamType streamType);
 
-        /*!	Gets the Entity mapped to the passed ID.
-		*
-		*	@param      id                    The ID of the Entity to search for.
-		*
-        *   @exception  std::invalid_argument   Throws if the ID maps to no Entity.
-        *
-		*	@returns    A reference to the mapped Entity.
-		*/
-        Entity &operator[](UUID64 id);
-
-        EntityMap &getEntities() { return _entities; };
+        EntityMap &getEntities() noexcept { return _entities; };
 
       private:
         void updateSystems(double delta);
@@ -83,7 +82,7 @@ namespace razaron::core::space
 
 		UUID64 _id;
         SystemGraph _systemGraph;
-        double _intervalMax{};
+        double _intervalMax;
         EntityMap _entities;
         EventStream _eventStream;
         std::vector<UUID64> _deletingEntities;

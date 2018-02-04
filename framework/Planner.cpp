@@ -1,8 +1,9 @@
 #include "Planner.hpp"
 
 using namespace razaron::planner;
+using namespace razaron::graph;
 
-ActionList Planner::plan(ActionList actions, Action goal)
+ActionSet Planner::plan(ActionSet actions, Action goal)
 {
 	// Reset
 	_validNodes.clear();
@@ -52,7 +53,7 @@ ActionList Planner::plan(ActionList actions, Action goal)
 			return false;
 	});
 
-	ActionList plan;
+	ActionSet plan;
 
 	if (_validNodes.size())
 	{
@@ -67,7 +68,7 @@ ActionList Planner::plan(ActionList actions, Action goal)
 	return plan;
 }
 
-void Planner::toDOT(std::string filename)
+void Planner::savePlan(std::string filename)
 {
 	_lastPlan.vertexFuncs[State::WHITE] = [&](ActionVertex &v, ActionGraph &) {
 		if (!v.adjacencyList.size())
@@ -127,7 +128,7 @@ void Planner::toDOT(std::string filename)
 	dotFile << dotStr;
 }
 
-NodeList Planner::genAdjacent(Node *parent, ActionList actions)
+NodeList Planner::genAdjacent(Node *parent, ActionSet actions)
 {
 	NodeList list;
 

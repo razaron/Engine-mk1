@@ -18,17 +18,29 @@ namespace razaron::core::entity
 	*/
 	class Entity {
 	public:
-		Entity() /*! Default constructor. */
-			:_id(UUID64{}), _components{} {}
+		Entity() noexcept :_id{}, _components{} {} /*!< Default constructor. */
 
 		/*!	Constructs an Entity object from a pre-constructed map of Component objects.
 		*
 		*	@param	components	The ComponentMap of components to initialize this Entity with.
 		*/
-		Entity(ComponentMap components)
-			:_id(UUID64{}), _components(components) {}
+		Entity(ComponentMap components)	:_id{}, _components{ components } {}
 
-		~Entity() {} /*! Default destructor */
+		/*!	Gets the Handle mapped to the passed ComponentType.
+		*
+		*	@param		type					The ComponentType to search for.
+		*
+		*   @exception  std::invalid_argument   Throws if the ComponentType maps to no Handle.
+		*
+		*	@returns	A reference to the mapped Handle.
+		*/
+		Handle &operator[](ComponentType type)
+		{
+			if (_components.find(type) != _components.end())
+				return _components[type];
+			else
+				throw std::invalid_argument("ComponentType not found in Entity: " + std::to_string(_id.uuid.to_ullong()));
+		}
 
 		/*!	Adds a ComponentHandle to the ComponentMap of Entity.
 		*
@@ -65,23 +77,7 @@ namespace razaron::core::entity
 		*
 		*	@returns	The unique id of this Entity.
 		*/
-		UUID64 getID() { return _id; }
-
-		/*!	Gets the Handle mapped to the passed ComponentType.
-		*
-		*	@param		type					The ComponentType to search for.
-		*
-        *   @exception  std::invalid_argument   Throws if the ComponentType maps to no Handle.
-        *
-		*	@returns	A reference to the mapped Handle.
-		*/
-		Handle &operator[](ComponentType type)
-		{
-			if(_components.find(type) != _components.end())
-				return _components[type];
-			else
-				throw std::invalid_argument("ComponentType not found in Entity: " + std::to_string(_id.uuid.to_ullong()));
-		}
+		UUID64 getID() noexcept { return _id; }
 
 	private:
 		UUID64 _id;

@@ -3,7 +3,9 @@
 using namespace razaron::core::system;
 
 
-System::System(){
+System::System() noexcept
+	:_id{}, _pool{}, _interval{0.05}, _eventStream{}, _componentTypes{}
+{
     registerHandler(EventType::CREATE_COMPONENT, [system = this](const Event & e) {
         auto data = std::static_pointer_cast<eventdata::CREATE_COMPONENT>(e.data);
 
@@ -39,10 +41,6 @@ System::System(){
     });
 }
 
-System::~System()
-{
-}
-
 void System::registerHandler(razaron::eventstream::EventType type, EventHandler handler)
 {
     _eventStream.registerHandler(type, handler);
@@ -68,7 +66,7 @@ void System::pushEvent(Event event)
     _eventStream.pushEvent(event, StreamType::OUTGOING);
 }
 
-void System::pushEvents(std::vector<Event> &events)
+void System::pushEvents(const std::vector<Event> &events)
 {
     _eventStream.pushEvents(events, StreamType::INCOMING);
     _eventStream.pushEvents(events, StreamType::OUTGOING);

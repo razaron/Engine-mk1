@@ -3,8 +3,8 @@
 using namespace razaron::core::space;
 using namespace razaron::core::entity;
 
-Space::Space(SystemGraph &systemGraph)
-	: _id(UUID64{}), _systemGraph(std::move(systemGraph))
+Space::Space(const SystemGraph &systemGraph)
+	: _id{}, _systemGraph{ systemGraph }, _intervalMax{}, _entities{}, _eventStream{}, _deletingEntities{}
 {
 	// Finds the highest interval for given Systems
 	_systemGraph.vertexFuncs[State::WHITE] = [&](SystemGraphVertex &v, SystemGraph &g) {
@@ -31,7 +31,7 @@ Space::Space(SystemGraph &systemGraph)
 				entity.getID(),
 				EventType::CREATE_COMPONENT,
 				std::make_shared<eventdata::CREATE_COMPONENT>(args)
-			});
+				});
 		}
 
 		pushEvents(events, StreamType::OUTGOING);
@@ -66,7 +66,7 @@ Space::Space(SystemGraph &systemGraph)
 			std::vector<Event> events;
 			for (auto&[type, handle] : entity.getComponents())
 			{
-				Event event{
+				Event event {
 					e.recipient,
 						EventType::REMOVE_COMPONENT,
 						std::make_shared<eventdata::REMOVE_COMPONENT>(ComponentHandle{ type, handle })
@@ -78,7 +78,7 @@ Space::Space(SystemGraph &systemGraph)
 			pushEvents(events, StreamType::OUTGOING);
 
 			// Create a followup REMOVE_ENTITY event to check up on progress
-			std::vector<Event> event{ {
+			std::vector<Event> event { {
 					e.recipient,
 						EventType::REMOVE_ENTITY,
 						std::make_shared<eventdata::REMOVE_ENTITY>(false)
@@ -100,7 +100,7 @@ Space::Space(SystemGraph &systemGraph)
 			// Else resend the event
 			else
 			{
-				std::vector<Event> event{ {
+				std::vector<Event> event { {
 						e.recipient,
 							EventType::REMOVE_ENTITY,
 							std::make_shared<eventdata::REMOVE_ENTITY>(false)
@@ -123,25 +123,12 @@ Space::Space(SystemGraph &systemGraph)
 
 }
 
-Space::~Space()
+Entity &Space::operator[](UUID64 id)
 {
-	_systemGraph.reset();
-
-	_systemGraph.vertexFuncs[State::WHITE] = [](SystemGraphVertex &v, SystemGraph &g) {
-		UNUSED(g);
-
-		delete v.data;
-	};
-
-	_systemGraph.edgeFuncs[State::WHITE] = [](SystemGraphEdge &e, SystemGraph &g) {
-		UNUSED(g);
-
-		UNUSED(e); // delete e if necessary
-	};
-
-	UNUSED(_systemGraph.data); // delete data if necessary
-
-	_systemGraph.breadthFirstTraversal(0);
+	if (_entities.count(id))
+		return _entities[id];
+	else
+		throw std::invalid_argument("Entity: " + std::to_string(id.uuid.to_ullong()) + " is not in Space: " + std::to_string(_id.uuid.to_ullong()));
 }
 
 void Space::update(double delta)
@@ -225,7 +212,7 @@ void Space::updateSystems(double delta)
 	_systemGraph.breadthFirstTraversal(0);
 }
 
-void Space::pushEvents(std::vector<Event> &events, StreamType streamType)
+void Space::pushEvents(const std::vector<Event> &events, StreamType streamType)
 {
 	_eventStream.pushEvents(events, streamType);
 }
@@ -246,12 +233,4 @@ std::size_t Space::removeEntity(UUID64 id)
 	_entities.erase(id);
 
 	return _entities.size();
-}
-
-Entity &Space::operator[](UUID64 id)
-{
-	if (_entities.count(id))
-		return _entities[id];
-	else
-		throw std::invalid_argument("Entity: " + std::to_string(id.uuid.to_ullong()) + " is not in Space: " + std::to_string(_id.uuid.to_ullong()));
 }
