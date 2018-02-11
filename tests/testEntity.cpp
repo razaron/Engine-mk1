@@ -39,6 +39,7 @@ SCENARIO("Entities can be constructed from a ComponentMap, then be added/removed
 
                 bool result = false;
 
+				// COMPONENT_1 removed so access should throw
                 try
                 {
                     e[ComponentType::COMPONENT_1];

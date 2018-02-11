@@ -4,7 +4,7 @@ using namespace razaron::core::system;
 
 
 System::System() noexcept
-	:_id{}, _pool{}, _interval{0.05}, _eventStream{}, _componentTypes{}
+	:_id{}, _pool{}, _interval{1.0}, _eventStream{}, _componentTypes{}
 {
     registerHandler(EventType::CREATE_COMPONENT, [system = this](const Event & e) {
         auto data = std::static_pointer_cast<eventdata::CREATE_COMPONENT>(e.data);

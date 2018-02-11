@@ -13,11 +13,8 @@ public:
 	FooSystem() {}
 	~FooSystem() {}
 
-	Task update(EntityMap &entities, double delta)
+	Task update(EntityMap &, double)
 	{
-		UNUSED(entities);
-		UNUSED(delta);
-
 		auto events = popEvents();
 
 		for (auto &e : events)
@@ -33,8 +30,8 @@ public:
 		return Task{};
 	}
 
-	ComponentHandle createComponent(ComponentType type, std::shared_ptr<void> tuplePtr) { UNUSED(type); UNUSED(tuplePtr); return ComponentHandle{}; }
-	bool removeComponent(ComponentHandle ch) { UNUSED(ch); return false; }
+	ComponentHandle createComponent(ComponentType, std::shared_ptr<void>) { return ComponentHandle{}; }
+	bool removeComponent(ComponentHandle) { return false; }
 
 	int count{};
 	std::string name{ "FooSystem" };
@@ -46,11 +43,8 @@ public:
 	BarSystem() {}
 	~BarSystem() {}
 
-	Task update(EntityMap &entities, double delta)
+	Task update(EntityMap &, double)
 	{
-		UNUSED(entities);
-		UNUSED(delta);
-
 		for (auto i = 0; i < 5; i++)
 		{
 			pushEvent(Event{ UUID64{0}, EventType::REMOVE_COMPONENT, std::make_shared<int>(i) });
@@ -59,8 +53,8 @@ public:
 		return Task{};
 	}
 
-	ComponentHandle createComponent(ComponentType type, std::shared_ptr<void> tuplePtr) { UNUSED(type); UNUSED(tuplePtr); return ComponentHandle{}; }
-	bool removeComponent(ComponentHandle ch) { UNUSED(ch); return false; }
+	ComponentHandle createComponent(ComponentType, std::shared_ptr<void>) { return ComponentHandle{}; }
+	bool removeComponent(ComponentHandle) { return false; }
 
 	std::string name{ "BarSystem" };
 };

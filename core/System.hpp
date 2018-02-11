@@ -83,7 +83,7 @@ namespace razaron::core::system
 
 		UUID64 _id;									/*!< The unique id of this system. */
         ObjectPool _pool;							/*!< The ObjectPool used to manage the memory of this System. */
-        double _interval;							/*!< The interval (in seconds) between updates for this System. */
+        double _interval;							/*!< The max interval (in seconds) between updates for this System. */
         EventStream _eventStream;					/*!< The EventStream belonging to this System. */
         std::set<ComponentType> _componentTypes;	/*!< The set of ComponentType%s supported by this System. */
     };

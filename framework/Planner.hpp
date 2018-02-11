@@ -54,19 +54,20 @@ namespace razaron::planner
 		std::size_t type;		/*!< A hashed `std::string` denoting the property type. */
 		ConditionValue value;	/*!< A `std::variant` denoting the value off the property. */
 		Operation op;			/*!< The Operation used to evaluate or apply a condition. */
+		int weight;				/*!< A weight applied to the result of distToSatisfy. */
 
 		std::string debugID;
 		std::string debugType;
 
 		Condition() noexcept :id{}, type{}, value{}, op{} {}
-		Condition(std::string id, std::string type, ConditionValue value, Operation op = Operation::NONE)
-			:id{ std::hash<std::string>{}(id) }, type{ std::hash<std::string>{}(type) }, value{ value }, op{ op }, debugID{ id }, debugType{ type } {}
+		Condition(std::string id, std::string type, ConditionValue value, Operation op = Operation::NONE, int weight = 1)
+			:id{ std::hash<std::string>{}(id) }, type{ std::hash<std::string>{}(type) }, value{ value }, op{ op }, weight{ weight }, debugID{ id }, debugType{ type } {}
 
 		bool operator==(const Condition &rhs) const noexcept
 		{
 			return id == rhs.id && type == rhs.type;
 		}
-		
+
 		/*!	Applies a modifier to this property. Can also be used to add conditions (e.g. `x>2` + `x>4` = `x>6`).
 		*	Follows the format: `this.value modifier.op modifier.value`.
 		*	E.g. If `this.value = 5`, `modifier.op = Operation::PLUS` and `modifier.value = 2` the function would perform `this.value = 5 + 2`.
@@ -284,9 +285,9 @@ namespace razaron::planner
 			{
 				case 0:
 				{
-					const bool c = std::get<bool>(value);
-					const bool v = std::get<bool>(condition.value);
-					return c != v;
+					const bool v = std::get<bool>(value);
+					const bool c = std::get<bool>(condition.value);
+					return (c != v)*condition.weight;
 					break;
 				}
 				case 1:
@@ -311,7 +312,7 @@ namespace razaron::planner
 			{
 				case Operation::EQUAL:
 				{
-					return std::abs(v - c);
+					return (std::abs(v - c))*condition.weight;
 					break;
 				}
 				case Operation::LESS:
@@ -319,7 +320,7 @@ namespace razaron::planner
 					if (v < c)
 						return 0;
 					else
-						return std::abs(v - c) + 1;
+						return (std::abs(v - c) + 1)*condition.weight;
 					break;
 				}
 				case Operation::LESS_EQUAL:
@@ -327,7 +328,7 @@ namespace razaron::planner
 					if (v <= c)
 						return 0;
 					else
-						return std::abs(v - c);
+						return (std::abs(v - c))*condition.weight;
 					break;
 				}
 				case Operation::GREATER:
@@ -335,7 +336,7 @@ namespace razaron::planner
 					if (v > c)
 						return 0;
 					else
-						return std::abs(v - c) + 1;
+						return (std::abs(v - c) + 1)*condition.weight;
 					break;
 				}
 				case Operation::GREATER_EQUAL:
@@ -343,7 +344,7 @@ namespace razaron::planner
 					if (v >= c)
 						return 0;
 					else
-						return std::abs(v - c);
+						return (std::abs(v - c))*condition.weight;
 					break;
 				}
 				default:
@@ -402,10 +403,8 @@ namespace razaron::planner
 		ConditionSet preconditions;		/*!< Condition%s that must be satisfied for this Action to be valid. */
 		ConditionSet postconditions;	/*!< Modifiers this Action applies to the world state during planning. */
 
-		std::function<void()> effect;	/*!< A function the runs the logic for this Action. Not used during planning. */
-
-		Action(std::string name = "DEFAULT", unsigned cost = unsigned{}, ConditionSet preconditions = ConditionSet{}, ConditionSet postconditions = ConditionSet{}, std::function<void()> effect = nullptr) noexcept
-			: name{ name }, cost{ cost }, preconditions{ preconditions }, postconditions{ postconditions }, effect{ effect } {}
+		Action(std::string name = "DEFAULT", unsigned cost = unsigned{}, ConditionSet preconditions = ConditionSet{}, ConditionSet postconditions = ConditionSet{}) noexcept
+			: name{ name }, cost{ cost }, preconditions{ preconditions }, postconditions{ postconditions } {}
 	};
 
 	/*! @cond */
@@ -439,7 +438,7 @@ namespace razaron::planner
 	public:
 		Planner() noexcept							/*!< Default Constructor. */
 			: _worldState{}, _validNodes{}, _lastPlan{}, _nextID{ 0 } {}
-		
+
 		Planner(const ConditionSet &worldState)		/*!< Constructs the Planner with the passed initial world state. */
 			: _worldState{ worldState }, _validNodes{}, _lastPlan{}, _nextID{ 0 } {}
 

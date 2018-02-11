@@ -7,9 +7,7 @@ Space::Space(const SystemGraph &systemGraph)
 	: _id{}, _systemGraph{ systemGraph }, _intervalMax{}, _entities{}, _eventStream{}, _deletingEntities{}
 {
 	// Finds the highest interval for given Systems
-	_systemGraph.vertexFuncs[State::WHITE] = [&](SystemGraphVertex &v, SystemGraph &g) {
-		UNUSED(g);
-
+	_systemGraph.vertexFuncs[State::WHITE] = [&](SystemGraphVertex &v, SystemGraph &) {
 		if (_intervalMax < v.data->getInterval())
 			_intervalMax = v.data->getInterval();
 	};
@@ -66,13 +64,11 @@ Space::Space(const SystemGraph &systemGraph)
 			std::vector<Event> events;
 			for (auto&[type, handle] : entity.getComponents())
 			{
-				Event event {
+				events.emplace_back(
 					e.recipient,
-						EventType::REMOVE_COMPONENT,
-						std::make_shared<eventdata::REMOVE_COMPONENT>(ComponentHandle{ type, handle })
-				};
-
-				events.push_back(event);
+					EventType::REMOVE_COMPONENT,
+					std::make_shared<eventdata::REMOVE_COMPONENT>(ComponentHandle{ type, handle })
+				);
 			}
 
 			pushEvents(events, StreamType::OUTGOING);
@@ -202,10 +198,8 @@ void Space::updateSystems(double delta)
 
 	// Reset SystemGraph and update all Systems
 	_systemGraph.reset();
-	_systemGraph.vertexFuncs[State::WHITE] = [&entities, delta](SystemGraphVertex & v, SystemGraph & g)
+	_systemGraph.vertexFuncs[State::WHITE] = [&entities, delta](SystemGraphVertex & v, SystemGraph &)
 	{
-		UNUSED(g);
-
 		v.data->processEvents();
 		v.data->update(entities, delta);
 	};

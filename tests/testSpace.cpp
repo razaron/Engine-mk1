@@ -49,7 +49,7 @@ SCENARIO("Spaces manage Systems and Events, updating them in BF order", "[space]
 
             THEN("Updating the space with delta > _maxInterval")
             {
-                s.update(0.05 * 1.5);
+                s.update(1.0 * 1.5);
 
                 REQUIRE(a->count == 3);
                 REQUIRE(b->count == 3);

@@ -302,13 +302,11 @@ namespace razaron::graph
 	template <class V, class E, class G>
 	inline void Graph<V, E, G>::addEdge(std::size_t source, std::size_t target, E edgeData)
 	{
-		// look for vertex with ID source
-		try
-		{
-			(*this)[source];
-		}
-		// if it's not found, construct it
-		catch (std::out_of_range e)
+		auto it = std::find_if(_vertices.begin(), _vertices.end(), [source](const Vertex<V, E> &v) {
+			return v.id == source;
+		});
+
+		if (it == _vertices.end())
 		{
 			if (source >= _vertices.size())
 				_vertices.emplace_back(source);
@@ -316,12 +314,11 @@ namespace razaron::graph
 				_vertices.emplace(_vertices.begin() + source, source);
 		}
 
-		// look for vertex with ID target
-		try
-		{
-			(*this)[target];
-		}
-		catch (std::out_of_range e)
+		it = std::find_if(_vertices.begin(), _vertices.end(), [target](const Vertex<V, E> &v) {
+			return v.id == target;
+		});
+
+		if (it == _vertices.end())
 		{
 			if (target >= _vertices.size())
 				_vertices.emplace_back(target);

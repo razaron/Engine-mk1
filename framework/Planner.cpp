@@ -170,9 +170,9 @@ NodeList Planner::genAdjacent(Node *parent, ActionSet actions)
 				auto it = std::find(goal.begin(), goal.end(), cond);
 				if (it != goal.end())
 				{
-					if (cond.op != it->op)
-						throw std::exception("Can't have different op for the same id & type");
-					else
+					//if (cond.op != it->op)
+					//	throw std::exception("Can't have different op for the same id & type");
+					//else
 					{
 						it->apply(cond);
 					}
