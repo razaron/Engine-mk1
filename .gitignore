@@ -72,3 +72,7 @@ docs/doxylocal
 *.gch
 
 callgraph\.sh
+
+core/CMakeFiles/
+
+framework/CMakeFiles/

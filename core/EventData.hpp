@@ -6,7 +6,7 @@
 
 #include "Component.hpp"
 
-namespace razaron::eventdata
+namespace razaron::core::eventdata
 {
     using namespace razaron::core::component;
 
@@ -38,7 +38,7 @@ namespace razaron::eventdata
     {
         bool initial;
 
-        REMOVE_ENTITY(bool initial = true) : initial{initial} {}
+        REMOVE_ENTITY(bool initial = true) noexcept : initial{initial} {}
     };
 
     struct REMOVE_COMPONENT

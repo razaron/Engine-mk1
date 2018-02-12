@@ -1,119 +1,90 @@
 #include "Planner.hpp"
 
 using namespace razaron::planner;
+using namespace razaron::graph;
 
-ActionList Planner::plan(ConditionSet worldState, Action goal, ActionList availableActions)
+ActionSet Planner::plan(ActionSet actions, Action goal)
 {
-	_worldState = worldState;
+	// Reset
+	_validNodes.clear();
+	_lastPlan = ActionGraph{};
+	_nextID = 0;
 
-	ActionGraph g;
-	g.addEdge(0, 0, 0);
-	g[0].data = goal;
-	g[0].data.name = "GOAL: " + goal.name;
-	g[0].adjacencyList.clear();
+	NodeList openList;
+	NodeList closedList;
 
-	genTree(&g, 0, availableActions, worldState, goal.preconditions);
-	_lastPlan = ActionGraph{ g }; // 
+	Node init;
+	init.id = _nextID++;
+	init.action = goal;
+	init.goalState = goal.preconditions;
+	init.currentState = _worldState;
 
-	auto it = g.data.plans.begin();
+	_lastPlan.addEdge(0, 0);
 
-	auto buildList = [&it](ActionVertex &v, ActionGraph &g) {
-		std::clog << v.id << ": " << v.data.name << std::endl;
+	_lastPlan[0].data = init;
+	_lastPlan[0].adjacencyList.clear();
 
-		// Create a new ActionList
-		if (it == g.data.plans.end())
-		{
-			g.data.plans.emplace_back();
-			it = std::prev(g.data.plans.end());
-		}
+	openList.push_back(init);
 
-		// Push Vertex onto current ActionList, ignoring origin Vertex
-		if (v.id)
-			it->push_back(v.data);
-
-		// if branch end Vertex is State::WHITE, clear the ActionLists content to start filling again
-		if (!v.adjacencyList.size())
-		{
-			std::clog << "END" << std::endl;
-
-			g.data.plans.erase(it);
-			it = g.data.plans.end();
-		}
-	};
-
-	auto endList = [&it](ActionVertex &v, ActionGraph &g) {
-		std::clog << v.id << ": " << v.data.name << std::endl;
-
-		// Create a new ActionList
-		if (it == g.data.plans.end())
-		{
-			g.data.plans.emplace_back();
-			it = std::prev(g.data.plans.end());
-		}
-
-		// Push Vertex onto current ActionList, ignoring origin Vertex
-		if (v.id)
-			it->push_back(v.data);
-
-		// if branch end Vertex is State::GREEN, go onto the next ActionList
-		if (!v.adjacencyList.size())
-		{
-			std::clog << "END" << std::endl;
-
-			it++;
-		}
-	};
-
-	g.vertexFuncs[State::WHITE] = buildList;
-	g.vertexFuncs[State::BLACK] = buildList;
-	g.vertexFuncs[State::GREEN] = endList;
-
-	g.branchTraversal(0);
-
-	ActionList bestPlan;
-	int bestCost = std::numeric_limits<int>::max();
-
-	for (auto &plan : g.data.plans)
+	while (openList.size())
 	{
-		int sumCost = 0;
-		for (auto &a : plan)
-		{
-			sumCost += a.cost;
-		}
+		closedList.splice(closedList.begin(), openList, openList.begin());
 
-		if (sumCost < bestCost)
+		Node *parent = &closedList.front();
+
+		// If the cheapest openList node (parent) has a higher f than the cheapest valid plan
+		if (_validNodes.size() && parent->f >= _validNodes.begin()->f)
+			break;
+
+		auto adjacent = genAdjacent(parent, actions);
+
+		openList.merge(adjacent, [](const Node& a, const Node& b) {
+			if (a.f <= b.f && a.h < b.h)
+				return true;
+			else
+				return false;
+		});
+	}
+
+	_validNodes.sort([](const Node& a, const Node& b) {
+		if (a.f < b.f || (a.f == b.f && a.h < b.h))
+			return true;
+		else
+			return false;
+	});
+
+	ActionSet plan;
+
+	if (_validNodes.size())
+	{
+		Node cur = _validNodes.front();
+		while (cur.parent)
 		{
-			bestPlan = plan;
-			bestCost = sumCost;
+			plan.push_back(cur.action);
+			cur = *cur.parent;
 		}
 	}
 
-	if (bestPlan.size())
-		bestPlan.reverse();
-
-	return bestPlan;
+	return plan;
 }
 
-void razaron::planner::Planner::toDOT(std::string filename)
+void Planner::savePlan(std::string filename)
 {
-	_lastPlan.vertexFuncs[State::WHITE] = [](ActionVertex &v, ActionGraph &g) {
-		int cost = v.data.cost;
-
-		for (auto &e : v.adjacencyList)
+	_lastPlan.vertexFuncs[State::WHITE] = [&](ActionVertex &v, ActionGraph &) {
+		if (!v.adjacencyList.size())
 		{
-			g[e.target].data.cost += cost;
+			if (std::count(_validNodes.begin(), _validNodes.end(), v.data))
+				v.state = State::GREEN;
+			else
+				v.state = State::RED;
 		}
-
-		if (!v.adjacencyList.size() && v.state != State::GREEN)
-			v.state = State::RED;
 	};
 
 	_lastPlan.breadthFirstTraversal(0);
 
-	auto vAttr = [](const ActionVertex &v) {
-		auto id = v.id;
-		auto name = v.data.name;
-		auto cost = v.data.cost;
+	const auto vAttr = [](const ActionVertex &v) {
+		const auto id = v.id;
+		const auto name = v.data.action.name;
 
 		auto colour = "white";
 		switch (v.state)
@@ -141,12 +112,12 @@ void razaron::planner::Planner::toDOT(std::string filename)
 		return attributes.str();
 	};
 
-	auto eAttr = [&](const ActionEdge &e) {
+	const auto eAttr = [&](const ActionEdge &e) {
 		std::stringstream attr;
 
-		auto action = _lastPlan[e.target].data;
+		auto node = _lastPlan[e.target].data;
 
-		attr << "[dir=back label=\"F(" << action.cost + e.data << ") G(" << action.cost << ") H(" << e.data << ")\"]\n";
+		attr << "[dir=back label=\"F(" << node.f << ") G(" << node.g << ") H(" << node.h << ")\"]\n";
 
 		return attr.str();
 	};
@@ -157,181 +128,151 @@ void razaron::planner::Planner::toDOT(std::string filename)
 	dotFile << dotStr;
 }
 
-void Planner::genTree(ActionGraph *g, int where, ActionList actions, ConditionSet currentState, ConditionSet goalState)
+NodeList Planner::genAdjacent(Node *parent, ActionSet actions)
 {
-	// Checks the remaining conditions
-	ConditionSet rem{ goalState };
-	for (auto &c : goalState)
-	{
-		auto it = currentState.find(c);
-		if (it != currentState.end())
-		{
-			if (it->value == c.value)
-				rem.erase(c);
-		}
-	}
-
-	if (!rem.size())
-		return;
+	NodeList list;
 
 	for (auto &a : actions)
 	{
-		auto index = static_cast<unsigned short>(g->size());
-
-		// Add postcondtions to the current state
-		ConditionSet cState{ currentState };
-		for (auto &c : a.postconditions)
+		// Add postconditions to current state
+		ConditionSet current{ parent->currentState };
+		for (auto &cond : a.postconditions)
 		{
-			auto it = goalState.find(c);
-			if (it != goalState.end())
+			auto it = std::find(current.begin(), current.end(), cond);
+
+			if (it != current.end())
 			{
-				if (it->value == c.value)
-				{
-					cState.insert(c);
-				}
+				it->apply(cond);
+			}
+			else
+			{
+				// Create a new zeroed Condition with the id and type of cond
+				Condition prop{ cond };
+				prop.zero();
+				prop.op = Operation::NONE;
+
+				prop.apply(cond);
+
+				current.push_back(prop);
 			}
 		}
 
-		// add procedural postconditions to the current state
-		bool relevantProc = false;
-		for (auto &func : a.proceduralPostconditions)
-		{
-			auto prop = func(cState, goalState);
-			cState.erase(prop.first);
-			cState.insert(prop.first);
+		// Calculate distance to goals before and after
+		int before = calculateDistanceToGoal(parent->goalState, parent->currentState);
+		int after = calculateDistanceToGoal(parent->goalState, current);
 
-			// If the returned property is relevant to the goal
-			if (prop.second)
-				relevantProc = true;
-		}
-
-		// Checks the remaining conditions
-		ConditionSet prevRem{ goalState };
-		for (auto &c : goalState)
+		if (after < before)
 		{
-			auto it = currentState.find(c);
-			if (it != currentState.end())
-			{
-				if (it->value == c.value)
-					prevRem.erase(c);
-			}
-		}
-		
-		ConditionSet curRem{ goalState };
-		for (auto &c : goalState)
-		{
-			auto it = cState.find(c);
-			if (it != cState.end())
-			{
-				if (it->value == c.value)
-					curRem.erase(c);
-			}
-		}
-
-		// True if there are remaining conditions
-		bool x = curRem.size();
-		
-		// True if the remaining conditions has decreased or if a relevant 
-		bool y = curRem.size() < prevRem.size() || relevantProc;
-		
-		// True if the action is applicable to the current world state
-		bool z = includes(_worldState, a.preconditions);
-		for (auto &func : a.proceduralPreconditions)
-		{
-			auto prop = func(_worldState, curRem);
-			if (prop.first != WorldProperty{})
-				z = false;
-		}
-
-		// If action satisfies some conditions OR if action satisfies all conditions but isn't applicable in current world state
-		if ((x && y) || (!x && !z))
-		{
-			// Add action to graph
-			g->addEdge(where, index, 0);
-			(*g)[index].data = a;
-
 			// Add preconditions to the goal state
-			ConditionSet gState{ goalState };
-			for (auto &c : a.preconditions)
+			ConditionSet goal{ parent->goalState };
+			for (auto &cond : a.preconditions)
 			{
-				// if precondition is in the current state, remove it
-				auto it = cState.find(c);
-				if (it != cState.end())
+				auto it = std::find(goal.begin(), goal.end(), cond);
+				if (it != goal.end())
 				{
-					if (it->value == c.value)
-						cState.erase(c);
-				}
-				// else add it to the goal state
-				else
-					gState.insert(c);
-			}
-
-			// Add procedural preconditions to the goal state
-			for (auto &func : a.proceduralPreconditions)
-			{
-				// Add prop to goal state
-				auto prop = func(cState, gState);
-
-				if (prop.first != WorldProperty{})
-				{
-					gState.erase(prop.first);
-					gState.insert(prop.first);
-				}
-			}
-
-			int heuristic = 0;
-			for (auto &c : gState)
-			{
-				auto it = cState.find(c);
-				if (it != cState.end())
-				{
-					switch (c.value.index())
+					//if (cond.op != it->op)
+					//	throw std::exception("Can't have different op for the same id & type");
+					//else
 					{
-					case 0:
-					{
-						if (std::get<bool>(c.value) != std::get<bool>(it->value))
-							heuristic++;
-						break;
-					}
-					case 1:
-					{
-						int current = std::get<int>(it->value);
-						int goal = std::get<int>(c.value);
-
-						heuristic += std::abs(current - goal);
-
-						break;
-					}
+						it->apply(cond);
 					}
 				}
 				else
-					heuristic++;
+					goal.push_back(cond);
+
 			}
 
-			for (auto &e : (*g)[where].adjacencyList)
+			// Create Node with action
+			Node n;
+			n.id = _nextID++;
+			n.action = a;
+			n.currentState = current;
+			n.goalState = goal;
+			n.parent = parent;
+
+			// Check world state satisfies preconditions
+			ConditionSet temp{ a.preconditions };
+			for (auto &cond : a.preconditions)
 			{
-				if (e.target == index)
-					e.data = heuristic;
+				auto it = std::find(_worldState.begin(), _worldState.end(), cond);
+				if (it != _worldState.end() && it->satisfies(cond))
+				{
+					temp.remove_if([cond](const Condition &c) {
+						if (c == cond && c.op == cond.op && c.value == c.value)
+							return true;
+						else
+							return false;
+					});
+				}
 			}
 
-			// Remove the action from the list of available actions
-			ActionList temp = actions;
-			temp.remove_if([a](Action b) {
-				return a.cost == b.cost && a.name == b.name;
-			});
+			// Recalculate distance to goal
+			before = after;
+			after = calculateDistanceToGoal(goal, current);
 
-			// recursively build current branch if there are still untried actions
-			if (temp.size())
-				genTree(g, index, temp, cState, gState);
+			if (temp.size() == 0 && after == 0)
+			{
+				n.g = parent->g + a.cost;
+				n.g *= PLANNER_G_MOD;
+				n.h = 0;
+				n.h *= PLANNER_H_MOD;
+				n.f = n.g + n.h;
+
+				_validNodes.push_back(n);
+
+				_lastPlan.addEdge(parent->id, n.id, n.f);
+				_lastPlan[n.id].data = n;
+			}
+			else
+			{
+				n.g = parent->g + a.cost;
+				n.g *= PLANNER_G_MOD;
+				n.h = after;
+				n.h *= PLANNER_H_MOD;
+				n.f = n.g + n.h;
+
+				list.push_back(n);
+
+				_lastPlan.addEdge(parent->id, n.id, n.f);
+				_lastPlan[n.id].data = n;
+			}
 		}
-		// If action satisfies all remaing conditions and is applicable in the current world state
-		else if (!x && z)
-		{
-			g->addEdge(where, index, 0);
-			(*g)[index].data = a;
 
-			// if branch end satisfies goal, green light it
-			(*g)[index].state = State::GREEN;
+	}
+
+	// sort the list
+	if (list.size() > 1)
+	{
+		list.sort([](const Node& a, const Node& b) {
+			if (a.f < b.f || (a.f == b.f && a.h < b.h))
+				return true;
+			else
+				return false;
+		});
+	}
+
+	return list;
+}
+
+int Planner::calculateDistanceToGoal(const ConditionSet &goal, const ConditionSet &current)
+{
+	int dist = 0;
+	for (auto &cond : goal)
+	{
+		auto it = std::find(current.begin(), current.end(), cond);
+		if (it != current.end())
+		{
+			dist += it->distToSatisfy(cond);
+		}
+		else
+		{
+			Condition prop{ cond };
+			prop.zero();
+			prop.op = Operation::NONE;
+
+			dist += prop.distToSatisfy(cond);
 		}
 	}
+
+	return dist;
 }

@@ -23,7 +23,7 @@ SCENARIO("Components are generated with unique IDs", "[component]")
 
         THEN("Each will have a unique ID")
         {
-            std::set<unsigned int> s;
+            std::set<UUID64, UUID64Cmp> s;
 
             for (std::size_t i = 0; i < v.size(); i++)
             {
@@ -58,7 +58,7 @@ SCENARIO("Classes deriving from class Component are generated with unique IDs", 
 
         THEN("Each will have a unique ID")
         {
-            std::set<unsigned int> s;
+			std::set<UUID64, UUID64Cmp> s;
 
             for (std::size_t i = 0; i < v.size(); i++)
             {

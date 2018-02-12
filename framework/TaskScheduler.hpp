@@ -39,14 +39,14 @@ namespace razaron::taskscheduler
     /*! A data structure for representing a Task. */
     struct Task
     {
-        std::size_t taskID;        /*!< The ID of this Task. */
-        std::size_t parentID;      /*!< The parents Task ID. */
-        std::size_t dependencyID;  /*!< The ID of the Task that must finish as a prerequisite. */
-        WorkFunc work;             /*!< The work function to run. */
-        std::size_t openWorkItems; /*!< The remaing work items equal to N+1 where N is the number of children Task%s. */
+		std::size_t taskID{};        /*!< The ID of this Task. */
+        std::size_t parentID{};      /*!< The parents Task ID. */
+        std::size_t dependencyID{};  /*!< The ID of the Task that must finish as a prerequisite. */
+        WorkFunc work{};             /*!< The work function to run. */
+        std::size_t openWorkItems{}; /*!< The remaing work items equal to N+1 where N is the number of children Task%s. */
 
         /*! Basic equality comparator. */
-        bool operator==(const Task &rhs) const
+        bool operator==(const Task &rhs) const noexcept
         {
             return taskID == rhs.taskID;
         }
@@ -58,8 +58,14 @@ namespace razaron::taskscheduler
     class TaskScheduler
     {
       public:
-        TaskScheduler();  /*!< Default constructor. */
-        ~TaskScheduler(); /*!< Default destructor. */
+        TaskScheduler() noexcept;						/*!< Default constructor. */
+		TaskScheduler(const TaskScheduler&) = delete;
+		TaskScheduler(TaskScheduler&&) = delete;
+		
+        ~TaskScheduler();								/*!< Default destructor. */
+
+		TaskScheduler& operator=(const TaskScheduler &) = delete;
+		TaskScheduler& operator=(TaskScheduler &&) = delete;
 
         /*! Pushes a new Task to be scheduled.
         *
@@ -100,7 +106,7 @@ namespace razaron::taskscheduler
         Task getTask();
         void doTask(Task task);
 
-        std::atomic<std::size_t> _nextTaskID{1};
+        std::atomic<std::size_t> _nextTaskID;
         TaskList _openTasks;
         TaskList _pendingTasks;
 
@@ -108,8 +114,8 @@ namespace razaron::taskscheduler
         std::mutex _taskQueueMutex;
         std::condition_variable _hasWorkCondition;
 
-		std::atomic<bool> _isEnd{false};
-		std::atomic<bool> _hasOpenWork{false};
-		std::atomic<bool> _hasWork{false};
+		std::atomic<bool> _isEnd;
+		std::atomic<bool> _hasOpenWork;
+		std::atomic<bool> _hasWork;
     };
 }

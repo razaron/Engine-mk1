@@ -25,19 +25,15 @@ class SystemA : public System
 
     ~SystemA() {}
 
-    Task update(EntityMap &entities, double delta)
+    Task update(EntityMap &, double)
     {
-        UNUSED(entities);
-        UNUSED(delta);
         count++;
 
         return Task{};
     }
 
-    ComponentHandle createComponent(ComponentType type, std::shared_ptr<void> tuplePtr)
+    ComponentHandle createComponent(ComponentType type, std::shared_ptr<void>)
     {
-        UNUSED(tuplePtr);
-
         Handle h;
 
         switch (type)
@@ -82,26 +78,14 @@ class SystemC : public System
     SystemC() {}
     ~SystemC() {}
 
-    Task update(EntityMap &entities, double delta)
-    {
-        UNUSED(entities);
-        UNUSED(delta);
-        count++;
-        return Task{};
-    }
+	Task update(EntityMap &, double)
+	{
+		count++;
+		return Task{};
+	}
 
-    ComponentHandle createComponent(ComponentType type, std::shared_ptr<void> tuplePtr)
-    {
-        UNUSED(type);
-        UNUSED(tuplePtr);
-
-        return ComponentHandle{};
-    }
-    bool removeComponent(ComponentHandle ch)
-    {
-        UNUSED(ch);
-        return false;
-    }
+	ComponentHandle createComponent(ComponentType, std::shared_ptr<void>) { return ComponentHandle{}; }
+	bool removeComponent(ComponentHandle) { return false; }
 
     int count{};
 
@@ -118,19 +102,15 @@ class SystemD : public System
     }
     ~SystemD() {}
 
-    Task update(EntityMap &entities, double delta)
+    Task update(EntityMap &, double)
     {
-        UNUSED(entities);
-        UNUSED(delta);
         count++;
 
         return Task{};
     }
 
-    ComponentHandle createComponent(ComponentType type, std::shared_ptr<void> tuplePtr)
+    ComponentHandle createComponent(ComponentType type, std::shared_ptr<void>)
     {
-        UNUSED(tuplePtr);
-
         Handle h;
 
         switch (type)
@@ -175,26 +155,14 @@ class SystemB : public System
     SystemB() {}
     ~SystemB() {}
 
-    Task update(EntityMap &entities, double delta)
-    {
-        UNUSED(entities);
-        UNUSED(delta);
-        count++;
-        return Task{};
-    }
+	Task update(EntityMap &, double)
+	{
+		count++;
+		return Task{};
+	}
 
-    ComponentHandle createComponent(ComponentType type, std::shared_ptr<void> tuplePtr)
-    {
-        UNUSED(type);
-        UNUSED(tuplePtr);
-
-        return ComponentHandle{};
-    }
-    bool removeComponent(ComponentHandle ch)
-    {
-        UNUSED(ch);
-        return false;
-    }
+	ComponentHandle createComponent(ComponentType, std::shared_ptr<void>) { return ComponentHandle{}; }
+	bool removeComponent(ComponentHandle) { return false; }
 
     int count{};
 
@@ -208,26 +176,14 @@ class SystemE : public System
     SystemE() {}
     ~SystemE() {}
 
-    Task update(EntityMap &entities, double delta)
-    {
-        UNUSED(entities);
-        UNUSED(delta);
-        count++;
-        return Task{};
-    }
+	Task update(EntityMap &, double)
+	{
+		count++;
+		return Task{};
+	}
 
-    ComponentHandle createComponent(ComponentType type, std::shared_ptr<void> tuplePtr)
-    {
-        UNUSED(type);
-        UNUSED(tuplePtr);
-
-        return ComponentHandle{};
-    }
-    bool removeComponent(ComponentHandle ch)
-    {
-        UNUSED(ch);
-        return false;
-    }
+	ComponentHandle createComponent(ComponentType, std::shared_ptr<void>) { return ComponentHandle{}; }
+	bool removeComponent(ComponentHandle) { return false; }
 
     int count{};
 
@@ -241,26 +197,14 @@ class SystemF : public System
     SystemF() {}
     ~SystemF() {}
 
-    Task update(EntityMap &entities, double delta)
+    Task update(EntityMap &, double)
     {
-        UNUSED(entities);
-        UNUSED(delta);
         count++;
         return Task{};
     }
 
-    ComponentHandle createComponent(ComponentType type, std::shared_ptr<void> tuplePtr)
-    {
-        UNUSED(type);
-        UNUSED(tuplePtr);
-        
-        return ComponentHandle{};
-    }
-    bool removeComponent(ComponentHandle ch)
-    {
-        UNUSED(ch);
-        return false;
-    }
+	ComponentHandle createComponent(ComponentType, std::shared_ptr<void>) { return ComponentHandle{}; }
+	bool removeComponent(ComponentHandle) { return false; }
 
     int count{};
 

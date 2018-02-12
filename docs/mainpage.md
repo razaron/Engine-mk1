@@ -10,3 +10,4 @@ Use of the TaskScheduler is optional. So you can have a mix of concurrent and se
 - [ObjectPool](@ref objectpool): Lets you store and access objects in contiguous aligned memory.
 - [Planner](@ref planner): A goal oriented action planner implementation.
 - [TaskScheduler](@ref taskscheduler): Takes a group of tasks (with option interdependencies) and schedules them to run on worker threads.
+- [EventStream](@ref eventstream): Manages the sending, receiving and processing of asynchronous events.

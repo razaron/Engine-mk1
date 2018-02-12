@@ -10,127 +10,461 @@
 #include <string>
 #include <variant>
 
+#ifndef PLANNER_G_MOD
+#define PLANNER_G_MOD 1
+#endif
+
+#ifndef PLANNER_H_MOD
+#define PLANNER_H_MOD 1
+#endif
+
+/*! Planners are used to generate a sequence of Action%s that satisfy a goal */
 namespace razaron::planner
 {
-	using namespace razaron::graph;
-
-	using PropertyVariant = std::variant<bool, int>;
-
-	/*! Represents a facet of the world as a property interpretable by the planner. */
-	struct WorldProperty
+	/*! The range of Operation%s available to the Planner. */
+	enum class Operation
 	{
+		NONE,
+		EQUAL,
+		LESS,
+		LESS_EQUAL,
+		GREATER,
+		GREATER_EQUAL,
+		ASSIGN,
+		PLUS,
+		MINUS,
+		TIMES,
+		DIVIDE
+	};
+
+	struct Action;
+	struct Condition;
+
+	using ConditionSet = std::list<Condition>;
+	using ActionSet = std::list<Action>;
+
+	/*! Represents a world state property, condition or modifier in a format interpretable by the planner.
+	*	Properties have an `op` value of `Operation::NONE` while all other `op` values denote a condition or modifier.
+	*/
+	struct Condition
+	{
+		using ConditionValue = std::variant<bool, int>;
+
 		std::size_t id;			/*!< A hashed `std::string` denoting the property owner. */
 		std::size_t type;		/*!< A hashed `std::string` denoting the property type. */
-		PropertyVariant value;	/*!< A `std::variant` denoting the value off the property. */
+		ConditionValue value;	/*!< A `std::variant` denoting the value off the property. */
+		Operation op;			/*!< The Operation used to evaluate or apply a condition. */
+		int weight;				/*!< A weight applied to the result of distToSatisfy. */
+
 		std::string debugID;
 		std::string debugType;
 
-		WorldProperty() :id(0), type(0), value(false) {}
-		WorldProperty(std::string id, std::string type, PropertyVariant value)
-			:id(std::hash<std::string>{}(id)), type(std::hash<std::string>{}(type)), value(value), debugID(id), debugType(type) {}
+		Condition() noexcept :id{}, type{}, value{}, op{} {}
+		Condition(std::string id, std::string type, ConditionValue value, Operation op = Operation::NONE, int weight = 1)
+			:id{ std::hash<std::string>{}(id) }, type{ std::hash<std::string>{}(type) }, value{ value }, op{ op }, weight{ weight }, debugID{ id }, debugType{ type } {}
 
-		bool operator==(const WorldProperty& rhs)
+		bool operator==(const Condition &rhs) const noexcept
 		{
-			return id == rhs.id && type == rhs.type && value == rhs.value;
+			return id == rhs.id && type == rhs.type;
 		}
 
-		bool operator!=(const WorldProperty& rhs)
+		/*!	Applies a modifier to this property. Can also be used to add conditions (e.g. `x>2` + `x>4` = `x>6`).
+		*	Follows the format: `this.value modifier.op modifier.value`.
+		*	E.g. If `this.value = 5`, `modifier.op = Operation::PLUS` and `modifier.value = 2` the function would perform `this.value = 5 + 2`.
+		*
+		*	@param		modifier				The modifier to apply to this condition or property.
+		*
+		*	@exception	std::logic_error		Passed a Condition with `op == Operation::EQUAL` and `value != this.value`
+		*	@exception	std::invalid_argument	Passed a Condition with `op == Operation::NONE`.
+		*
+		*/
+		void apply(const Condition &modifier)
 		{
-			return !(*this == rhs);
+			const auto index = value.index();
+
+			switch (index)
+			{
+				case 0:
+				{
+					apply(std::get<bool>(value), modifier);
+					break;
+				}
+				case 1:
+				{
+					apply(std::get<int>(value), modifier);
+					break;
+				}
+				default:
+				{
+					throw std::runtime_error("This should be impossible.");
+				}
+			}
+		}
+
+		template <typename T>
+		void apply(T &v, const Condition &modifier)
+		{
+			const T m = std::get<T>(modifier.value);
+
+			switch (modifier.op)
+			{
+				case Operation::ASSIGN:
+				{
+					v = m;
+					break;
+				}
+				case Operation::PLUS:
+				{
+					v = v + m;
+					break;
+				}
+				case Operation::MINUS:
+				{
+					v = v - m;
+					break;
+				}
+				case Operation::TIMES:
+				{
+					v = v * m;
+					break;
+				}
+				case Operation::DIVIDE:
+				{
+					v = v / m;
+					break;
+				}
+				case Operation::LESS:
+				{
+					v = v - m;
+					break;
+				}
+				case Operation::LESS_EQUAL:
+				{
+					v = v - m;
+					break;
+				}
+				case Operation::GREATER:
+				{
+					v = v + m;
+					break;
+				}
+				case Operation::GREATER_EQUAL:
+				{
+					v = v + m;
+					break;
+				}
+				case Operation::EQUAL:
+				{
+					if (v != m)
+						throw std::logic_error("Invalid operation in Condition::apply. Logical falicy.");
+
+					v = v;
+					break;
+				}
+				default:
+				{
+					throw std::invalid_argument("Invalid operation in Condition::apply. Operation not handled.");
+					break;
+				}
+			}
+
+			value = ConditionValue{ v };
+		}
+
+		void apply(bool &v, const Condition &modifier)
+		{
+			const bool m = std::get<bool>(modifier.value);
+
+			switch (modifier.op)
+			{
+				case Operation::ASSIGN:
+				{
+					v = m;
+					break;
+				}
+				default:
+				{
+					throw std::invalid_argument("Invalid operation in Condition::apply. Operation not handled.");
+					break;
+				}
+			}
+
+			value = ConditionValue{ v };
+		}
+
+		/*	Evaluates a condition using this against this property.
+		*	Follows the format: `this.value modifier.op modifier.value`.
+		*	E.g. If `this.value = 5`, `modifier.op = Operation::PLUS` and `modifier.value = 2` the function would perform `this.value = 5 + 2`.
+		*
+		*	@param		condition				The condition to evaluate against this property.
+		*
+		*	@exception	std::invalid_argument	Passed condition uses a non-comparison Operator.
+		*
+		*	@return		bool					True if this property satisfies the condition. Else false.
+		*/
+		bool satisfies(const Condition &condition) const
+		{
+			const auto index = value.index();
+
+			switch (index)
+			{
+				case 0:
+				{
+					return satisfies<bool>(condition);
+					break;
+				}
+				case 1:
+				{
+					return satisfies<int>(condition);
+					break;
+				}
+				default:
+				{
+					throw std::runtime_error("This should be impossible.");
+				}
+			}
+		}
+
+		template <typename T>
+		bool satisfies(const Condition &condition) const
+		{
+			const T v = std::get<T>(value);
+			const T c = std::get<T>(condition.value);
+
+			switch (condition.op)
+			{
+				case Operation::EQUAL:
+				{
+					return v == c;
+					break;
+				}
+				case Operation::LESS:
+				{
+					return v < c;
+					break;
+				}
+				case Operation::LESS_EQUAL:
+				{
+					return v <= c;
+					break;
+				}
+				case Operation::GREATER:
+				{
+					return v > c;
+					break;
+				}
+				case Operation::GREATER_EQUAL:
+				{
+					return v >= c;
+					break;
+				}
+				default:
+				{
+					throw std::invalid_argument("Invalid operation in Condition::satisfies.");
+					break;
+				}
+			}
+		}
+
+
+		/*	Evaluates how close a condition is to being satisfied by this property.
+		*	The distance represents the minimum value this property needs to be modified by in order to satisfy the condition.
+		*
+		*	@param		condition				The condition to calculate the distance to.
+		*
+		*	@return		int						The minimum distance to the condition.
+		*/
+		int distToSatisfy(const Condition &condition) const
+		{
+			const auto index = value.index();
+
+			switch (index)
+			{
+				case 0:
+				{
+					const bool v = std::get<bool>(value);
+					const bool c = std::get<bool>(condition.value);
+					return (c != v)*condition.weight;
+					break;
+				}
+				case 1:
+				{
+					return distToSatisfy<int>(condition);
+					break;
+				}
+				default:
+				{
+					throw std::runtime_error("This should be impossible.");
+				}
+			}
+		}
+
+		template <typename T>
+		int distToSatisfy(const Condition &condition) const
+		{
+			const T v = std::get<T>(value);
+			const T c = std::get<T>(condition.value);
+
+			switch (condition.op)
+			{
+				case Operation::EQUAL:
+				{
+					return (std::abs(v - c))*condition.weight;
+					break;
+				}
+				case Operation::LESS:
+				{
+					if (v < c)
+						return 0;
+					else
+						return (std::abs(v - c) + 1)*condition.weight;
+					break;
+				}
+				case Operation::LESS_EQUAL:
+				{
+					if (v <= c)
+						return 0;
+					else
+						return (std::abs(v - c))*condition.weight;
+					break;
+				}
+				case Operation::GREATER:
+				{
+					if (v > c)
+						return 0;
+					else
+						return (std::abs(v - c) + 1)*condition.weight;
+					break;
+				}
+				case Operation::GREATER_EQUAL:
+				{
+					if (v >= c)
+						return 0;
+					else
+						return (std::abs(v - c))*condition.weight;
+					break;
+				}
+				default:
+				{
+					return 0;
+					break;
+				}
+			}
+		}
+
+		void zero() noexcept
+		{
+			const auto index = value.index();
+
+			switch (index)
+			{
+				case 0:
+				{
+					value = ConditionValue{ bool{} };
+					break;
+				}
+				case 1:
+				{
+					value = ConditionValue{ int{} };
+					break;
+				}
+			}
+		}
+
+	};
+
+	/*! @cond */
+	struct ConditionHash
+	{
+		std::size_t operator()(const Condition& p) const noexcept
+		{
+			return p.id ^ (p.type ^ (static_cast<std::size_t>(p.op) << 1));
 		}
 	};
 
-	struct WorldPropertyHash
+	struct ConditionEqual
 	{
-		std::size_t operator()(const WorldProperty& p) const
-		{
-			return p.id ^ (p.type << 1);
-		}
-	};
-
-	struct WorldPropertyEqual
-	{
-		bool operator()(const WorldProperty& lhs, const WorldProperty& rhs) const
+		bool operator()(const Condition& lhs, const Condition& rhs) const noexcept
 		{
 			return lhs.id == rhs.id && lhs.type == rhs.type;
 		}
 	};
-
-	struct Action;
-	struct ActionGraphData;
-
-	using ActionGraph = Graph<Action, int, ActionGraphData>;
-	using ActionVertex = Vertex<Action, int>;
-	using ActionEdge = Edge<int>;
-
-	using ActionList = std::list<Action>;
-	using ConditionSet = std::unordered_set<WorldProperty, WorldPropertyHash, WorldPropertyEqual>;
-	using ProceduralCondition = std::function<std::pair<WorldProperty, bool>(const ConditionSet&, const ConditionSet&)>;
-	using ProceduralConditionList = std::list<ProceduralCondition>;
+	/*! @endcond */
 
 	/*! A single atomic Action used to modify the world state in some manner. */
 	struct Action
 	{
-		unsigned cost{ 0 };									/*!< The cost to perform this Action. */
-		std::string name{ "DEFAULT" };						/*!< The Action%s name. */
+		std::string name;				/*!< The Action%s name. */
+		unsigned cost;					/*!< The cost to perform this Action. */
 
-		ConditionSet preconditions;							/*!< Are added to the goal world state in a binary manner, replacing any WorldProperty with a matching id and type. */
-		ProceduralConditionList proceduralPreconditions;	/*!< Functors that take the current and goal world states to return a WorldProperty to add as another precondition. */
+		ConditionSet preconditions;		/*!< Condition%s that must be satisfied for this Action to be valid. */
+		ConditionSet postconditions;	/*!< Modifiers this Action applies to the world state during planning. */
 
-		ConditionSet postconditions;						/*!< Are added to the current world state in a binary manner, replacing any WorldProperty with a matching id and type. */
-		ProceduralConditionList proceduralPostconditions;	/*!< Functors that take the current and goal world states to return a WorldProperty to add as another postcondition. */
-
-		std::function<void()> effect;						/*!< A function the runs the logic for this Action. Not used during planning. */
-
-		Action() {}
-		Action(unsigned cost, std::string name, ConditionSet preconditions, ConditionSet postconditions, std::function<void()> effect = nullptr)
-			: cost(cost), name(name), preconditions(preconditions), postconditions(postconditions), effect(effect) {}
-
-		Action(unsigned cost, std::string name, ConditionSet preconditions, ProceduralConditionList proceduralPreconditions, ConditionSet postconditions, std::function<void()> effect = nullptr)
-			: cost(cost), name(name), preconditions(preconditions), proceduralPreconditions(proceduralPreconditions), postconditions(postconditions), effect(effect) {}
-
-		Action(unsigned cost, std::string name, ConditionSet preconditions, ConditionSet postconditions, ProceduralConditionList proceduralPostconditions, std::function<void()> effect = nullptr)
-			: cost(cost), name(name), preconditions(preconditions), postconditions(postconditions), proceduralPostconditions(proceduralPostconditions), effect(effect) {}
-
-		Action(unsigned cost, std::string name, ConditionSet preconditions, ProceduralConditionList proceduralPreconditions, ConditionSet postconditions, ProceduralConditionList proceduralPostconditions, std::function<void()> effect = nullptr)
-			: cost(cost), name(name), preconditions(preconditions), proceduralPreconditions(proceduralPreconditions), postconditions(postconditions), proceduralPostconditions(proceduralPostconditions), effect(effect) {}
+		Action(std::string name = "DEFAULT", unsigned cost = unsigned{}, ConditionSet preconditions = ConditionSet{}, ConditionSet postconditions = ConditionSet{}) noexcept
+			: name{ name }, cost{ cost }, preconditions{ preconditions }, postconditions{ postconditions } {}
 	};
 
-	/*! Data to be held by the ActionGraph. */
-	struct ActionGraphData
+	/*! @cond */
+	struct Node
 	{
-		std::vector<ActionList> plans; /*!< A `std::vector` holding all valid plans. */
+		unsigned short id{};
+		int f{}, g{}, h{};
+		Action action{};
+		ConditionSet currentState{}; // Operation::NONE for all.
+		ConditionSet goalState{};
+		Node *parent{};
+
+		bool operator==(const Node &rhs) const noexcept
+		{
+			return id == rhs.id;
+		}
 	};
 
-	/*! Implements goal oriented action planning. */
+	using NodeList = std::list<Node>;
+
+	using ActionGraph = razaron::graph::Graph<Node, int, int>;
+	using ActionVertex = razaron::graph::Vertex<Node, int>;
+	using ActionEdge = razaron::graph::Edge<int>;
+	/*! @endcond */
+
+	/*! Implements goal oriented action planning.
+	*	For more information and examples, see page \ref planner
+	*/
 	class Planner
 	{
 	public:
-		Planner() {}	/*!< Default Constructor. */
-		~Planner() {}	/*!< Default Destructor. */
+		Planner() noexcept							/*!< Default Constructor. */
+			: _worldState{}, _validNodes{}, _lastPlan{}, _nextID{ 0 } {}
 
-		/*!	Plans a series of Action%s that satisfy a given goal using goal oriented action planning.
-		*
-		*	@param	worldState			The starting world state.
-		*	@param	goal				A desired goal represented by an Action that can only run if its preconditions have been met.
-		*	@param	availableActions	A list of possible actions the planner can use to reach the goal.	
-		*
-		*	@return	An ActionList holding the sequence of Action%s that will reach a goal state when performed in order.
-		*/
-		ActionList plan(ConditionSet worldState, Action goal, ActionList availableActions);
+		Planner(const ConditionSet &worldState)		/*!< Constructs the Planner with the passed initial world state. */
+			: _worldState{ worldState }, _validNodes{}, _lastPlan{}, _nextID{ 0 } {}
 
-		/*!	Saves the last generated ActionGraph as a DOT file.	
-		*	Red nodes represent failed paths, green nodes represent successful, node are named after the Action they represent and edges are labeled 
-		*	with the values for f(), g() and h().
+		/*!	Determines the series of Action%s that will take the world state from it's current state to the state required by the goal.
 		*
-		*	@param	filename	The name to save the DOT file with
+		*	@param	actions		The Action%s available for the Planner to use to formulate plans.
+		*	@param	goal		An Action that can only run in the desired goal state.
+		*
+		*	@return	ActionSet	The series of actions that will take you from the current world state to the goal world state.
 		*/
-		void toDOT(std::string filename);
+		ActionSet plan(ActionSet actions, Action goal);
+
+		/*!	Saves the graph of Action%s generated during the last call to `Planner::plan`.
+		*	The graph is saved in the DOT language.
+		*
+		*	@param	filename	The filename to save the file to.
+		*/
+		void savePlan(std::string filename);
+
+		ConditionSet &getWorldState() noexcept { return _worldState; };
+		ConditionSet &setWorldState(const ConditionSet &worldState) { return _worldState = worldState; };
 
 	private:
-		ConditionSet _worldState;
-		ActionGraph _lastPlan;
+		NodeList genAdjacent(Node * parent, ActionSet actions);
+		int calculateDistanceToGoal(const ConditionSet & current, const ConditionSet & goal);
 
-		void genTree(ActionGraph *g, int where, ActionList actions, ConditionSet currentState, ConditionSet goalState);
+		ConditionSet _worldState;
+		NodeList _validNodes;
+		ActionGraph _lastPlan;
+		unsigned short _nextID;
 	};
 }

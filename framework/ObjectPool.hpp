@@ -40,14 +40,17 @@ namespace razaron::objectpool
 	using ArrayE = alignedArray<char, OBJECT_POOL_PAGE_LENGTH * OBJECT_SIZE_32, OBJECT_POOL_PAGE_ALIGNMENT>;
 	using ArrayF = alignedArray<char, OBJECT_POOL_PAGE_LENGTH * OBJECT_SIZE_64, OBJECT_POOL_PAGE_ALIGNMENT>;
 
-	using PoolA = std::tuple<Handle *, std::list<ArrayA *>, std::shared_ptr<std::recursive_mutex>>;
-	using PoolB = std::tuple<Handle *, std::list<ArrayB *>, std::shared_ptr<std::recursive_mutex>>;
-	using PoolC = std::tuple<Handle *, std::list<ArrayC *>, std::shared_ptr<std::recursive_mutex>>;
-	using PoolD = std::tuple<Handle *, std::list<ArrayD *>, std::shared_ptr<std::recursive_mutex>>;
-	using PoolE = std::tuple<Handle *, std::list<ArrayE *>, std::shared_ptr<std::recursive_mutex>>;
-	using PoolF = std::tuple<Handle *, std::list<ArrayF *>, std::shared_ptr<std::recursive_mutex>>;
+	using PoolA = std::tuple<Handle *, std::list<std::unique_ptr<ArrayA>>, std::shared_ptr<std::recursive_mutex>>;
+	using PoolB = std::tuple<Handle *, std::list<std::unique_ptr<ArrayB>>, std::shared_ptr<std::recursive_mutex>>;
+	using PoolC = std::tuple<Handle *, std::list<std::unique_ptr<ArrayC>>, std::shared_ptr<std::recursive_mutex>>;
+	using PoolD = std::tuple<Handle *, std::list<std::unique_ptr<ArrayD>>, std::shared_ptr<std::recursive_mutex>>;
+	using PoolE = std::tuple<Handle *, std::list<std::unique_ptr<ArrayE>>, std::shared_ptr<std::recursive_mutex>>;
+	using PoolF = std::tuple<Handle *, std::list<std::unique_ptr<ArrayF>>, std::shared_ptr<std::recursive_mutex>>;
 
 	using PoolTuple = std::tuple<PoolA, PoolB, PoolC, PoolD, PoolE, PoolF>;
+
+	template <typename Pool>
+	using Page = typename std::tuple_element<1, Pool>::type::value_type::element_type;
 
 	// clang-format off
 	template <typename T>
@@ -57,24 +60,6 @@ namespace razaron::objectpool
 		typename std::conditional <sizeof(T) <= OBJECT_SIZE_16, PoolD,
 		typename std::conditional <sizeof(T) <= OBJECT_SIZE_32, PoolE, PoolF>::type>::type>::type>::type>;
 	// clang-format on
-
-	struct HandleHash
-	{
-		std::size_t operator()(const Handle &h) const
-		{
-			auto hash1 = std::hash<HandleSize>()(h.size);
-			auto hash2 = std::hash<HandleIndex>()(h.index);
-			return hash1 ^= hash2 + 0x9e3779b9 + (hash1 << 6) + (hash1 >> 2);
-		}
-	};
-
-	struct HandleEqual
-	{
-		bool operator()(const Handle &lhs, const Handle &rhs) const
-		{
-			return lhs.size == rhs.size && lhs.index == rhs.index;
-		}
-	};
 	/*! @endcond */
 
 	/*! Hashmap for mapping Handle%s to pointers. */
@@ -86,9 +71,9 @@ namespace razaron::objectpool
 	class ObjectPool
 	{
 	public:
-		ObjectPool();  /*!< Default constructor. */
-		~ObjectPool(); /*!< Default destructor. */
-
+		ObjectPool() noexcept;  /*!< Default constructor. */
+		template <std::size_t... Is>
+		void init(PoolTuple &p);
 		/*!	Copies an object of type T into the ObjectPool.
 		*
 		*	@tparam		T				   The type of the object to be moved int o the ObjectPool.
@@ -179,11 +164,8 @@ namespace razaron::objectpool
 		/*! Returns the current total capacity in bytes. */
 		std::size_t capacity(); // add overload with size parameter. Checks how many size bytes long object can fit.
 
-	private:
-		PoolTuple _pools;
-		HandleMap _hashMap;
-		std::mutex _hashMapMutex;
 
+	private:
 		template <class T, class Pool, class... Args>
 		Handle allocateConstruct(Args... args);
 
@@ -194,7 +176,7 @@ namespace razaron::objectpool
 		void addPage();
 
 		template <class Pool>
-		typename std::tuple_element<1, Pool>::type::value_type getPage(HandleIndex index);
+		Page<Pool>* getPage(HandleIndex index);
 
 		template <class T>
 		T *getObject(const Handle &handle);
@@ -210,40 +192,27 @@ namespace razaron::objectpool
 
 		template <class Pool>
 		void shrink();
+
+		PoolTuple _pools;
+		HandleMap _hashMap;
+		std::mutex _hashMapMutex;
 	};
 
 	/* *************************************************
 					PUBLIC FUNCTIONS
 	****************************************************/
 
-	inline ObjectPool::ObjectPool()
+	template <std::size_t... Is>
+	void ObjectPool::init(PoolTuple &p)
 	{
-		_pools = std::apply([](auto... x) { // expand tuple
-			return std::make_tuple( // run lambda over tuple elements individually
-				([](auto element)
-			{
-				std::get<0>(element) = nullptr;
-				std::get<2>(element) = std::make_shared<std::recursive_mutex>();
-
-				return element;
-			}
-			)(x)...);
-		}, _pools);
+		((std::get<2>(std::get<Is>(p)) = std::make_shared<std::recursive_mutex>()), ...);
+		//((std::get<0>(std::get<Is>(p)) = new Handle{ Is,Is,true }), ...);
 	}
 
-	inline ObjectPool::~ObjectPool()
+	inline ObjectPool::ObjectPool() noexcept
+		: _hashMap{}, _hashMapMutex{}
 	{
-		_pools = std::apply([](auto... x) { // expand tuple
-			return std::make_tuple( // run lambda over tuple elements individually
-				([](auto element)
-			{
-				for (auto arr : std::get<1>(element))
-					delete arr;
-
-				return element;
-			}
-			)(x)...);
-		}, _pools);
+		init<0, 1, 2, 3, 4, 5>(_pools);
 	}
 
 	template <class T>
@@ -392,12 +361,12 @@ namespace razaron::objectpool
 
 	inline std::size_t ObjectPool::capacity()
 	{
-		auto pA = std::get<PoolA>(_pools);
-		auto pB = std::get<PoolB>(_pools);
-		auto pC = std::get<PoolC>(_pools);
-		auto pD = std::get<PoolD>(_pools);
-		auto pE = std::get<PoolE>(_pools);
-		auto pF = std::get<PoolF>(_pools);
+		auto &pA = std::get<PoolA>(_pools);
+		auto &pB = std::get<PoolB>(_pools);
+		auto &pC = std::get<PoolC>(_pools);
+		auto &pD = std::get<PoolD>(_pools);
+		auto &pE = std::get<PoolE>(_pools);
+		auto &pF = std::get<PoolF>(_pools);
 
 		return std::get<1>(pA).size() * sizeof(ArrayA) + std::get<1>(pB).size() * sizeof(ArrayB) + std::get<1>(pC).size() * sizeof(ArrayC) + std::get<1>(pD).size() * sizeof(ArrayD) + std::get<1>(pE).size() * sizeof(ArrayE) + std::get<1>(pF).size() * sizeof(ArrayF);
 	}
@@ -464,14 +433,11 @@ namespace razaron::objectpool
 	template <class Pool>
 	inline void ObjectPool::addPage()
 	{
-		typedef typename std::tuple_element<1, Pool>::type::value_type PagePtr;
-		typedef typename std::remove_pointer<PagePtr>::type Page;
-
 		auto pool = &std::get<Pool>(_pools);
 
 		// Create and push a new page onto the pool
-		auto page = new Page{};
-		std::get<1>(*pool).push_back(page);
+		auto page = new Page<Pool>;
+		std::get<1>(*pool).emplace_back(page);
 
 		// Initialize the pages positions with free handles pointing to the next free Handle
 		auto pageData = std::get<1>(*pool).back()->data();
@@ -489,22 +455,20 @@ namespace razaron::objectpool
 	}
 
 	template <class Pool>
-	inline typename std::tuple_element<1, Pool>::type::value_type ObjectPool::getPage(HandleIndex index)
+	inline typename std::tuple_element<1, Pool>::type::value_type::element_type* ObjectPool::getPage(HandleIndex index)
 	{
-		typedef typename std::tuple_element<1, Pool>::type::value_type PagePtr;
-
 		auto pool = &std::get<Pool>(_pools);
 
 		// Quotient is the page number and remainder is the position in that page
 		std::div_t d = std::div(index, OBJECT_POOL_PAGE_LENGTH);
 
 		// Finds a pointer to the correct page
-		PagePtr page = nullptr;
+		Page<Pool> *page = nullptr;
 		for (auto &p : std::get<1>(*pool))
 		{
 			if (!d.quot)
 			{
-				page = p;
+				page = p.get();
 				break;
 			}
 			d.quot--;
@@ -531,14 +495,12 @@ namespace razaron::objectpool
 	template <class T, class Pool>
 	inline T *ObjectPool::getPointer(const Handle &handle)
 	{
-		typedef typename std::tuple_element<1, Pool>::type::value_type PagePtr;
-
 		auto pool = &std::get<Pool>(_pools);
 
 		std::lock_guard<std::recursive_mutex> lk{ *std::get<2>(*pool) };
 
 		// Find the page containg handle
-		PagePtr page = getPage<Pool>(handle.index);
+		auto page = getPage<Pool>(handle.index);
 
 		// Quotient is the page number and remainder is the position in that page
 		std::div_t d = std::div(handle.index, OBJECT_POOL_PAGE_LENGTH);
@@ -552,9 +514,6 @@ namespace razaron::objectpool
 	template <class Pool, typename T>
 	inline typename std::enable_if<std::is_pointer<T>::value, HandleIndex>::type ObjectPool::getIndex(T ptr)
 	{
-		typedef typename std::tuple_element<1, Pool>::type::value_type PagePtr;
-		typedef typename std::remove_pointer<PagePtr>::type Page;
-
 		auto pool = &std::get<Pool>(_pools);
 
 		// Find the page that contains ptr
@@ -570,12 +529,12 @@ namespace razaron::objectpool
 
 			++pageNumber;
 
-			if (diff >= 0 && diff < sizeof(Page))
+			if (diff >= 0 && diff < sizeof(Page<Pool>))
 				break;
 		}
 
 		// Throw if no page found
-		if (!(diff >= 0 && diff < sizeof(Page)))
+		if (!(diff >= 0 && diff < sizeof(Page<Pool>)))
 		{
 			throw std::out_of_range("Pointer is not in any page.");
 		}

@@ -1,0 +1,59 @@
+#include "GameSystem.hpp"
+#include "RenderSystem.hpp"
+#include "InputSystem.hpp"
+#include "Space.hpp"
+
+#include <algorithm>
+#include <chrono>
+#include <iostream>
+#include <map>
+
+using namespace razaron::core::space;
+using namespace razaron::game::systems;
+using namespace std::chrono_literals;
+
+int main() {
+	std::clog.setstate(std::ios_base::failbit);
+
+	sf::RenderWindow window(sf::VideoMode(1024, 1024), "SFML works!");
+
+	sol::state lua;
+	lua["log"] = false;
+	lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::table, sol::lib::math);
+	razaron::lua::maths::hook(lua);
+
+	SystemGraph g;
+	g.addEdge(0, 1);
+	g.addEdge(1, 2);
+
+	g[0].data = std::make_shared<InputSystem>(lua, &window);
+	g[1].data = std::make_shared<GameSystem>(lua);
+	g[2].data = std::make_shared<RenderSystem>(lua, &window);
+
+	Space s{ g };
+
+	double delta{};
+	double elapsed{};
+	unsigned frames{};
+	while (window.isOpen())
+	{
+		auto start = std::chrono::high_resolution_clock::now();
+
+		s.update(delta);
+
+		auto end = std::chrono::high_resolution_clock::now();
+		std::chrono::duration<double> diff = end - start;
+
+		delta = diff.count();
+		elapsed += delta;
+		++frames;
+
+		if (elapsed >= 1.0)
+		{
+			std::cout << "FPS: " << frames / 1 << std::endl;
+			elapsed = 0.0;
+			frames = 0;
+		}
+	}
+	return 0;
+}
