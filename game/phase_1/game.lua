@@ -50,6 +50,7 @@ function game.update(delta)
 		end
 
 		game.player.lastShot = game.player.lastShot + delta * 10
+		game.player:move(false, "PLAYER")
 
 		-- UPDATE AGENTS
 		for i = #game.agents, 1, - 1 do

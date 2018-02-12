@@ -76,15 +76,14 @@ function Agent:move(target, behaviour)
 	elseif behaviour == "ARRIVE" then
 		steering = self.steer:arrive(self.pos, target, self.vel, 500)
 	elseif behaviour == "MAINTAIN" then
-		steering = self.steer:seek(self.pos, target, self.vel, 250)
+		steering = self.steer:maintain(self.pos, target, self.vel, 250)
 	end
 
-	if behaviour ~= "CUSTOM" then
+	if behaviour ~= "PLAYER" then
 		self.vel = self.vel + (steering * game.delta)
 		self.pos = self.pos + (self.vel * game.delta)
 	else
-		-- FOR PLAYERS 
-		self.vel = target * 2
+		-- FOR PLAYERS
 		self.pos = self.pos + (self.vel * game.delta)
 	end
 

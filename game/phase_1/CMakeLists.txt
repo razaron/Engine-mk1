@@ -1,12 +1,13 @@
-set (GAME_SOURCES main.cpp GameSystem.cpp InputSystem.cpp RenderSystem.cpp)
+file(GLOB GAME_SOURCES "*.cpp")
+file(GLOB GAME_HEADERS "*.hpp")
 
-add_executable (game-phase-1 ${GAME_SOURCES})
+add_executable (game-phase-1 ${GAME_SOURCES} ${GAME_HEADERS})
 set_target_properties(game-phase-1 PROPERTIES COMPILE_FLAGS ${MY_COMPILE_FLAGS} LINK_FLAGS ${MY_LINKER_FLAGS})
 target_link_libraries (game-phase-1 ${REQUIRED_LIBS})
 
 # COPY LUA FILES
-SET(FROM_DIR ${PROJECT_SOURCE_DIR}/game/phase_1)
-SET(TO_DIR $<TARGET_FILE_DIR:game-phase-1>)
+set(FROM_DIR ${PROJECT_SOURCE_DIR}/game/phase_1)
+set(TO_DIR $<TARGET_FILE_DIR:game-phase-1>)
 file(GLOB LUA_FILES "${FROM_DIR}/*.lua")
 
 FOREACH(LUA_FILE ${LUA_FILES})
@@ -17,12 +18,12 @@ ENDFOREACH()
 add_custom_command(TARGET game-phase-1 POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${FROM_DIR}/res ${TO_DIR}/res)
 
 # COPY DLLS
-if(${CMAKE_GENERATOR} STREQUAL "Visual Studio 15 2017 Win64")
-    SET(FROM_DIR ${PROJECT_SOURCE_DIR}/3rd_party/libs/Win64)
-    SET(TO_DIR $<TARGET_FILE_DIR:game-phase-1>)
+IF(${CMAKE_GENERATOR} STREQUAL "Visual Studio 15 2017 Win64")
+    set(FROM_DIR ${PROJECT_SOURCE_DIR}/3rd_party/libs/Win64)
+    set(TO_DIR $<TARGET_FILE_DIR:game-phase-1>)
     file(GLOB DLL_FILES "${FROM_DIR}/*.dll")
 
     FOREACH(DLL_FILE ${DLL_FILES})
         add_custom_command(TARGET game-phase-1 POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different ${DLL_FILE} ${TO_DIR})
     ENDFOREACH()
-endif()
+ENDIF()

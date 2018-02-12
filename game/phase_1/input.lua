@@ -8,19 +8,35 @@ function input.init()
         KEYBOARD
     ]]--
     input.handlers["w"] = function(isReleased)
-        game.player:move(glm.vec2.new(0,-512), "CUSTOM")
+        if isReleased then
+            game.player.vel.y = 0
+        else
+            game.player.vel.y = -256
+        end
     end
 
     input.handlers["s"] = function(isReleased)
-        game.player:move(glm.vec2.new(0,512), "CUSTOM")
+        if isReleased then
+            game.player.vel.y = 0
+        else
+            game.player.vel.y = 256
+        end
     end
 
     input.handlers["a"] = function(isReleased)
-        game.player:move(glm.vec2.new(-512,0), "CUSTOM")
+        if isReleased then
+            game.player.vel.x = 0
+        else
+            game.player.vel.x = -256
+        end
     end
 
     input.handlers["d"] = function(isReleased)
-        game.player:move(glm.vec2.new(512,0), "CUSTOM")
+        if isReleased then
+            game.player.vel.x = 0
+        else
+            game.player.vel.x = 256
+        end
     end
 
     input.handlers["1"] = function(isReleased)
