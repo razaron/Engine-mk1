@@ -22,16 +22,24 @@ FIND_PACKAGE (Threads)
 
 # Create engine-framework-lib
 ADD_SUBDIRECTORY(framework)
-SET (REQUIRED_LIBS ${REQUIRED_LIBS} engine-framework ${CMAKE_THREAD_LIBS_INIT})
+SET (REQUIRED_LIBS engine-framework ${CMAKE_THREAD_LIBS_INIT} ${REQUIRED_LIBS})
 
 # Create engine-core-lib
 ADD_SUBDIRECTORY(core)
-SET (REQUIRED_LIBS ${REQUIRED_LIBS} engine-core)
+SET (REQUIRED_LIBS engine-core ${REQUIRED_LIBS})
 
 # Create the test exe
 ADD_SUBDIRECTORY (tests)
 
 # Create games
-SET (REQUIRED_LIBS ${REQUIRED_LIBS} sfml-system-d sfml-window-d sfml-graphics-d lua)
+# Set default compile flags for GCC/MSVC
+if(${CMAKE_GENERATOR} STREQUAL "Unix Makefiles")
+    find_package(Lua)
+    set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake_modules" ${CMAKE_MODULE_PATH})
+    find_package(SFML 2 REQUIRED COMPONENTS network audio graphics window system)
+    SET (REQUIRED_LIBS ${LUA_LIBRARIES} ${SFML_LIBRARIES} ${SFML_DEPENDENCIES} ${REQUIRED_LIBS})
+elseif(${CMAKE_GENERATOR} STREQUAL "Visual Studio 15 2017 Win64")
+    SET (REQUIRED_LIBS sfml-system-d sfml-window-d sfml-graphics-d lua ${REQUIRED_LIBS})
+endif()
 
 ADD_SUBDIRECTORY(game/phase_1)

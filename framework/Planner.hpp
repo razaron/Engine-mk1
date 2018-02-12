@@ -86,25 +86,24 @@ namespace razaron::planner
 			{
 				case 0:
 				{
-					apply<bool>(modifier);
+					apply(std::get<bool>(value), modifier);
 					break;
 				}
 				case 1:
 				{
-					apply<int>(modifier);
+					apply(std::get<int>(value), modifier);
 					break;
 				}
 				default:
 				{
-					throw std::exception("This should be impossible.");
+					throw std::runtime_error("This should be impossible.");
 				}
 			}
 		}
 
 		template <typename T>
-		void apply(const Condition &modifier)
+		void apply(T &v, const Condition &modifier)
 		{
-			T v = std::get<T>(value);
 			const T m = std::get<T>(modifier.value);
 
 			switch (modifier.op)
@@ -172,10 +171,8 @@ namespace razaron::planner
 			value = ConditionValue{ v };
 		}
 
-		template <>
-		void apply<bool>(const Condition &modifier)
+		void apply(bool &v, const Condition &modifier)
 		{
-			bool v = std::get<bool>(value);
 			const bool m = std::get<bool>(modifier.value);
 
 			switch (modifier.op)
@@ -223,7 +220,7 @@ namespace razaron::planner
 				}
 				default:
 				{
-					throw std::exception("This should be impossible.");
+					throw std::runtime_error("This should be impossible.");
 				}
 			}
 		}
@@ -297,7 +294,7 @@ namespace razaron::planner
 				}
 				default:
 				{
-					throw std::exception("This should be impossible.");
+					throw std::runtime_error("This should be impossible.");
 				}
 			}
 		}
