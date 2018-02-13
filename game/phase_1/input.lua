@@ -56,9 +56,17 @@ function input.init()
     input.handlers["3"] = function(isReleased)
         if isReleased then
             print("3")
-            for i = 1, 16 do
-                table.insert(game.agents, Human.new("Enemy_"..tostring(i), glm.vec2.new(math.random(1024), math.random(1024)), glm.u8vec3.new(255, 0, 0)))
-            end
+            for i = 1, 8 do
+        		local blue = Human.new("BLUE_"..tostring(i), glm.vec2.new(0, math.random(1024)), glm.u8vec3.new(0, 0, 255))
+        		blue.team = "BLUE"
+
+        		table.insert(game.agents, blue)
+
+        		local red = Human.new("RED_"..tostring(i), glm.vec2.new(1024, math.random(1024)), glm.u8vec3.new(255, 0, 0))
+        		red.team = "RED"
+
+        		table.insert(game.agents, red)
+        	end
         end
     end
 

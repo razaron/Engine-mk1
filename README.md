@@ -2,19 +2,35 @@
 Click here for [documentation](https://razaron.github.io/engine-mk1/ "Documentation")
 
 ## Compiling
-#### Requirements
-- gcc-7
-- gnu make
-- cmake
-- python
+### Instructions
+#### Windows
+- Visual Studio 15.6 Preview 4
 
-#### Instructions
-You can get a Windows binary for gcc-7 [here](https://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win32/Personal%20Builds/mingw-builds/7.1.0/)
+That's all. 3rd party libraries and headers are already included.<br>
+VS 15.4 lacks fold expressions and 15.5 has a compiler bug, hence the 15.6 preview version.
 
-Configure build.json by setting your include paths. Adding "includes", "build_opts", "compiler_opts" or "cmake_opts" to the "linux"/"windows" sections will override the defaults.
+````bash
+cd "location/of/engine-mk1"
+mkdir ../build
+cd ../build
+cmake -G "Visual Studio 15 2017 Win64" ../engine-mk1/
+````
 
-After configuring build.json, run build.py from the project directory.
+In the build directory, there should be a `.sln` file. Open it in VS and build it.
+#### Linux
+- GCC 7.2
+- libsfml-dev
+- liblua5.3-dev
 
+Just install the libs normally through apt.
+
+````bash
+cd "location/of/engine-mk1"
+mkdir ../build
+cd ../build
+cmake -G "Unix Makefiles" ../engine-mk1/
+make
+````
 ## TODO
 ### Documentation
 - Comment source (non-doxy)

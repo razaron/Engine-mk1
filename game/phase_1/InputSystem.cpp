@@ -45,7 +45,7 @@ Task InputSystem::update(EntityMap &, double delta)
 		std::cerr << err.what() << std::endl;
 	}
 
-	auto processKey = [&](std::string key, bool isReleased = false) { 
+	auto processKey = [&](std::string key, bool isReleased = false) {
 		try
 		{
 			sol::function func = _lua["input"]["handlers"][key];

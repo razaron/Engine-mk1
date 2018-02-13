@@ -16,7 +16,7 @@ game = {
 function game.init()
 	game.player = Human.new("Player", glm.vec2.new(200, 200), glm.u8vec3.new(0, 255, 0))
 
-	for i = 1, 3 do
+	for i = 1, 8 do
 		local blue = Human.new("BLUE_"..tostring(i), glm.vec2.new(0, math.random(1024)), glm.u8vec3.new(0, 0, 255))
 		blue.team = "BLUE"
 
