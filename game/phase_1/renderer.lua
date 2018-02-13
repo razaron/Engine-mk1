@@ -10,7 +10,7 @@ function renderer.update(delta)
     Render.draw.tilemap(renderer.tilemap);
 
     Render.draw.polygon(3, 32, game.player.pos, game.player.rot, game.player.col)
-    Render.draw.text(tostring(game.lives), glm.vec2.new(0, 1024-32), 32, glm.u8vec3.new(0, 0, 255))
+    Render.draw.text(tostring(game.lives), glm.vec2.new(0, 1024 - 32), 32, glm.u8vec3.new(0, 0, 255))
 
     local string = ""
     for i = 1, #game.agents do
@@ -21,7 +21,7 @@ function renderer.update(delta)
         if agent.curAction ~= 0 then
             local action = agent.curPlan[agent.curAction]
 
-            string = string .. agent.name .."\t".. action.name .."\t".. action.behaviour .."\t".. glm.length(agent.vel) .."\n"
+            string = string .. agent.name .."\t".. action.name .."\t".. action.behaviour .."\t".. glm.length(agent.vel) .."\t".. tostring(agent.rot) .."\t".. tostring(agent.theta) .."\n"
         end
     end
 

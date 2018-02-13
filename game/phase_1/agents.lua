@@ -69,22 +69,23 @@ function Agent:update()
 end
 
 function Agent:move(target, behaviour)
-	steering = glm.vec2.new(0,0)
+	steering = glm.vec2.new(0, 0)
 
 	if behaviour == "SEEK" then
 		steering = self.steer:seek(self.pos, target, self.vel)
 	elseif behaviour == "ARRIVE" then
 		steering = self.steer:arrive(self.pos, target, self.vel, 500)
 	elseif behaviour == "MAINTAIN" then
-		steering = self.steer:seek(self.pos, target, self.vel, 250)
+		steering = self.steer:maintain(self.pos, target, self.vel, 250)
 	end
 
-	if behaviour ~= "CUSTOM" then
+	if behaviour ~= "PLAYER" then
 		self.vel = self.vel + (steering * game.delta)
 		self.pos = self.pos + (self.vel * game.delta)
+
+		self.rot = glm.angle(self.vel, glm.vec2.new(1, 0))
 	else
-		-- FOR PLAYERS 
-		self.vel = target * 2
+		-- FOR PLAYERS
 		self.pos = self.pos + (self.vel * game.delta)
 	end
 
@@ -147,9 +148,19 @@ end
 function Human:shoot(target)
 	if self.lastShot > 1 then
 		self.lastShot = 0
-		target = glm.normalize(target - self.pos) * 256
-		local bullet = {["owner"] = self.name, ["pos"] = glm.vec2.new(self.pos.x, self.pos.y), ["target"] = self.pos + target}
-		table.insert(game.bullets, bullet)
+
+		local dest = glm.normalize(target - self.pos) * 256
+		self.theta = glm.angle(dest, glm.vec2.new(1, 0))
+
+		if self.theta > self.rot - 3.14159 / 2 and self.theta < self.rot + 3.14159 / 2 then
+			local bullet = {
+				["owner"] = self.name,
+				["pos"] = glm.vec2.new(self.pos.x, self.pos.y),
+				["target"] = self.pos + dest
+			}
+
+			table.insert(game.bullets, bullet)
+		end
 	end
 end
 

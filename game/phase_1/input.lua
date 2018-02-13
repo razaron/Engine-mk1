@@ -8,19 +8,35 @@ function input.init()
         KEYBOARD
     ]]--
     input.handlers["w"] = function(isReleased)
-        game.player:move(glm.vec2.new(0,-512), "CUSTOM")
+        if isReleased then
+            game.player.vel.y = 0
+        else
+            game.player.vel.y = -256
+        end
     end
 
     input.handlers["s"] = function(isReleased)
-        game.player:move(glm.vec2.new(0,512), "CUSTOM")
+        if isReleased then
+            game.player.vel.y = 0
+        else
+            game.player.vel.y = 256
+        end
     end
 
     input.handlers["a"] = function(isReleased)
-        game.player:move(glm.vec2.new(-512,0), "CUSTOM")
+        if isReleased then
+            game.player.vel.x = 0
+        else
+            game.player.vel.x = -256
+        end
     end
 
     input.handlers["d"] = function(isReleased)
-        game.player:move(glm.vec2.new(512,0), "CUSTOM")
+        if isReleased then
+            game.player.vel.x = 0
+        else
+            game.player.vel.x = 256
+        end
     end
 
     input.handlers["1"] = function(isReleased)
@@ -40,9 +56,17 @@ function input.init()
     input.handlers["3"] = function(isReleased)
         if isReleased then
             print("3")
-            for i = 1, 16 do
-                table.insert(game.agents, Human.new("Enemy_"..tostring(i), glm.vec2.new(math.random(1024), math.random(1024)), glm.u8vec3.new(255, 0, 0)))
-            end
+            for i = 1, 8 do
+        		local blue = Human.new("BLUE_"..tostring(i), glm.vec2.new(0, math.random(1024)), glm.u8vec3.new(0, 0, 255))
+        		blue.team = "BLUE"
+
+        		table.insert(game.agents, blue)
+
+        		local red = Human.new("RED_"..tostring(i), glm.vec2.new(1024, math.random(1024)), glm.u8vec3.new(255, 0, 0))
+        		red.team = "RED"
+
+        		table.insert(game.agents, red)
+        	end
         end
     end
 
