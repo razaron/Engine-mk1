@@ -9,33 +9,25 @@ function input.init()
     ]]--
     input.handlers["w"] = function(isReleased)
         if isReleased then
-            game.player.vel.y = 0
-        else
-            game.player.vel.y = -256
+            print("w")
         end
     end
 
     input.handlers["s"] = function(isReleased)
         if isReleased then
-            game.player.vel.y = 0
-        else
-            game.player.vel.y = 256
+            print("s")
         end
     end
 
     input.handlers["a"] = function(isReleased)
         if isReleased then
-            game.player.vel.x = 0
-        else
-            game.player.vel.x = -256
+            print("a")
         end
     end
 
     input.handlers["d"] = function(isReleased)
         if isReleased then
-            game.player.vel.x = 0
-        else
-            game.player.vel.x = 256
+            print("d")
         end
     end
 
@@ -56,33 +48,76 @@ function input.init()
     input.handlers["3"] = function(isReleased)
         if isReleased then
             print("3")
-            for i = 1, 8 do
-        		local blue = Human.new("BLUE_"..tostring(i), glm.vec2.new(0, math.random(1024)), glm.u8vec3.new(0, 0, 255))
-        		blue.team = "BLUE"
-
-        		table.insert(game.agents, blue)
-
-        		local red = Human.new("RED_"..tostring(i), glm.vec2.new(1024, math.random(1024)), glm.u8vec3.new(255, 0, 0))
-        		red.team = "RED"
-
-        		table.insert(game.agents, red)
-        	end
         end
     end
 
-    input.handlers["4"] = function(isReleased) print("4") end
+    input.handlers["4"] = function(isReleased)
+        if isReleased then
+            renderer.overlay = not renderer.overlay
+        end
+    end
 
     --[[
         MOUSE
     ]]--
     input.handlers["m1"] = function(x, y)
         print(tostring(x)..", "..tostring(y))
-        game.player:shoot(glm.vec2.new(x, y))
+        local p = glm.vec2.new(x, y)
+        p = (p/renderer.zoom) + renderer.camera
+
+        local isClicked, node = game.bases[1].interface:getClicked(p)
+
+        if isClicked then
+            node.handler()
+        else
+            game.bases[1].interface:close()
+
+            isClicked, node = game.bases[2].interface:getClicked(p)
+
+            if isClicked then
+                node.handler()
+            else
+                game.bases[2].interface:close()
+            end
+        end
+    end
+
+    input.handlers["m2"] = function(x, y)
+        print(tostring(x)..", "..tostring(y))
+        local p = glm.vec2.new(x, y)
+        p = (p/renderer.zoom) + renderer.camera
+
+        local isClicked, node = game.bases[1].interface:getClicked(p)
+
+        if isClicked then
+            node:open()
+        else
+            game.bases[1].interface:close()
+
+            isClicked, node = game.bases[2].interface:getClicked(p)
+
+            if isClicked then
+                node:open()
+            else
+                game.bases[2].interface:close()
+            end
+        end
     end
 
     input.handlers["move"] = function(x, y)
-        game.mouse.x = x
-        game.mouse.y = y
+        local p = glm.vec2.new(x, y)
+        p = (p/renderer.zoom) + renderer.camera
+
+        game.mouse = p
+
+        local mouse = p
+        for _, node in pairs(game.rootNodes) do
+            if p.x > node.pos.x - node.size and p.x < node.pos.x + node.size and p.y > node.pos.y - node.size and p.y < node.pos.y + node.size then
+                node.isOpen = true
+            elseif #node.children == 0 or not node.children[1].isOpen then
+                node:close()
+            end
+        end
     end
 end
 

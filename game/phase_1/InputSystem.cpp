@@ -154,6 +154,11 @@ Task InputSystem::update(EntityMap &, double delta)
 						processMouse("m1", event.mouseButton.x, event.mouseButton.y);
 						break;
 					}
+					case sf::Mouse::Right:
+					{
+						processMouse("m2", event.mouseButton.x, event.mouseButton.y);
+						break;
+					}
 				}
 				break;
 			}

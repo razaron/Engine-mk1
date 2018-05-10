@@ -40,6 +40,8 @@ namespace razaron::planner
 	struct Action;
 	struct Condition;
 
+	using ProceduralCondition = std::function<Condition()>;
+	using ProceduralConditionSet = std::vector<ProceduralCondition>;
 	using ConditionSet = std::list<Condition>;
 	using ActionSet = std::list<Action>;
 
@@ -400,8 +402,11 @@ namespace razaron::planner
 		ConditionSet preconditions;		/*!< Condition%s that must be satisfied for this Action to be valid. */
 		ConditionSet postconditions;	/*!< Modifiers this Action applies to the world state during planning. */
 
-		Action(std::string name = "DEFAULT", unsigned cost = unsigned{}, ConditionSet preconditions = ConditionSet{}, ConditionSet postconditions = ConditionSet{}) noexcept
-			: name{ name }, cost{ cost }, preconditions{ preconditions }, postconditions{ postconditions } {}
+		ProceduralConditionSet procPreconditions;
+		ProceduralConditionSet procPostconditions;
+
+		Action(std::string name = "DEFAULT", unsigned cost = {}, ConditionSet preconditions = {}, ConditionSet postconditions = {}, ProceduralConditionSet procPreconditions = {}, ProceduralConditionSet procPostconditions = {}) noexcept
+			: name{ name }, cost{ cost }, preconditions{ preconditions }, postconditions{ postconditions }, procPreconditions{ procPreconditions }, procPostconditions{ procPostconditions } {}
 	};
 
 	/*! @cond */

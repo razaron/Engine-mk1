@@ -141,9 +141,28 @@ NodeList Planner::genAdjacent(Node *parent, ActionSet actions)
 			auto it = std::find(current.begin(), current.end(), cond);
 
 			if (it != current.end())
-			{
 				it->apply(cond);
+			else
+			{
+				// Create a new zeroed Condition with the id and type of cond
+				Condition prop{ cond };
+				prop.zero();
+				prop.op = Operation::NONE;
+
+				prop.apply(cond);
+
+				current.push_back(prop);
 			}
+		}
+
+		// Add procedural postconditions to current state
+		for (auto &func : a.procPostconditions)
+		{
+			auto cond = func();
+			auto it = std::find(current.begin(), current.end(), cond);
+
+			if (it != current.end())
+				it->apply(cond);
 			else
 			{
 				// Create a new zeroed Condition with the id and type of cond
@@ -168,18 +187,23 @@ NodeList Planner::genAdjacent(Node *parent, ActionSet actions)
 			for (auto &cond : a.preconditions)
 			{
 				auto it = std::find(goal.begin(), goal.end(), cond);
+
 				if (it != goal.end())
-				{
-					//if (cond.op != it->op)
-					//	throw std::exception("Can't have different op for the same id & type");
-					//else
-					{
-						it->apply(cond);
-					}
-				}
+					it->apply(cond);
 				else
 					goal.push_back(cond);
+			}
 
+			// Add procedural preconditions to the goal state
+			for (auto &func : a.procPreconditions)
+			{
+				auto cond = func();
+				auto it = std::find(goal.begin(), goal.end(), cond);
+
+				if (it != goal.end())
+					it->apply(cond);
+				else
+					goal.push_back(cond);
 			}
 
 			// Create Node with action

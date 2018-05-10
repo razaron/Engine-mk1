@@ -44,8 +44,22 @@ namespace razaron::lua::planner
 			[](Condition a, Condition b, Condition c) { return ConditionSet{ a,b,c }; }
 		);
 
+		lua["ProceduralConditionSet"] = sol::overload(
+			[]() { return ProceduralConditionSet{}; },
+			[](ProceduralCondition a) { return ProceduralConditionSet{ a }; },
+			[](ProceduralCondition a, ProceduralCondition b) { return ProceduralConditionSet{ a,b }; },
+			[](ProceduralCondition a, ProceduralCondition b, ProceduralCondition c) { return ProceduralConditionSet{ a,b,c }; }
+		);
+
 		lua.new_usertype<Condition>("Condition",
-			sol::constructors<Condition(std::string, std::string, bool), Condition(std::string, std::string, bool, Operation), Condition(std::string, std::string, bool, Operation, int)>(),
+			sol::constructors<
+				Condition(std::string, std::string, bool),
+				Condition(std::string, std::string, bool, Operation), 
+				Condition(std::string, std::string, bool, Operation, int), 
+				Condition(std::string, std::string, int), 
+				Condition(std::string, std::string, int, Operation), 
+				Condition(std::string, std::string, int, Operation, int)
+			>(),
 			"id", &Condition::debugID,
 			"type", &Condition::debugType,
 			"value", &Condition::value,
@@ -54,7 +68,7 @@ namespace razaron::lua::planner
 			);
 
 		lua.new_usertype<Action>("Action",
-			sol::constructors<Action(std::string, unsigned), Action(std::string, unsigned, ConditionSet, ConditionSet)>(),
+			sol::constructors<Action(std::string, unsigned), Action(std::string, unsigned, ConditionSet, ConditionSet), Action(std::string, unsigned, ConditionSet, ConditionSet, ProceduralConditionSet, ProceduralConditionSet)>(),
 			"name", &Action::name,
 			"cost", &Action::cost,
 			"preconditions", &Action::preconditions,
@@ -135,7 +149,7 @@ namespace razaron::lua::maths
 
 		// u8vec3
 		table.new_usertype<glm::u8vec3>("u8vec3",
-			sol::constructors<glm::u8vec3(unsigned char, unsigned char, unsigned char)>()
+			sol::constructors<glm::u8vec3(unsigned char, unsigned char, unsigned char), glm::u8vec3(const glm::u8vec3 &)>()
 			);
 		
 		table["normalize"] = sol::overload(&normalize<glm::vec2>);

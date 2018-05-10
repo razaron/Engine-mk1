@@ -1,96 +1,147 @@
 local agents = require("agents")
+local nodal = require("nodal")
+local base = require("homebase")
+local deposit = require("deposit")
 
 game = {
-	frame = 0,
-	running = true,
-	player = {},
-	agents = {},
-	bullets = {},
-	mouse = glm.vec2.new(0, 0),
-	delta = 0.0,
-	lives = 10,
-	godmode = false,
-	godmodeTimer = 0
+    frame = 0,
+    running = true,
+    player = {},
+    agents = {},
+    bullets = {},
+    deposits = {},
+    bases = {},
+    rootNodes = {},
+    mouse = glm.vec2.new(0, 0),
+    delta = 0.0,
+    wins = {blue = 0, red = 0}
 }
 
 function game.init()
-	game.player = Human.new("Player", glm.vec2.new(200, 200), glm.u8vec3.new(0, 255, 0))
+    -- BASES
+    table.insert(game.bases, Base.new(glm.vec2.new(256, 256), "BLUE", glm.u8vec3.new(0, 0, 255)))
+    table.insert(game.bases, Base.new(glm.vec2.new(4096 - 256, 4096 - 256), "RED", glm.u8vec3.new(255, 0, 0)))
 
-	for i = 1, 8 do
-		local blue = Human.new("BLUE_"..tostring(i), glm.vec2.new(0, math.random(1024)), glm.u8vec3.new(0, 0, 255))
-		blue.team = "BLUE"
+    game.bases[1].cycle = 0
+    game.bases[2].cycle = 0
 
-		table.insert(game.agents, blue)
-
-		local red = Human.new("RED_"..tostring(i), glm.vec2.new(1024, math.random(1024)), glm.u8vec3.new(255, 0, 0))
-		red.team = "RED"
-
-		table.insert(game.agents, red)
-	end
+    -- RESOURCE DEPOSITS
+    table.insert(game.deposits, Deposit.new(glm.vec2.new(1024, 1024), 1.0))
+    table.insert(game.deposits, Deposit.new(glm.vec2.new(1024, 3072), 0.0))
+    table.insert(game.deposits, Deposit.new(glm.vec2.new(2048, 2048), 0.0))
+    table.insert(game.deposits, Deposit.new(glm.vec2.new(3072, 1024), 0.0))
+    table.insert(game.deposits, Deposit.new(glm.vec2.new(3072, 3072), - 1.0))
+    print(#game.rootNodes)
 end
 
 function game.update(delta)
-	game.delta = delta
-	if game.running then
-		game.frame = game.frame + 1
+    game.delta = delta
+    if game.running then
+        game.frame = game.frame + 1
 
-		-- UPDATE PLAYER
-		game.godmodeTimer = game.godmodeTimer + delta
-		if game.godmodeTimer >= 2 then
-			game.godmode = false
-		end
+        local redDead = true
+        local blueDead = true
+        for _, a in pairs(game.agents) do
+            if not redDead and not blueDead then break
+            elseif a.team == "RED" then redDead = false
+            elseif a.team == "BLUE" then blueDead = false end
+        end
 
-		local cosTheta = glm.dot(glm.normalize(game.mouse - game.player.pos), glm.vec2.new(1, 0))
-		local theta = math.acos(cosTheta)
+        if redDead or blueDead then
+            if blueDead then game.wins.blue = game.wins.blue + 1 end
+            if redDead then game.wins.red = game.wins.red + 1 end
 
-		if game.mouse.y > game.player.pos.y then
-			game.player.rot = theta
-		else
-			game.player.rot = 2 * 3.14159 - theta
-		end
+            game.agents = {}
+            game.bullets = {}
+            game.deposits = {}
+            game.bases = {}
+            game.rootNodes = {}
+            game.init()
+        end
 
-		game.player.lastShot = game.player.lastShot + delta * 10
-		game.player:move(false, "PLAYER")
+        -- UPDATE AGENTS
+        for i = #game.agents, 1, - 1 do
+            local agent = game.agents[i]
 
-		-- UPDATE AGENTS
-		for i = #game.agents, 1, - 1 do
-			local agent = game.agents[i]
+            if agent.isDead then
+                table.remove(game.agents, i)
+                local action = agent.curPlan[agent.curAction]
 
-			agent.lastShot = agent.lastShot + delta
-			agent:update()
-		end
+                if type(action) == "function" then
+                    action = action()
+                end
 
-		-- UPDATE BULLETS
-		for i = #game.bullets, 1, - 1 do
-			local bullet = game.bullets[i]
+                if action and action.name == "resupply" then
+                    for _, b in pairs(game.bases) do
+                        if b.team == agent.team then
+                            b.resupplying = b.resupplying - 1
+                            break
+                        end
+                    end
+                end
+            else
+                if agent.lastShot then agent.lastShot = agent.lastShot + delta end
+                if agent.lastCraft then agent.lastCraft = agent.lastCraft + delta end
+                if agent.lastMine then agent.lastMine = agent.lastMine + delta end
 
-			local dir = glm.normalize(bullet.target - bullet.pos)
+                agent:update()
+            end
+        end
 
-			if glm.length(bullet.target - bullet.pos) < 1000 * delta then
-				table.remove(game.bullets, i)
-			end
+        -- UPDATE BASES --
+        for _, base in pairs(game.bases) do
+            local x, y, z = 0, 0, 0
 
-			bullet.pos = bullet.pos + dir * 1000 * delta
+            for _, a in pairs(game.agents) do
+                if a.team == base.team then
+                    if a.class == "Worker" then x = x + 1
+                    elseif a.class == "Attacker" then y = y + 1
+                    elseif a.class == "Defender" then z = z + 1 end
+                end
+            end
 
-			-- CHECK PLAYER-BULLET COLLISION
-			if not game.godmode and game.player.name ~= bullet.owner and bullet.pos.x > game.player.pos.x - 16 and bullet.pos.x < game.player.pos.x + 16 and bullet.pos.y > game.player.pos.y - 16 and bullet.pos.y < game.player.pos.y + 16 then
-				table.remove(game.bullets, i)
-				game.player.pos.x = 512
-				game.player.pos.y = 512
-				game.lives = game.lives - 1
-				game.godmode = true
-				game.godmodeTimer = 0
-			end
-
-			-- CHECK AGENT-BULLET COLLISION
-			for j = #game.agents, 1, - 1 do
-				local agent = game.agents[j]
-
-				if agent.name ~= bullet.owner and bullet.pos.x > agent.pos.x - 16 and bullet.pos.x < agent.pos.x + 16 and bullet.pos.y > agent.pos.y - 16 and bullet.pos.y < agent.pos.y + 16 then
-					table.remove(game.bullets, i)
-					table.remove(game.agents, j)
+            if x <= y + z then
+				if base.ammo > 2 then
+                	base:build("Worker")
 				end
-			end
-		end
-	end
+            elseif y <= z then
+				if base.ammo > 5 then
+                	base:build("Attacker")
+				end
+            else
+				if base.ammo > 5 then
+                	base:build("Defender")
+				end
+            end
+        end
+
+        -- UPDATE DEPOSITS
+        for _, depo in pairs(game.deposits) do
+            depo:update(delta)
+        end
+
+        -- UPDATE BULLETS
+        for i = #game.bullets, 1, - 1 do
+            local bullet = game.bullets[i]
+
+            local dir = glm.normalize(bullet.target - bullet.pos)
+
+            if glm.length(bullet.target - bullet.pos) < 2000 * delta then
+                table.remove(game.bullets, i)
+            end
+
+            bullet.pos = bullet.pos + dir * 2000 * delta
+
+            -- CHECK AGENT-BULLET COLLISION
+            for j = #game.agents, 1, - 1 do
+                local agent = game.agents[j]
+
+                if agent.team ~= bullet.owner and bullet.pos.x > agent.pos.x - 16 and bullet.pos.x < agent.pos.x + 16 and bullet.pos.y > agent.pos.y - 16 and bullet.pos.y < agent.pos.y + 16 then
+                    table.remove(game.bullets, i)
+
+                    agent.isDead = true
+                end
+            end
+        end
+    end
 end
