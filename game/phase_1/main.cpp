@@ -15,7 +15,7 @@ using namespace std::chrono_literals;
 int main() {
 	std::clog.setstate(std::ios_base::failbit);
 
-	sf::RenderWindow window(sf::VideoMode(1024, 1024), "SFML works!");
+	sf::RenderWindow window(sf::VideoMode(1024, 1024), "Phase 1: Lua Prototype");
 
 	sol::state lua;
 	lua["log"] = false;

@@ -24,12 +24,17 @@ namespace razaron::planner
 	/*! The range of Operation%s available to the Planner. */
 	enum class Operation
 	{
+		// Property 
 		NONE,
+
+		// Condition
 		EQUAL,
 		LESS,
 		LESS_EQUAL,
 		GREATER,
 		GREATER_EQUAL,
+
+		// Modifier
 		ASSIGN,
 		PLUS,
 		MINUS,
