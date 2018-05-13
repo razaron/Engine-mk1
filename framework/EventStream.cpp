@@ -178,11 +178,3 @@ void EventStream::processEvents()
 			it->second(e);
 	}
 }
-
-void EventStream::propogateEvents(EventStream &dst)
-{
-	std::vector<Event> events = popEvents(StreamType::OUTGOING);
-
-	dst.pushEvents(events, StreamType::INCOMING);
-	dst.pushEvents(events, StreamType::OUTGOING);
-}

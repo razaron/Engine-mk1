@@ -610,7 +610,7 @@ namespace razaron::objectpool
 				posNextFree = getIndex<Pool>(ptrNextFree);
 			}
 
-			// Currently, ptrToRemove is set to some value (e.g. "hello"), so I have to use handle
+			// Currently, ptrToRemove is zeroed, so I have to get it's index from handle
 			ptrPrevFree->index = handle.index;
 
 			// Setup the ptr being removed to be inbetween ptrPrevFree and ptrNextFree

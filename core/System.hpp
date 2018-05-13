@@ -56,21 +56,17 @@ namespace razaron::core::system
         /*! Calls `registerHandler` on the member EventStream with the given arguments. */
         void registerHandler(EventType type, EventHandler handler);
 
+		/*! Calls `extendHandler` on the member EventStream with the given arguments. */
+		void extendHandler(EventType type, EventHandler handler);
+
         /*! Calls `processEvents` on the member EventStream. */
         void processEvents();
 
-        /*! Calls `propogateEvents` on the member EventStream with the given argument. */
-        void propogateEvents(System &dst);
-        void propogateEvents(EventStream &stream);
+		/*! Calls `pushEvents` on the member EventStream. */
+		void pushEvents(const std::vector<Event> &events, StreamType streamType);
 
-        /*! Pushes an Event onto the outgoing stream. */
-        void pushEvent(Event event);
-
-        /*! Pushes Events onto the incoming stream. */
-        void pushEvents(const std::vector<Event> &event);
-
-        /*! Pops all Event objects from the incoming stream. */
-        std::vector<Event> popEvents();
+		/*! Calls `popEvents` on the member EventStream. */
+		std::vector<Event> popEvents(StreamType streamType);
 
         /*! Gets the set interval (in ms) between updates for this System. */
         double getInterval() noexcept { return _interval; }
