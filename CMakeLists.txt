@@ -43,3 +43,4 @@ ELSEIF(${CMAKE_GENERATOR} STREQUAL "Visual Studio 15 2017 Win64")
 ENDIF()
 
 add_subdirectory(game/phase_1)
+add_subdirectory(game/phase_2)

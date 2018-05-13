@@ -11,7 +11,7 @@ Actions = {
             function()
                 local isAvailable = false
                 for k, agent in pairs(game.agents) do
-                    if agent.team ~= self.team then
+                    if agent.transform and agent.team ~= self.team then
                         isAvailable = true
                         break
                     end
@@ -105,11 +105,28 @@ Actions = {
         pre = ConditionSet(Condition.new("team", "hasDeposit", true, OPERATION.EQUAL))
         post = ConditionSet(Condition.new("self", "hasResource", true, OPERATION.ASSIGN))
 
+        procPre = ProceduralConditionSet()
+        procPost = ProceduralConditionSet(
+            function()
+                local hasDeposit = false
+                for _, r in pairs(game.deposits) do
+                    if r.team == self.team then
+                        hasDeposit = true
+                        break
+                    end
+                end
+
+                return Condition.new("team", "hasDeposit", hasDeposit, OPERATION.ASSIGN)
+            end
+        )
+
         return Action.new(
             "mine",
             1,
             pre,
-            post
+            post,
+            procPre,
+            procPost
         )
     end,
     craft = function()
@@ -165,7 +182,7 @@ Effects = {
                 ["effect"] = function()
                     local target = false
                     for k, agent in pairs(game.agents) do
-                        if agent.team ~= self.team then
+                        if agent.pos and agent.team ~= self.team then
                             if target == false then
                                 target = agent
                             elseif glm.length(self.pos - agent.pos) < glm.length(self.pos - target.pos) then
