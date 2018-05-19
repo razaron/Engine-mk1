@@ -1,14 +1,14 @@
 #pragma once
 
-#include <set>
-#include <vector>
-#include <utility>
-
 #include "Entity.hpp"
 #include "EventStream.hpp"
 #include "EventData.hpp"
 #include "ObjectPool.hpp"
 #include "TaskScheduler.hpp"
+
+#include <set>
+#include <vector>
+#include <utility>
 
 /*! Systems manage the memory, events and logic for related components.
 *   For more information and examples, see page \ref core.

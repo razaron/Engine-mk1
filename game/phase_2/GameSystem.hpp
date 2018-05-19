@@ -1,8 +1,8 @@
 #pragma once
 
 #include "System.hpp"
-
-#include <sol.hpp>
+#include "LuaHooks.hpp"
+#include "config.hpp"
 
 namespace razaron::game::systems
 {
@@ -17,8 +17,8 @@ namespace razaron::game::systems
 		Task update(EntityMap &entities, double delta);
 		ComponentHandle createComponent(ComponentType type, std::shared_ptr<void> tuplePtr);
 		bool removeComponent(ComponentHandle ch);
-
 	private:
 		sol::state_view _lua;
+		std::vector<std::pair<UUID64, EVENTDATA_COLLISION>> _collisions;
 	};
 }

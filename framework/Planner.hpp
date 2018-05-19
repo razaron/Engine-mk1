@@ -9,6 +9,7 @@
 #include <fstream>
 #include <string>
 #include <variant>
+#include <queue>
 
 #ifndef PLANNER_G_MOD
 #define PLANNER_G_MOD 1
@@ -412,6 +413,11 @@ namespace razaron::planner
 
 		Action(std::string name = "DEFAULT", unsigned cost = {}, ConditionSet preconditions = {}, ConditionSet postconditions = {}, ProceduralConditionSet procPreconditions = {}, ProceduralConditionSet procPostconditions = {}) noexcept
 			: name{ name }, cost{ cost }, preconditions{ preconditions }, postconditions{ postconditions }, procPreconditions{ procPreconditions }, procPostconditions{ procPostconditions } {}
+
+		bool operator==(const Action &rhs) const noexcept
+		{
+			return name == rhs.name && cost == rhs.cost;
+		}
 	};
 
 	/*! @cond */
@@ -476,5 +482,7 @@ namespace razaron::planner
 		NodeList _validNodes;
 		ActionGraph _lastPlan;
 		unsigned short _nextID;
+
+		std::vector<std::tuple<ConditionSet, Action, ActionSet>> _oldPlans;
 	};
 }

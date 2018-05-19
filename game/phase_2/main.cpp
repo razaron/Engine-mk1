@@ -9,6 +9,7 @@ using namespace razaron::core::space;
 using namespace razaron::core;
 using namespace razaron::game::systems;
 using namespace razaron::game::components;
+using namespace razaron::taskscheduler;
 
 int main()
 {
@@ -18,75 +19,13 @@ int main()
 
 	// Create a new Lue state and load libraries
 	sol::state lua;
-	lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::table, sol::lib::math, sol::lib::debug);
+	lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::table, sol::lib::math, sol::lib::os, sol::lib::debug, sol::lib::string, sol::lib::io);
 	razaron::lua::maths::hook(lua);
 	razaron::lua::planner::hook(lua);
 
-	// Entity creation events
 	std::vector<Event> events;
-
-	lua["deleteEntity"] = [&events, &lua](const UUID64 &id) {
-		Event e{
-			id, // Entity ID.
-			EventType::SPACE_DELETE_ENTITY, // Event type enum
-			std::make_shared<eventdata::SPACE_DELETE_ENTITY>()
-		};
-
-		events.push_back(e);
-	};
-
-	lua["newAgent"] = [&events, &lua](sol::table obj, glm::vec2 pos, int sides, glm::u8vec3 col) {
-		Event e{
-			UUID64{ 0 }, // Entity ID. 0 because unneeded
-			EventType::SPACE_NEW_ENTITY, // Event type enum
-			std::make_shared<eventdata::SPACE_NEW_ENTITY>(std::list<ComponentArgs>{
-				ComponentArgs{ ComponentType::TRANSFORM, std::make_shared<TransformArgs>(obj, pos, glm::vec2{6.4f,6.4f}, 0.f) },
-				ComponentArgs{ ComponentType::SHAPE, std::make_shared<ShapeArgs>(obj, sides, col) }
-			})
-		};
-
-		events.push_back(e);
-	};
-
-	lua["newBase"] = [&events, &lua](sol::table obj, glm::vec2 pos, glm::u8vec3 col) {
-		Event e{
-			UUID64{ 0 }, // Entity ID. 0 because unneeded
-			EventType::SPACE_NEW_ENTITY, // Event type enum
-			std::make_shared<eventdata::SPACE_NEW_ENTITY>(std::list<ComponentArgs>{
-			ComponentArgs{ ComponentType::TRANSFORM, std::make_shared<TransformArgs>(obj, pos, glm::vec2{ 25.6f,25.6f }, -3.14159 / 4) },
-				ComponentArgs{ ComponentType::SHAPE, std::make_shared<ShapeArgs>(obj, 4, col) }
-		})
-		};
-
-		events.push_back(e);
-	};
-
-	lua["newDeposit"] = [&events, &lua](sol::table obj, glm::vec2 pos, glm::u8vec3 col) {
-		Event e{
-			UUID64{ 0 }, // Entity ID. 0 because unneeded
-			EventType::SPACE_NEW_ENTITY, // Event type enum
-			std::make_shared<eventdata::SPACE_NEW_ENTITY>(std::list<ComponentArgs>{
-			ComponentArgs{ ComponentType::TRANSFORM, std::make_shared<TransformArgs>(obj, pos, glm::vec2{ 12.8f,12.8f }, 0.f) },
-				ComponentArgs{ ComponentType::SHAPE, std::make_shared<ShapeArgs>(obj, 4, col) }
-		})
-		};
-
-		events.push_back(e);
-	};
-
-	lua["newBullet"] = [&events, &lua](sol::table obj, glm::vec2 pos, glm::u8vec3 col) {
-		Event e{
-			UUID64{ 0 }, // Entity ID. 0 because unneeded
-			EventType::SPACE_NEW_ENTITY, // Event type enum
-			std::make_shared<eventdata::SPACE_NEW_ENTITY>(std::list<ComponentArgs>{
-			ComponentArgs{ ComponentType::TRANSFORM, std::make_shared<TransformArgs>(obj, pos, glm::vec2{ 1.6f,1.6f }, 0.f) },
-				ComponentArgs{ ComponentType::SHAPE, std::make_shared<ShapeArgs>(obj, 16, col) }
-		})
-		};
-
-		events.push_back(e);
-	};
-
+	razaron::lua::entities::hook(lua, events);
+	
 	// Create a new space
 	SystemGraph g;
 	g.addEdge(0, 1);
@@ -142,9 +81,9 @@ int main()
 		elapsed += delta;
 		++frames;
 
-		if (elapsed >= 1.0)
+		if (elapsed >= 10.0)
 		{
-			std::cout << "FPS: " << frames / 1 << std::endl;
+			std::cout << "FPS: " << frames / 10 << "\tFrames: " << frames << std::endl;
 			elapsed = 0.0;
 			frames = 0;
 		}

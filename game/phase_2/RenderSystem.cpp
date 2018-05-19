@@ -6,6 +6,8 @@ using namespace razaron::game::components;
 RenderSystem::RenderSystem(sol::state_view lua, sf::RenderWindow *window)
 	:_lua{ lua }, _window{ window }
 {
+	_interval = 0.01;
+
 	_componentTypes.insert(ComponentType::SHAPE);
 
 	_lua.new_usertype<ShapeComponent>("ShapeComponent",
@@ -30,28 +32,21 @@ Task RenderSystem::update(EntityMap &entities, double)
 	_window->clear();
 
 	std::vector<std::pair<glm::mat4, ShapeComponent>> data;
-	for (auto &[id, components] : entities)
+	for (auto &[id, entity] : entities)
 	{
-		try
-		{
-			if (_models.find(id) == _models.end())
-				throw std::exception();
+		if (!entity.has(ComponentType::SHAPE)) continue;
+		if (_models.find(id) == _models.end()) continue;
 
-			auto model = _models[id];
-			auto shape = *getObject<ShapeComponent>(components[ComponentType::SHAPE]);
+		auto model = _models[id];
+		auto shape = *getObject<ShapeComponent>(entity[ComponentType::SHAPE]);
 
-			data.push_back(std::make_pair(model, shape));
-		}
-		catch (const std::exception &e)
-		{
-		}
+		data.push_back(std::make_pair(model, shape));
 	}
+
+	std::vector<sf::Vertex> va;
 
 	for (auto &[model, shape] : data)
 	{
-		sf::ConvexShape convex;
-		convex.setPointCount(shape.sides);
-
 		float theta = .0f;
 		float delta = 2 * 3.14159 / shape.sides;
 		for (int i = 0; i < shape.sides; i++)
@@ -59,21 +54,26 @@ Task RenderSystem::update(EntityMap &entities, double)
 			float x = std::cos(theta);
 			float y = std::sin(theta);
 
-			glm::vec4 vec{ x, y, 0.f, 1.f };
-			vec = model * vec;
+			glm::vec4 v1{ std::cos(theta), std::sin(theta), 0.f, 1.f };
+			glm::vec4 v2{ std::cos(theta + delta), std::sin(theta + delta), 0.f, 1.f };
+			glm::vec4 v3{ 0.f,0.f,0.f,1.f };
 
-			convex.setPoint(i, sf::Vector2f{ vec.x, vec.y });
+			v1 = model * v1;
+			v2 = model * v2;
+			v3 = model * v3;
+
+			va.emplace_back(sf::Vertex(sf::Vector2f{ v1.x, v1.y }, sf::Color(shape.colour.r, shape.colour.g, shape.colour.b)));
+			va.emplace_back(sf::Vertex(sf::Vector2f{ v2.x, v2.y }, sf::Color(shape.colour.r, shape.colour.g, shape.colour.b)));
+			va.emplace_back(sf::Vertex(sf::Vector2f{ v3.x, v3.y }, sf::Color(shape.colour.r, shape.colour.g, shape.colour.b)));
 
 			theta += delta;
 		}
-
-		convex.setFillColor(sf::Color(shape.colour.r, shape.colour.g, shape.colour.b));
-
-		_window->draw(convex);
 	}
 
-	_window->display();
+	if (va.size())
+		_window->draw(&va[0], va.size(), sf::Triangles);
 
+	_window->display();
 
 	// Cleanup
 	_models.clear();

@@ -48,9 +48,9 @@ int main() {
 		elapsed += delta;
 		++frames;
 
-		if (elapsed >= 1.0)
+		if (elapsed >= 10.0)
 		{
-			std::cout << "FPS: " << frames / 1 << std::endl;
+			std::cout << "FPS: " << frames / 10 << "\tFrames: " << frames << std::endl;
 			elapsed = 0.0;
 			frames = 0;
 		}

@@ -10,9 +10,7 @@ Bullet = {
     owner = "BLUE",
     direction = glm.vec2.new(0, 0),
     origin = glm.vec2.new(0,0),
-    isDead = false,
-
-    speed = 2000/4
+    isDead = false
 }
 
 function Bullet.new(owner, pos, direction)
@@ -23,38 +21,48 @@ function Bullet.new(owner, pos, direction)
     self.shape = nil
     self.uuid = nil
 
-    self.pos = nil
+    self.pos = pos
 
     self.owner = owner or Bullet.owner
     self.direction = direction or Bullet.direction
     self.origin = pos or Bullet.origin
     self.isDead = false
 
-    newBullet(self, pos or glm.vec2.new(512, 512), glm.u8vec3.new(255, 255, 255))
+    newBullet(self, pos or glm.vec2.new(512, 512), glm.u8vec3.new(255, 255, 255), glm.normalize(direction))
 
     return self
 end
 
 function Bullet:update()
-    if not self.transform or not self.shape then return end
-
-
     -- update pos
-    self.transform.translation = self.transform.translation + self.direction * self.speed * game.delta
-
     self.pos = glm.vec2.new(self.transform.translation)
 
     -- delete if max dist traveled
-    if(glm.length(self.origin - self.pos) > self.speed) then
+    if(glm.length(self.origin - self.pos) > 64) then
         self.isDead = true
         return
     end
 
+    if self.owner == "RED" then self.collisions = getCollisions(self.uuid, 2)
+    elseif self.owner == "BLUE" then self.collisions = getCollisions(self.uuid, 1) end
+
     -- handle bullet-agent collision
-    for _, agent in pairs(game.agents) do
-        if agent.pos and agent.team ~= self.owner and self.pos.x > agent.pos.x - 16 and self.pos.x < agent.pos.x + 16 and self.pos.y > agent.pos.y - 16 and self.pos.y < agent.pos.y + 16 then
-            self.isDead = true
-            agent.isDead = true
+    local uid = 0;
+    local dist = math.huge
+    for _, col in pairs(self.collisions) do
+        if col.distance < dist then
+            dist = col.distance
+            uid = col.target
+        end
+    end
+
+    if dist ~= math.huge then
+        for _,agent in pairs(game.agents) do
+            if agent.uuid == uid then
+                self.isDead = true
+                agent.isDead = true
+                break
+            end
         end
     end
 end
@@ -75,6 +83,7 @@ Agent = {
     steer = Steering.new(),
 
     -- AI
+    planner = {},
     blackboard = {},
 
     actions = ActionSet(),
@@ -84,19 +93,22 @@ Agent = {
     curAction = 0
 }
 
-function Agent.new(name, pos, sides, col)
+function Agent.new(name, pos, sides, col, team)
     local self = {}
+
     setmetatable(self, {__index = Agent})
 
     self.name = name or Agent.name
 
     self.transform = nil
     self.shape = nil
-    self.pos = nil
+    self.uuid = nil
+    self.pos = pos--################################################
 
     self.vel = glm.vec2.new(0, 1)
     self.steer = Steering.new()
 
+    self.planner = Planner.new()
     self.blackboard = {}
 
     self.actions = ActionSet()
@@ -105,67 +117,42 @@ function Agent.new(name, pos, sides, col)
     self.curPlan = {}
     self.curAction = 0
 
-    newAgent(self, pos or glm.vec2.new(512, 512), sides or 3, col or glm.u8vec3.new(200, 200, 200))
+    self.team = team
+
+    local group = 0
+    if team == "RED" then group = 1
+    elseif team == "BLUE" then group = 2 end
+
+    newAgent(self, pos or glm.vec2.new(512, 512), sides or 3, col or glm.u8vec3.new(200, 200, 200), group)
 
     return self
 end
 
 function Agent:update()
-    if not self.transform or not self.shape then return end
-
     self.pos = glm.vec2.new(self.transform.translation)
+    if self.team == "RED" then self.collisions = getCollisions(self.uuid, 2)
+    elseif self.team == "BLUE" then self.collisions = getCollisions(self.uuid, 1) end
 
     if self.curAction > 0 then
         local action = self.curPlan[self.curAction]
 
         if not action.target then self.curAction = 0 return end
 
-        self:move(action.target.transform.translation, action.behaviour)
-
         if action.effect() then
             if self.curAction < #self.curPlan then
                 self.curAction = self.curAction + 1
                 self.curPlan[self.curAction] = (self.curPlan[self.curAction])(self)
+
+                if not self.curPlan[self.curAction].target then self.curAction = 0 return end
+
+                updateSteering(self.uuid, self.curPlan[self.curAction].target.uuid, STEERING_BEHAVIOUR[self.curPlan[self.curAction].behaviour])
             else
                 self.curAction = 0
             end
         end
     else
-        self:move()
         self:plan()
     end
-
-    self.transform.translation.x = self.pos.x
-    self.transform.translation.y = self.pos.y
-end
-
-function Agent:move(target, behaviour)
-    local steering = glm.vec2.new(0, 0) - self.vel * 10
-
-    if behaviour == "SEEK" then
-        steering = self.steer:seek(self.pos, target, self.vel)
-    elseif behaviour == "ARRIVE" then
-        steering = self.steer:arrive(self.pos, target, self.vel, 500 / 5)
-    elseif behaviour == "MAINTAIN" then
-        steering = self.steer:maintain(self.pos, target, self.vel, 128 / 5)
-    elseif behaviour == "WANDER" then
-        steering = self.steer:wander(self.vel)
-    end
-
-    if behaviour ~= "PLAYER" and steering.x ~= 0 and steering.y ~= 0 then
-        self.vel = glm.limit(self.vel + (steering * game.delta), self.steer.maxVelocity)
-        self.pos = self.pos + (self.vel * game.delta)
-
-        self.transform.rotation = glm.angle(self.vel, glm.vec2.new(1, 0))
-    else
-        -- FOR PLAYERS
-        self.pos = self.pos + (self.vel * game.delta)
-    end
-
-    if self.pos.x < 0 then self.pos.x = 0 end
-    if self.pos.x > 1024 then self.pos.x = 1024 end
-    if self.pos.y < 0 then self.pos.y = 0 end
-    if self.pos.y > 1024 then self.pos.y = 1024 end
 end
 
 function Agent:sense() -- returns world state
@@ -174,11 +161,14 @@ function Agent:sense() -- returns world state
 end
 
 function Agent:plan()
-    local planner = Planner.new(self:sense())
+    self.planner.worldState = self:sense()
 
-    local plan = planner:plan(self.actions, self:decideGoal())
+    local plan = self.planner:plan(self.actions, self:decideGoal())
 
     if plan:size() > 0 then
+
+        --if self == logging then self.planner:savePlan("dot/"..self.name.."_"..frame..".dot") print(self.blackboard.threat) end
+
         -- Add target and effect function to curPlan
         self.curPlan = {}
         for k, v in pairs(plan) do
@@ -189,6 +179,8 @@ function Agent:plan()
 
         self.curAction = 1
         self.curPlan[1] = (self.curPlan[1])(self)
+
+        updateSteering(self.uuid, self.curPlan[1].target.uuid, STEERING_BEHAVIOUR[self.curPlan[1].behaviour])
     end
 end
 
@@ -211,8 +203,8 @@ Soldier = {
 }
 setmetatable(Soldier, {__index = Agent})
 
-function Soldier.new(name, pos, sides, col)
-    local self = Agent.new(name, pos or glm.vec2.new(0, 0), sides, col or glm.u8vec3.new(math.random(255), math.random(255), math.random(255)))
+function Soldier.new(name, pos, sides, col, team)
+    local self = Agent.new(name, pos or glm.vec2.new(0, 0), sides, col or glm.u8vec3.new(math.random(255), math.random(255), math.random(255)), team)
     setmetatable(self, {__index = Soldier})
 
     self.class = "Soldier"
@@ -239,7 +231,6 @@ function Soldier.new(name, pos, sides, col)
 
     self.lastShot = Soldier.lastShot
     self.ammo = Soldier.ammo
-    self.team = Soldier.team
     self.blackboard = {
         threat = 0,
         ammoAvailable = false
@@ -263,22 +254,24 @@ function Soldier:shoot(target)
         self.theta = glm.angle(dest, glm.vec2.new(1, 0))
 
         if self.theta > self.transform.rotation - 3.14159 / 2 and self.theta < self.transform.rotation + 3.14159 / 2 then
-            table.insert(game.bullets, Bullet.new(self.team, glm.vec2.new(self.pos.x, self.pos.y), glm.normalize(target - self.pos)))
+            factory.construct(
+                Bullet.new(self.team, glm.vec2.new(self.pos.x, self.pos.y), glm.normalize(target - self.pos)),
+                "bullets",
+                {"transform", "shape"}
+            )
         end
     end
 end
 
+function threat(self)
+    self.blackboard.threat = 0
+    self.blackboard.threat = #self.collisions
+end
+
 function Soldier:sense()
     local ws = ConditionSet()
-    self.blackboard.threat = 0
-    for i = 1, #game.agents do
-        local agent = game.agents[i]
-        if agent.pos and agent.shape then
-            if self.team ~= agent.team and glm.length(self.pos - agent.pos) < 1024 / 5 then
-                self.blackboard.threat = self.blackboard.threat + 1
-            end
-        end
-    end
+
+    threat(self)
 
     self.blackboard.ammoAvailable = false
     for _, b in pairs(game.bases) do
@@ -312,8 +305,8 @@ Attacker = {
 }
 setmetatable(Attacker, {__index = Soldier})
 
-function Attacker.new(name, pos, col)
-    local self = Soldier.new(name, pos, 3, col)
+function Attacker.new(name, pos, col, team)
+    local self = Soldier.new(name, pos, 3, col, team)
     setmetatable(self, {__index = Attacker})
 
     self.class = "Attacker"
@@ -367,8 +360,8 @@ Defender = {
 }
 setmetatable(Defender, {__index = Soldier})
 
-function Defender.new(name, pos, col)
-    local self = Soldier.new(name, pos, 4, col)
+function Defender.new(name, pos, col, team)
+    local self = Soldier.new(name, pos, 4, col, team)
     setmetatable(self, {__index = Defender})
 
     self.class = "Defender"
@@ -427,8 +420,8 @@ Worker = {
 }
 setmetatable(Worker, {__index = Agent})
 
-function Worker.new(name, pos, col)
-    local self = Agent.new(name, pos or glm.vec2.new(0, 0), 8, col or glm.u8vec3.new(math.random(255), math.random(255), math.random(255)))
+function Worker.new(name, pos, col, team)
+    local self = Agent.new(name, pos or glm.vec2.new(0, 0), 8, col or glm.u8vec3.new(math.random(255), math.random(255), math.random(255)), team)
     setmetatable(self, {__index = Worker})
 
     self.class = "Worker"
@@ -461,15 +454,8 @@ end
 
 function Worker:sense()
     local ws = ConditionSet()
-    self.blackboard.threat = 0
-    for i = 1, #game.agents do
-        local agent = game.agents[i]
-        if agent.pos and agent.shape then
-            if self.team ~= agent.team and glm.length(self.pos - agent.pos) < 1024 / 5 then
-                self.blackboard.threat = self.blackboard.threat + 1
-            end
-        end
-    end
+
+    threat(self)
 
     ws:add(Condition.new("self", "threat", self.blackboard.threat))
 

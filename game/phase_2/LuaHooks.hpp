@@ -1,5 +1,10 @@
 #pragma once
 #include "Planner.hpp"
+#include "EventStream.hpp"
+#include "Entity.hpp"
+#include "EventData.hpp"
+#include "PhysicsSystem.hpp"
+#include "RenderSystem.hpp"
 
 #pragma warning(push)
 #pragma warning(disable: 4996)
@@ -53,12 +58,12 @@ namespace razaron::lua::planner
 
 		lua.new_usertype<Condition>("Condition",
 			sol::constructors<
-				Condition(std::string, std::string, bool),
-				Condition(std::string, std::string, bool, Operation), 
-				Condition(std::string, std::string, bool, Operation, int), 
-				Condition(std::string, std::string, int), 
-				Condition(std::string, std::string, int, Operation), 
-				Condition(std::string, std::string, int, Operation, int)
+			Condition(std::string, std::string, bool),
+			Condition(std::string, std::string, bool, Operation),
+			Condition(std::string, std::string, bool, Operation, int),
+			Condition(std::string, std::string, int),
+			Condition(std::string, std::string, int, Operation),
+			Condition(std::string, std::string, int, Operation, int)
 			>(),
 			"id", &Condition::debugID,
 			"type", &Condition::debugType,
@@ -151,11 +156,90 @@ namespace razaron::lua::maths
 		table.new_usertype<glm::u8vec3>("u8vec3",
 			sol::constructors<glm::u8vec3(unsigned char, unsigned char, unsigned char), glm::u8vec3(const glm::u8vec3 &)>()
 			);
-		
+
 		table["normalize"] = sol::overload(&normalize<glm::vec2>);
 		table["length"] = sol::overload(&length<glm::vec2>);
 		table["limit"] = sol::overload(&limit<glm::vec2>);
 		table["dot"] = sol::overload(&dot<glm::vec2>);
 		table["angle"] = sol::overload(&angle<glm::vec2>);
+	}
+}
+
+namespace razaron::lua::entities
+{
+	using namespace razaron::core;
+	using namespace razaron::core::eventdata;
+	using namespace razaron::eventstream;
+	using namespace razaron::game::systems;
+
+
+	inline void hook(sol::state_view lua, std::vector<Event> &events)
+	{
+		lua["deleteEntity"] = [&events, &lua](const UUID64 &id) {
+			Event e{
+				id, // Entity ID.
+				EventType::SPACE_DELETE_ENTITY, // Event type enum
+				std::make_shared<eventdata::SPACE_DELETE_ENTITY>()
+			};
+
+			events.push_back(e);
+		};
+
+		lua["newAgent"] = [&events, &lua](sol::table obj, glm::vec2 pos, int sides, glm::u8vec3 col, int group) {
+			Event e{
+				UUID64{ 0 }, // Entity ID. 0 because unneeded
+				EventType::SPACE_NEW_ENTITY, // Event type enum
+				std::make_shared<eventdata::SPACE_NEW_ENTITY>(std::list<ComponentArgs>{
+					ComponentArgs{ ComponentType::TRANSFORM, std::make_shared<TransformArgs>(obj, pos, glm::vec2{ 6.4f,6.4f }, 0.f) },
+					ComponentArgs{ ComponentType::MOTION, std::make_shared<MotionArgs>(obj, glm::vec2{}, glm::vec2{}, 125.f,125.f, 1.f) },
+					ComponentArgs{ ComponentType::SHAPE, std::make_shared<ShapeArgs>(obj, sides, col) },
+					ComponentArgs{ ComponentType::COLLIDER, std::make_shared<ColliderArgs>(obj, 256.f, group) }
+				})
+			};
+
+			events.push_back(e);
+		};
+
+		lua["newBase"] = [&events, &lua](sol::table obj, glm::vec2 pos, glm::u8vec3 col) {
+			Event e{
+				UUID64{ 0 }, // Entity ID. 0 because unneeded
+				EventType::SPACE_NEW_ENTITY, // Event type enum
+				std::make_shared<eventdata::SPACE_NEW_ENTITY>(std::list<ComponentArgs>{
+					ComponentArgs{ ComponentType::TRANSFORM, std::make_shared<TransformArgs>(obj, pos, glm::vec2{ 25.6f,25.6f }, -3.14159 / 4) },
+					ComponentArgs{ ComponentType::SHAPE, std::make_shared<ShapeArgs>(obj, 4, col) }
+				})
+			};
+
+			events.push_back(e);
+		};
+
+		lua["newDeposit"] = [&events, &lua](sol::table obj, glm::vec2 pos, glm::u8vec3 col) {
+			Event e{
+				UUID64{ 0 }, // Entity ID. 0 because unneeded
+				EventType::SPACE_NEW_ENTITY, // Event type enum
+				std::make_shared<eventdata::SPACE_NEW_ENTITY>(std::list<ComponentArgs>{
+					ComponentArgs{ ComponentType::TRANSFORM, std::make_shared<TransformArgs>(obj, pos, glm::vec2{ 12.8f,12.8f }, 0.f) },
+					ComponentArgs{ ComponentType::SHAPE, std::make_shared<ShapeArgs>(obj, 4, col) },
+					ComponentArgs{ ComponentType::COLLIDER, std::make_shared<ColliderArgs>(obj, 16.f, 3) }
+				})
+			};
+
+			events.push_back(e);
+		};
+
+		lua["newBullet"] = [&events, &lua](sol::table obj, glm::vec2 pos, glm::u8vec3 col, glm::vec2 dir) {
+			Event e{
+				UUID64{ 0 }, // Entity ID. 0 because unneeded
+				EventType::SPACE_NEW_ENTITY, // Event type enum
+				std::make_shared<eventdata::SPACE_NEW_ENTITY>(std::list<ComponentArgs>{
+					ComponentArgs{ ComponentType::TRANSFORM, std::make_shared<TransformArgs>(obj, pos, glm::vec2{ 1.6f,1.6f }, 0.f) },
+					ComponentArgs{ ComponentType::MOTION, std::make_shared<MotionArgs>(obj, dir * 512.f, glm::vec2{}, 64.f,64.f,1.f) },
+					ComponentArgs{ ComponentType::SHAPE, std::make_shared<ShapeArgs>(obj, 16, col) },
+					ComponentArgs{ ComponentType::COLLIDER, std::make_shared<ColliderArgs>(obj, 16.f, 4) }
+				})
+			};
+
+			events.push_back(e);
+		};
 	}
 }

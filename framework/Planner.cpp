@@ -5,6 +5,14 @@ using namespace razaron::graph;
 
 ActionSet Planner::plan(ActionSet actions, Action goal)
 {
+	for (auto &[ws, g, p] : _oldPlans)
+	{
+		if (g == goal && std::equal(ws.begin(), ws.end(), _worldState.begin(), _worldState.end(), [](const Condition &a, const Condition &b) { return a.id == b.id && a.type == b.type && a.value == b.value; }))
+		{
+			return p;
+		}
+	}
+
 	// Reset
 	_validNodes.clear();
 	_lastPlan = ActionGraph{};
@@ -43,7 +51,7 @@ ActionSet Planner::plan(ActionSet actions, Action goal)
 				return true;
 			else
 				return false;
-		});
+			});
 	}
 
 	_validNodes.sort([](const Node& a, const Node& b) {
@@ -51,7 +59,7 @@ ActionSet Planner::plan(ActionSet actions, Action goal)
 			return true;
 		else
 			return false;
-	});
+		});
 
 	ActionSet plan;
 
@@ -63,6 +71,14 @@ ActionSet Planner::plan(ActionSet actions, Action goal)
 			plan.push_back(cur.action);
 			cur = *cur.parent;
 		}
+	}
+
+	if (plan.size())
+	{
+		_oldPlans.push_back(std::make_tuple(_worldState, goal, plan));
+
+		if (_oldPlans.size() > 10)
+			_oldPlans.erase(_oldPlans.begin());
 	}
 
 	return plan;
@@ -89,21 +105,21 @@ void Planner::savePlan(std::string filename)
 		auto colour = "white";
 		switch (v.state)
 		{
-		case State::GREEN:
-		{
-			colour = "green";
-			break;
-		}
-		case State::GREY:
-		{
-			colour = "grey";
-			break;
-		}
-		case State::RED:
-		{
-			colour = "red";
-			break;
-		}
+			case State::GREEN:
+			{
+				colour = "green";
+				break;
+			}
+			case State::GREY:
+			{
+				colour = "grey";
+				break;
+			}
+			case State::RED:
+			{
+				colour = "red";
+				break;
+			}
 		}
 
 		std::stringstream attributes;
@@ -226,7 +242,7 @@ NodeList Planner::genAdjacent(Node *parent, ActionSet actions)
 							return true;
 						else
 							return false;
-					});
+						});
 				}
 			}
 
@@ -272,7 +288,7 @@ NodeList Planner::genAdjacent(Node *parent, ActionSet actions)
 				return true;
 			else
 				return false;
-		});
+			});
 	}
 
 	return list;

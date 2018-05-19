@@ -34,8 +34,6 @@ function Base.new(team, pos)
 end
 
 function Base:update()
-    if not self.transform or not self.shape then return end
-
     local x, y, z = 0, 0, 0
 
     for _, a in pairs(game.agents) do
@@ -67,30 +65,34 @@ function Base:build(type)
     elseif self.team == "BLUE" then colour = glm.u8vec3.new(0, 0, 255) end
 
     if type == "Worker" then
-        local agent = Worker.new(self.team.."_CRAFTER", glm.vec2.new(self.pos), colour)
+        local agent = Worker.new(self.team.."_CRAFTER", glm.vec2.new(self.pos), colour, self.team)
         agent.team = self.team
 
         if self.ammo >= 2 then
             self.ammo = self.ammo - 2
-            table.insert(game.agents, agent)
+            factory.construct(agent, "agents", {"transform", "shape"})
         end
     elseif type == "Attacker" then
-        local agent = Attacker.new(self.team.."_ATTACKER", glm.vec2.new(self.pos), colour)
+        if not logging then colour = glm.u8vec3.new(255, 255, 255) end
+
+        local agent = Attacker.new(self.team.."_ATTACKER", glm.vec2.new(self.pos), colour, self.team)
         agent.team = self.team
         agent.ammo = 3
 
+        if not logging then logging = agent end
+
         if self.ammo >= 5 then
             self.ammo = self.ammo - 5
-            table.insert(game.agents, agent)
+            factory.construct(agent, "agents", {"transform", "shape"})
         end
     elseif type == "Defender" then
-        local agent = Defender.new(self.team.."_DEFENDER", glm.vec2.new(self.pos), colour)
+        local agent = Defender.new(self.team.."_DEFENDER", glm.vec2.new(self.pos), colour, self.team)
         agent.team = self.team
         agent.ammo = 3
 
         if self.ammo >= 5 then
             self.ammo = self.ammo - 5
-            table.insert(game.agents, agent)
+            factory.construct(agent, "agents", {"transform", "shape"})
         end
     end
 end
@@ -132,8 +134,6 @@ function Deposit.new(pos, control)
 end
 
 function Deposit:update()
-    if not self.transform or not self.shape then return end
-
     self.elapsed = self.elapsed + game.delta
 
     if self.elapsed >= 1 then
@@ -141,20 +141,8 @@ function Deposit:update()
         self.elapsed = self.elapsed - 1
     end
 
-    local red = {}
-    local blue = {}
-
-    for _, agent in pairs(game.agents) do
-        if agent.pos and agent.shape then
-            if glm.length(agent.pos - self.pos) > 64 then
-                -- do nothing
-            elseif agent.team == "RED" then
-                table.insert(red, agent)
-            elseif agent.team == "BLUE" then
-                table.insert(blue, agent)
-            end
-        end
-    end
+    local red = getCollisions(self.uuid, 1)
+    local blue = getCollisions(self.uuid, 2)
 
     if #red == 0 then
         self.control = self.control + #blue * game.delta / 10

@@ -7,7 +7,7 @@
 #define OBJECT_POOL_PAGE_ALIGNMENT 64
 #endif
 
-#define OBJECT_SIZE_1 sizeof(std::size_t) * 2
+#define OBJECT_SIZE_1 sizeof(std::size_t)
 
 #define OBJECT_SIZE_2 sizeof(std::size_t) * 2
 #define OBJECT_SIZE_4 sizeof(std::size_t) * 4
@@ -15,6 +15,8 @@
 #define OBJECT_SIZE_16 sizeof(std::size_t) * 16
 #define OBJECT_SIZE_32 sizeof(std::size_t) * 32
 #define OBJECT_SIZE_64 sizeof(std::size_t) * 64
+
+#include "Misc.hpp"
 
 #include <cstring>
 #include <iostream>
@@ -26,8 +28,6 @@
 #include <typeinfo>
 #include <unordered_map>
 #include <vector>
-
-#include "Misc.hpp"
 
 /*! Things related to an aligned generic object pool implementation. */
 namespace razaron::objectpool

@@ -34,6 +34,8 @@ function input.init()
     input.handlers["1"] = function(isReleased)
         if isReleased then
             print("1")
+            ProFi:stop()
+            ProFi:writeReport( 'MyProfilingReport.txt' )
         end
     end
 

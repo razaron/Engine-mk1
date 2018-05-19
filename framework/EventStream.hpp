@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Misc.hpp"
+
 #include <functional>
 #include <iostream>
 #include <map>
@@ -7,8 +9,6 @@
 #include <mutex>
 #include <queue>
 #include <vector>
-
-#include "Misc.hpp"
 
 /*! %Event streams are used to queue up events to be consumed at a later time. */
 namespace razaron::eventstream
@@ -127,8 +127,8 @@ namespace razaron::eventstream
 		void processEvents();
 
 	private:
-		std::queue<Event> _incomingEvents;
-		std::queue<Event> _outgoingEvents;
+		std::vector<Event> _incomingEvents;
+		std::vector<Event> _outgoingEvents;
 		std::map<EventType, EventHandler> _eventHandlers;
 
 		std::mutex _incomingEventsMutex;

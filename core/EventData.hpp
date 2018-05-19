@@ -1,10 +1,10 @@
 #pragma once
 
+#include "Component.hpp"
+
 #include <list>
 #include <utility>
 #include <memory>
-
-#include "Component.hpp"
 
 namespace razaron::core::eventdata
 {

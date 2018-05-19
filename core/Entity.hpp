@@ -1,8 +1,8 @@
 #pragma once
 
-#include <string>
-
 #include "Component.hpp"
+
+#include <string>
 
 /*!	Entities are a way of organizing related components into groups. */
 namespace razaron::core::entity
@@ -62,6 +62,12 @@ namespace razaron::core::entity
 		{
 			if(_components.find(component.first) != _components.end() && _components[component.first] == component.second)
 				_components.erase(component.first);
+		}
+
+		template <typename... Types>
+		bool has(Types... types)
+		{
+			return (_components.count(types) && ...);
 		}
 
 		/*!	Gets the current ComponentMap of the Entity.
