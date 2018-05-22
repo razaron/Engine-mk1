@@ -117,7 +117,7 @@ Entity &Space::operator[](UUID64 id)
 	if (_entities.count(id))
 		return _entities[id];
 	else
-		throw std::invalid_argument("Entity: " + std::to_string(id.uuid.to_ullong()) + " is not in Space: " + std::to_string(_id.uuid.to_ullong()));
+		throw std::invalid_argument("Entity: " + std::to_string(id.uuid) + " is not in Space: " + std::to_string(_id.uuid));
 }
 
 void Space::update(double delta)

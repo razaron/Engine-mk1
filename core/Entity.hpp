@@ -39,7 +39,7 @@ namespace razaron::core::entity
 			if (_components.find(type) != _components.end())
 				return _components[type];
 			else
-				throw std::invalid_argument("ComponentType not found in Entity: " + std::to_string(_id.uuid.to_ullong()));
+				throw std::invalid_argument("ComponentType not found in Entity: " + std::to_string(_id.uuid));
 		}
 
 		/*!	Adds a ComponentHandle to the ComponentMap of Entity.

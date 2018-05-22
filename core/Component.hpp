@@ -57,7 +57,7 @@ namespace razaron::core::component
 			{
 				_id = rhs._id;
 
-				rhs._id.uuid.reset();
+				rhs._id.uuid = 0;
 			}
 
 			return *this;
