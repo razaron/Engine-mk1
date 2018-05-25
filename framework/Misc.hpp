@@ -23,9 +23,6 @@
 #endif
 #endif
 
-// For removing unused parameter warnings
-#define UNUSED(x) (void)(x)
-
 // Helper function
 template <typename T>
 bool includes(T a, T b)

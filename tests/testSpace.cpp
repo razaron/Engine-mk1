@@ -131,9 +131,7 @@ SCENARIO("Spaces can add/remove enitities, generating relavant components in the
 
                 for(auto& [id, entity] : s.getEntities())
                 {
-					UNUSED(entity);
-
-                    Event e{
+					Event e{
                         id, // Entity ID.
                         EventType::SPACE_DELETE_ENTITY, // Event type enum
                         std::make_shared<core::eventdata::SPACE_DELETE_ENTITY>()

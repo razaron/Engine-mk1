@@ -36,8 +36,9 @@ namespace razaron::core::entity
 		*/
 		Handle &operator[](ComponentType type)
 		{
-			if (_components.find(type) != _components.end())
-				return _components[type];
+			auto it = _components.find(type);
+			if (it != _components.end())
+				return it->second;
 			else
 				throw std::invalid_argument("ComponentType not found in Entity: " + std::to_string(_id.uuid));
 		}

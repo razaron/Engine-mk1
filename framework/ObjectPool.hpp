@@ -486,7 +486,7 @@ namespace razaron::objectpool
 
 		if (it != _hashMap.end())
 		{
-			return static_cast<T *>(_hashMap[handle]);
+			return static_cast<T *>(it->second);
 		}
 		else
 			return nullptr;

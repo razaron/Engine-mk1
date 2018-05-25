@@ -302,9 +302,7 @@ namespace razaron::graph
 	template <class V, class E, class G>
 	inline void Graph<V, E, G>::addEdge(std::size_t source, std::size_t target, E edgeData)
 	{
-		auto it = std::find_if(_vertices.begin(), _vertices.end(), [source](const Vertex<V, E> &v) {
-			return v.id == source;
-		});
+		auto it = std::find(_vertices.begin(), _vertices.end(), Vertex<V, E>{source});
 
 		if (it == _vertices.end())
 		{
@@ -314,9 +312,7 @@ namespace razaron::graph
 				_vertices.emplace(_vertices.begin() + source, source);
 		}
 
-		it = std::find_if(_vertices.begin(), _vertices.end(), [target](const Vertex<V, E> &v) {
-			return v.id == target;
-		});
+		it = std::find(_vertices.begin(), _vertices.end(), Vertex<V, E>{target});
 
 		if (it == _vertices.end())
 		{
@@ -336,7 +332,9 @@ namespace razaron::graph
 		{
 			v.state = State::WHITE;
 
-			for (auto &e : (*this)[v.id].adjacencyList)
+			auto adjList = (*this)[v.id].adjacencyList;
+
+			for (auto &e : adjList)
 			{
 				e.state = State::WHITE;
 			}
