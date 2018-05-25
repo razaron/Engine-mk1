@@ -21,7 +21,7 @@ add_custom_command(TARGET game-phase-2 POST_BUILD COMMAND ${CMAKE_COMMAND} -E co
 
 # COPY DLLS
 IF(${CMAKE_GENERATOR} STREQUAL "Visual Studio 15 2017 Win64")
-    set(FROM_DIR ${PROJECT_SOURCE_DIR}/3rd_party/libs/Win64)
+    set(FROM_DIR ${PROJECT_SOURCE_DIR}/3rd_party/libs/Win64/${CONFIGURATION})
     set(TO_DIR $<TARGET_FILE_DIR:game-phase-2>)
     file(GLOB DLL_FILES "${FROM_DIR}/*.dll")
 
