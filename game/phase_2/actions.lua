@@ -73,7 +73,7 @@ Actions = {
 
         return Action.new(
             "melee",
-            4,
+            2,
             pre,
             post
         )
@@ -146,7 +146,7 @@ Actions = {
 
         return Action.new(
             "resupply",
-            1,
+            2,
             pre,
             post
         )
@@ -206,9 +206,9 @@ Effects = {
                 ["behaviour"] = "SEEK",
 
                 ["effect"] = function()
-                    if self.blackboard.target and glm.length(self.pos - self.blackboard.target.pos) < 500/4 then
+                    if self.blackboard.target and (glm.length(self.pos - self.blackboard.target.pos) < 500/4 or self.blackboard.target.isDead) then
                         return true
-                    else
+                    else 
                         return false
                     end
                 end

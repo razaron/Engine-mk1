@@ -19,6 +19,10 @@ PhysicsSystem::PhysicsSystem(sol::state_view lua)
 		"rotation", sol::property(&TransformComponent::getRotation, &TransformComponent::setRotation)
 		);
 
+	_lua.new_usertype<MotionComponent>("MotionComponent",
+                                           sol::constructors<MotionComponent()>(),
+                                           "velocity", &MotionComponent::velocity);
+
 	lua["STEERING_BEHAVIOUR"] = sol::new_table();
 	lua["STEERING_BEHAVIOUR"]["ARRIVE"] = SteeringBehaviour::ARRIVE;
 	lua["STEERING_BEHAVIOUR"]["MAINTAIN"] = SteeringBehaviour::MAINTAIN;
@@ -28,7 +32,6 @@ PhysicsSystem::PhysicsSystem(sol::state_view lua)
 
 	_lua["updateSteering"] = [&](const UUID64 &recipient, const UUID64 &target, SteeringBehaviour behaviour) {
 		_behaviours[recipient] = std::make_pair(behaviour, target);
-
 	};
 
 	registerHandler(EVENTTYPE_STEERING, [&](const Event &e) {
@@ -50,11 +53,11 @@ PhysicsSystem::~PhysicsSystem()
 
 Task PhysicsSystem::update(EntityMap &entities, double delta)
 {
-	std::vector<Event> events;
-
+	using ColliderVec = std::vector<std::tuple<UUID64, TransformComponent*, ColliderComponent*>>;
+	
 	// Extract relavent components
 	std::map<UUID64, std::pair<TransformComponent*, MotionComponent*>, UUID64Cmp> bodies;
-	std::vector<std::tuple<UUID64, TransformComponent*, ColliderComponent*>> colliders;
+	ColliderVec colliders;
 	for (auto &[id, entity] : entities)
 	{
 		if (entity.has(ComponentType::MOTION, ComponentType::TRANSFORM))
@@ -200,6 +203,8 @@ Task PhysicsSystem::update(EntityMap &entities, double delta)
 		}
 	}
 
+	std::vector<Event> events;
+
 	// Calculate collisions
 	for (auto &[id1, t1, c1] : colliders)
 	{
@@ -208,11 +213,10 @@ Task PhysicsSystem::update(EntityMap &entities, double delta)
 			float length = glm::length(t2->translation - t1->translation);
 			if (length < c1->radius)
 			{
-				events.push_back(Event{
+				events.emplace_back(
 					id1,
 					EVENTTYPE_COLLISION,
 					std::make_shared<EVENTDATA_COLLISION>(id2, length, c2->group)
-					}
 				);
 			}
 		}
@@ -225,14 +229,15 @@ Task PhysicsSystem::update(EntityMap &entities, double delta)
 
 		auto transform = getObject<TransformComponent>(entity[ComponentType::TRANSFORM]);
 
-		events.push_back(Event{
+		events.emplace_back(
 			id,
 			EVENTTYPE_MODEL,
-			std::make_shared<EVENTDATA_MODEL>(transform->getModel()) }
+			std::make_shared<EVENTDATA_MODEL>(transform->getModel())
 		);
 	}
 
 	pushEvents(events, StreamType::OUTGOING);
+	
 
 	return Task{};
 }

@@ -6,12 +6,10 @@
 #include "PhysicsSystem.hpp"
 #include "RenderSystem.hpp"
 
+#include <glm/glm.hpp>
 #pragma warning(push)
 #pragma warning(disable: 4996)
-
 #include <sol.hpp>
-#include <glm/glm.hpp>
-
 #pragma warning(pop)
 
 namespace razaron::lua::planner
@@ -240,6 +238,6 @@ namespace razaron::lua::entities
 			};
 
 			events.push_back(e);
-		};
+        };
 	}
 }

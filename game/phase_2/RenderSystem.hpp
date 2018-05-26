@@ -4,13 +4,17 @@
 #include "ShapeComponent.hpp"
 #include "config.hpp"
 
-#include <sol.hpp>
 #include <SFML/Graphics.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#pragma warning(push)
+#pragma warning(disable: 4996)
+#include <sol.hpp>
+#pragma warning(pop)
 
 namespace razaron::game::systems
 {
 	using namespace razaron::core::system;
+	using namespace razaron::game::components;
 
 	using ShapeArgs = std::tuple<sol::object, int, glm::u8vec3>;
 
@@ -35,10 +39,13 @@ namespace razaron::game::systems
 		ComponentHandle createComponent(ComponentType type, std::shared_ptr<void> tuplePtr);
 		bool removeComponent(ComponentHandle ch);
 
+		void render();
+
 	private:
 		sol::state_view _lua;
 		sf::RenderWindow *_window;
 
+		std::vector<std::pair<glm::mat4, ShapeComponent>> _data;
 		std::map<UUID64, glm::mat4, UUID64Cmp> _models;
 	};
 }

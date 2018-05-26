@@ -34,8 +34,7 @@ function input.init()
     input.handlers["1"] = function(isReleased)
         if isReleased then
             print("1")
-            ProFi:stop()
-            ProFi:writeReport( 'MyProfilingReport.txt' )
+            Agent.debug.savePlan = not Agent.debug.savePlan
         end
     end
 
@@ -53,7 +52,7 @@ function input.init()
 
     input.handlers["4"] = function(isReleased)
         if isReleased then
-            print("4")
+            renderer.overlay = not renderer.overlay
         end
     end
 

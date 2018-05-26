@@ -1,7 +1,6 @@
 ProFi = require 'ProFi'
 local agents = require "agents"
 local buildings = require "buildings"
-local traverse = require "luatraverse"
 
 factory = {
     constructing = {},
@@ -47,6 +46,11 @@ function factory.update()
         if obj.uuid then
             deleteEntity(obj.uuid)
             table.remove(factory.destructing, i)
+
+            if obj.class == "Bullet" then destructedBullets = destructedBullets + 1 end
+            if obj.class == "Base" then destructedBases = destructedBases + 1 end
+            if obj.class == "Deposit" then destructedDeposits = destructedDeposits + 1 end
+            if obj.class == "Agent" or obj.class == "Soldier" or obj.class == "Attacker" or obj.class == "Defender"  or obj.class == "Worker" then destructedAgents = destructedAgents + 1 end
         end
     end
 end
@@ -62,7 +66,7 @@ game = {
 
 function game.init()
     -- BASES
-    local blueBase = Base.new("BLUE", glm.vec2.new(256 / 5, 256 / 5), glm.u8vec3.new(100, 100, 255))
+    local blueBase = Base.new("BLUE", glm.vec2.new(256 / 5 + 1024/10, 256 / 5 + 1024/10), glm.u8vec3.new(100, 100, 255))
     blueBase.cycle = 0
 
     factory.construct(
@@ -71,7 +75,7 @@ function game.init()
         {"transform", "shape"}
     )
 
-    local redBase = Base.new("RED", glm.vec2.new((4096 - 256) / 5, (4096 - 256) / 5), glm.u8vec3.new(100, 100, 255))
+    local redBase = Base.new("RED", glm.vec2.new((4096 - 256) / 5 + 1024/10, (4096 - 256) / 5 + 1024/10), glm.u8vec3.new(100, 100, 255))
     redBase.cycle = 0
 
     factory.construct(
@@ -82,27 +86,27 @@ function game.init()
 
     -- RESOURCE DEPOSITS
     factory.construct(
-        Deposit.new(glm.vec2.new(1024 / 5, 1024 / 5), 1.0),
+        Deposit.new(glm.vec2.new(1024 / 5 + 1024/10, 1024 / 5 + 1024/10), 1.0),
         "deposits",
         {"transform", "shape"}
     )
     factory.construct(
-        Deposit.new(glm.vec2.new(1024 / 5, 3072 / 5), 0.0),
+        Deposit.new(glm.vec2.new(1024 / 5 + 1024/10, 3072 / 5 + 1024/10), 0.0),
         "deposits",
         {"transform", "shape"}
     )
     factory.construct(
-        Deposit.new(glm.vec2.new(2048 / 5, 2048 / 5), 0.0),
+        Deposit.new(glm.vec2.new(2048 / 5 + 1024/10, 2048 / 5 + 1024/10), 0.0),
         "deposits",
         {"transform", "shape"}
     )
     factory.construct(
-        Deposit.new(glm.vec2.new(3072 / 5, 1024 / 5), 0.0),
+        Deposit.new(glm.vec2.new(3072 / 5 + 1024/10, 1024 / 5 + 1024/10), 0.0),
         "deposits",
         {"transform", "shape"}
     )
     factory.construct(
-        Deposit.new(glm.vec2.new(3072 / 5, 3072 / 5), - 1.0),
+        Deposit.new(glm.vec2.new(3072 / 5 + 1024/10, 3072 / 5 + 1024/10), - 1.0),
         "deposits",
         {"transform", "shape"}
     )
@@ -110,61 +114,30 @@ function game.init()
     --ProFi:start()
 end
 
+deadAgents = 0
+deadBullets = 0
+deadBases = 0
+deadDeposits = 0
+destructedAgents = 0
+destructedBullets = 0
+destructedBases = 0
+destructedDeposits = 0
+newAgents = 0
+newBullets = 0
+newBases = 0
+newDeposits = 0
+
 frame = 1
 elapsed = 1
 function game.update(delta)
-    frame = frame + 1
-
     factory.update()
-
     game.delta = delta
+
+    frame = frame + 1
 
     elapsed = elapsed - delta
     if elapsed < 0 then
         elapsed = 1
-
-        -- Determine win state
-        local redDead = true
-        local blueDead = true
-        for _, a in pairs(game.agents) do
-            if not redDead and not blueDead then break
-            elseif a.team == "RED" then redDead = false
-            elseif a.team == "BLUE" then blueDead = false end
-        end
-
-        if redDead or blueDead or #game.agents > 64 then
-            if blueDead then game.wins.blue = game.wins.blue + 1 end
-            if redDead then game.wins.red = game.wins.red + 1 end
-
-            for i = #game.agents, 1, - 1 do
-                local agent = game.agents[i]
-                factory.destruct(agent)
-            end
-            game.agents = {}
-
-            for i = #game.bullets, 1, - 1 do
-                local bullet = game.bullets[i]
-                factory.destruct(bullet)
-            end
-            game.bullets = {}
-
-            for i = #game.deposits, 1, - 1 do
-                local deposit = game.deposits[i]
-                factory.destruct(deposit)
-            end
-            game.deposits = {}
-
-
-            for i = #game.bases, 1, - 1 do
-                local base = game.bases[i]
-                factory.destruct(base)
-            end
-            game.bases = {}
-
-            factory.killAll()
-            game.init()
-            print(tostring(game.wins.blue)..'\t'..tostring(game.wins.red))
-        end
     end
 
     -- UPDATE BASES --
@@ -181,6 +154,8 @@ function game.update(delta)
         if agent.isDead then
             factory.destruct(agent)
             table.remove(game.agents, i)
+            agent.planner = nil
+            if isWon() then return end
         else
             agent:update()
         end
@@ -203,4 +178,52 @@ function game.update(delta)
             bullet:update()
         end
     end
+end
+
+function isWon()
+    -- Determine win state
+    local redDead = true
+    local blueDead = true
+    for _, a in pairs(game.agents) do
+        if not redDead and not blueDead then break
+        elseif a.team == "RED" then redDead = false
+        elseif a.team == "BLUE" then blueDead = false end
+    end
+
+    if redDead or blueDead or #game.agents > 64 then
+        if blueDead then game.wins.red = game.wins.red + 1 end
+        if redDead then game.wins.blue = game.wins.blue + 1 end
+
+        for i = #game.agents, 1, - 1 do
+            local agent = game.agents[i]
+            factory.destruct(agent)
+        end
+        game.agents = {}
+
+        for i = #game.bullets, 1, - 1 do
+            local bullet = game.bullets[i]
+            factory.destruct(bullet)
+        end
+        game.bullets = {}
+
+        for i = #game.deposits, 1, - 1 do
+            local deposit = game.deposits[i]
+            factory.destruct(deposit)
+        end
+        game.deposits = {}
+
+
+        for i = #game.bases, 1, - 1 do
+            local base = game.bases[i]
+            factory.destruct(base)
+        end
+        game.bases = {}
+
+        factory.killAll()
+        game.init()
+        print(tostring(game.wins.blue)..'\t'..tostring(game.wins.red))
+
+        return true
+    end
+    return false
 end

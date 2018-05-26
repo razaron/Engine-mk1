@@ -73,8 +73,6 @@ function Base:build(type)
             factory.construct(agent, "agents", {"transform", "shape"})
         end
     elseif type == "Attacker" then
-        if not logging then colour = glm.u8vec3.new(255, 255, 255) end
-
         local agent = Attacker.new(self.team.."_ATTACKER", glm.vec2.new(self.pos), colour, self.team)
         agent.team = self.team
         agent.ammo = 3

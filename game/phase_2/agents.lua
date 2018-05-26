@@ -1,4 +1,3 @@
-local steering = require("steering")
 local actions = require("actions")
 
 Bullet = {
@@ -9,7 +8,7 @@ Bullet = {
 
     owner = "BLUE",
     direction = glm.vec2.new(0, 0),
-    origin = glm.vec2.new(0,0),
+    origin = glm.vec2.new(0, 0),
     isDead = false
 }
 
@@ -57,7 +56,7 @@ function Bullet:update()
     end
 
     if dist ~= math.huge then
-        for _,agent in pairs(game.agents) do
+        for _, agent in pairs(game.agents) do
             if agent.uuid == uid then
                 self.isDead = true
                 agent.isDead = true
@@ -77,10 +76,8 @@ Agent = {
     -- Components
     transform = nil,
     shape = nil,
-
-    -- Motion
-    vel = glm.vec2.new(0, 0),
-    steer = Steering.new(),
+    motion = nil,
+    collider = nil,
 
     -- AI
     planner = {},
@@ -90,7 +87,13 @@ Agent = {
     effects = {},
 
     curPlan = {},
-    curAction = 0
+    curAction = 0,
+
+    isDead = false,
+
+    debug = {
+        savePlan = false
+    }
 }
 
 function Agent.new(name, pos, sides, col, team)
@@ -103,10 +106,7 @@ function Agent.new(name, pos, sides, col, team)
     self.transform = nil
     self.shape = nil
     self.uuid = nil
-    self.pos = pos--################################################
-
-    self.vel = glm.vec2.new(0, 1)
-    self.steer = Steering.new()
+    self.pos = pos
 
     self.planner = Planner.new()
     self.blackboard = {}
@@ -166,8 +166,9 @@ function Agent:plan()
     local plan = self.planner:plan(self.actions, self:decideGoal())
 
     if plan:size() > 0 then
-
-        --if self == logging then self.planner:savePlan("dot/"..self.name.."_"..frame..".dot") print(self.blackboard.threat) end
+        if Agent.debug.savePlan then
+            self.planner:savePlan("dot/"..self.name.."_"..frame..".dot")
+        end
 
         -- Add target and effect function to curPlan
         self.curPlan = {}

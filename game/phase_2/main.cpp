@@ -32,10 +32,11 @@ int main()
 	g.addEdge(1, 2);
 	g.addEdge(2, 3);
 
-	g[0].data = std::make_shared<GameSystem>(lua);
-	g[1].data = std::make_shared<PhysicsSystem>(lua);
-	g[2].data = std::make_shared<RenderSystem>(lua, &window);
-	g[3].data = std::make_shared<InputSystem>(lua, &window);
+	g[0].data = std::make_shared<InputSystem>(lua, &window);
+	g[1].data = std::make_shared<GameSystem>(lua);
+	g[2].data = std::make_shared<PhysicsSystem>(lua);
+	auto r = std::make_shared<RenderSystem>(lua, &window);
+	g[3].data = r;
 
 	Space s{ g };
 	s.registerHandler(EventType::SPACE_NEW_ENTITY, [&s, &lua](const Event & e) {
@@ -64,7 +65,9 @@ int main()
 
 	double delta{};
 	double elapsed{};
+	double lastRender{};
 	unsigned frames{};
+
 	while (window.isOpen())
 	{
 		auto start = std::chrono::high_resolution_clock::now();
@@ -74,16 +77,23 @@ int main()
 
 		s.update(delta);
 
+		if (lastRender > 0.016667)
+		{
+			lastRender = 0;
+			r->render();
+		}
+
 		auto end = std::chrono::high_resolution_clock::now();
 		std::chrono::duration<double> diff = end - start;
 
 		delta = diff.count();
 		elapsed += delta;
+		lastRender += delta;
 		++frames;
 
 		if (elapsed >= 10.0)
 		{
-			std::cout << "FPS: " << frames / 10 << "\tFrames: " << frames << std::endl;
+			std::cout << "FPS: " << frames / 10.f << "\tFrames: " << frames << std::endl;
 			elapsed = 0.0;
 			frames = 0;
 		}

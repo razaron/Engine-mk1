@@ -6,7 +6,11 @@
 #include "ColliderComponent.hpp"
 #include "config.hpp"
 
+#include <glm/glm.hpp>
+#pragma warning(push)
+#pragma warning(disable: 4996)
 #include <sol.hpp>
+#pragma warning(pop)
 
 namespace razaron::game::systems
 {

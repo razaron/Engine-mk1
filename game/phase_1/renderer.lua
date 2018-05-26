@@ -29,6 +29,7 @@ function renderer.update(delta)
         if resource.team == "RED" then col = glm.u8vec3.new(255, 100, 100) end
 
         Render.draw.polygon(4, 64 * renderer.zoom, (resource.pos - renderer.camera) * renderer.zoom, 0, col)
+        Render.draw.text(tostring(resource.value), ((resource.pos + glm.vec2.new(64, -64)) - renderer.camera) * renderer.zoom, 32, glm.u8vec3.new(255, 255, 255))
         Render.draw.text(tostring(resource.serving), ((resource.pos + glm.vec2.new(64, 64)) - renderer.camera) * renderer.zoom, 32, glm.u8vec3.new(255, 255, 255))
     end
 
@@ -46,33 +47,6 @@ function renderer.update(delta)
         Render.draw.polygon(8, 8 * renderer.zoom, (bullet.pos - renderer.camera) * renderer.zoom, 0, glm.u8vec3.new(255, 255, 255))
     end
 
-    -- INTERFACE
-    function drawNode(node)
-        if node.isOpen then
-            Render.draw.polygon(8, node.size * renderer.zoom, (node.pos - renderer.camera) * renderer.zoom, 0, glm.u8vec3.new(255, 255, 255))
-
-            Render.draw.text(node:getText(), ((node.pos - glm.vec2.new(64, 64)) - renderer.camera) * renderer.zoom, 32, glm.u8vec3.new(255, 0, 0))
-        end
-
-        for i = 1, #node.children do
-            local child = node.children[i]
-
-            local theta = math.pi/#node.children * i - math.pi/#node.children*2
-            if #node.children == 1 then
-                theta = 0
-            end
-            child.pos.x = math.cos(theta)
-            child.pos.y = math.sin(theta)
-
-            child.pos = node.pos + child.pos * 64 / renderer.zoom
-
-            drawNode(child)
-        end
-    end
-
-    for _, node in pairs(game.rootNodes) do
-        drawNode(node)
-    end
     -- OVERLAY
     if renderer.overlay then
         local string = ""
