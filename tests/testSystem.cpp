@@ -41,8 +41,9 @@ void loop(FooSystem &foo, BarSystem &bar)
 	foo.pushEvents(events, StreamType::INCOMING);
 	bar.pushEvents(events, StreamType::INCOMING);
 
-	foo.update(EntityMap{}, 0);
-	bar.update(EntityMap{}, 0);
+	EntityMap map{};
+	foo.update(map, 0);
+	bar.update(map, 0);
 
 	foo.processEvents();
 	bar.processEvents();

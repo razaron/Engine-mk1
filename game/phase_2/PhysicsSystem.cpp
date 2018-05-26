@@ -54,7 +54,7 @@ PhysicsSystem::~PhysicsSystem()
 Task PhysicsSystem::update(EntityMap &entities, double delta)
 {
 	using ColliderVec = std::vector<std::tuple<UUID64, TransformComponent*, ColliderComponent*>>;
-	
+
 	// Extract relavent components
 	std::map<UUID64, std::pair<TransformComponent*, MotionComponent*>, UUID64Cmp> bodies;
 	ColliderVec colliders;
@@ -117,11 +117,6 @@ Task PhysicsSystem::update(EntityMap &entities, double delta)
 
 					if (glm::length(steering) > m->maxAcceleration)
 						steering = glm::normalize(steering) * m->maxAcceleration;
-
-					if (steering == glm::vec2{} || target->translation - t->translation == glm::vec2{})
-					{
-						int i = 4;
-					}
 
 					break;
 				}
@@ -237,7 +232,7 @@ Task PhysicsSystem::update(EntityMap &entities, double delta)
 	}
 
 	pushEvents(events, StreamType::OUTGOING);
-	
+
 
 	return Task{};
 }
