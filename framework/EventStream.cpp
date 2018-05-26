@@ -17,14 +17,14 @@ void EventStream::pushEvent(Event event, StreamType streamType)
 	{
 		std::lock_guard<std::mutex> lk{ _incomingEventsMutex };
 
-		_incomingEvents.push(event);
+		_incomingEvents.push_back(event);
 		break;
 	}
 	case StreamType::OUTGOING:
 	{
 		std::lock_guard<std::mutex> lk{ _outgoingEventsMutex };
 
-		_outgoingEvents.push(event);
+		_outgoingEvents.push_back(event);
 		break;
 	}
 	}
@@ -38,10 +38,7 @@ void EventStream::pushEvents(const std::vector<Event> &events, StreamType stream
 	{
 		std::lock_guard<std::mutex> lk{ _incomingEventsMutex };
 
-		for (const auto &e : events)
-		{
-			_incomingEvents.push(e);
-		}
+		_incomingEvents.insert(_incomingEvents.end(), events.begin(), events.end());
 
 		break;
 	}
@@ -49,10 +46,7 @@ void EventStream::pushEvents(const std::vector<Event> &events, StreamType stream
 	{
 		std::lock_guard<std::mutex> lk{ _outgoingEventsMutex };
 
-		for (const auto &e : events)
-		{
-			_outgoingEvents.push(e);
-		}
+		_outgoingEvents.insert(_outgoingEvents.end(), events.begin(), events.end());
 
 		break;
 	}
@@ -72,7 +66,7 @@ Event EventStream::popEvent(StreamType streamType)
 		else
 		{
 			Event e = _incomingEvents.front();
-			_incomingEvents.pop();
+			_incomingEvents.erase(_incomingEvents.begin());
 
 			return e;
 		}
@@ -86,7 +80,7 @@ Event EventStream::popEvent(StreamType streamType)
 		else
 		{
 			Event e = _outgoingEvents.front();
-			_outgoingEvents.pop();
+			_outgoingEvents.erase(_incomingEvents.begin());
 
 			return e;
 		}
@@ -106,14 +100,7 @@ std::vector<Event> EventStream::popEvents(StreamType streamType)
 
 		std::vector<Event> events = {};
 
-		const std::size_t max = _incomingEvents.size();
-		for (std::size_t i = 0; i < max; i++)
-		{
-			Event e = _incomingEvents.front();
-			_incomingEvents.pop();
-
-			events.push_back(e);
-		}
+		events.swap(_incomingEvents);
 
 		return events;
 	}
@@ -123,14 +110,7 @@ std::vector<Event> EventStream::popEvents(StreamType streamType)
 
 		std::vector<Event> events = {};
 
-		const std::size_t max = _outgoingEvents.size();
-		for (std::size_t i = 0; i < max; i++)
-		{
-			Event e = _outgoingEvents.front();
-			_outgoingEvents.pop();
-
-			events.push_back(e);
-		}
+		events.swap(_outgoingEvents);
 
 		return events;
 	}
@@ -170,6 +150,15 @@ void EventStream::processEvents()
 	// Delete duplicate incoming Events
 	events.erase(std::unique(events.begin(), events.end()), events.end());
 
+	for (auto &[type, func] : _eventHandlers)
+	{
+		for (auto &e : events)
+		{
+			if (e.type == type)
+				func(e);
+		}
+	}
+	/*
 	for (auto &e : events)
 	{
 		auto it = _eventHandlers.find(e.type);
@@ -177,12 +166,5 @@ void EventStream::processEvents()
 		if (it != _eventHandlers.end())
 			it->second(e);
 	}
-}
-
-void EventStream::propogateEvents(EventStream &dst)
-{
-	std::vector<Event> events = popEvents(StreamType::OUTGOING);
-
-	dst.pushEvents(events, StreamType::INCOMING);
-	dst.pushEvents(events, StreamType::OUTGOING);
+	*/
 }

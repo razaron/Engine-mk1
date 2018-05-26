@@ -1,8 +1,8 @@
 #pragma once
 
-#include <string>
-
 #include "Component.hpp"
+
+#include <string>
 
 /*!	Entities are a way of organizing related components into groups. */
 namespace razaron::core::entity
@@ -36,10 +36,11 @@ namespace razaron::core::entity
 		*/
 		Handle &operator[](ComponentType type)
 		{
-			if (_components.find(type) != _components.end())
-				return _components[type];
+			auto it = _components.find(type);
+			if (it != _components.end())
+				return it->second;
 			else
-				throw std::invalid_argument("ComponentType not found in Entity: " + std::to_string(_id.uuid.to_ullong()));
+				throw std::invalid_argument("ComponentType not found in Entity: " + std::to_string(_id.uuid));
 		}
 
 		/*!	Adds a ComponentHandle to the ComponentMap of Entity.
@@ -62,6 +63,12 @@ namespace razaron::core::entity
 		{
 			if(_components.find(component.first) != _components.end() && _components[component.first] == component.second)
 				_components.erase(component.first);
+		}
+
+		template <typename... Types>
+		bool has(Types... types)
+		{
+			return (_components.count(types) && ...);
 		}
 
 		/*!	Gets the current ComponentMap of the Entity.

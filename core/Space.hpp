@@ -71,14 +71,17 @@ namespace razaron::core::space
         /*! Calls `registerHandler` on the member EventStream with the given arguments. */
         void registerHandler(EventType type, EventHandler handler);
 
-        /*! Calls `pushEvents` on the member EventStream with the given arguments. */
+		/*! Calls `registerHandler` on the member EventStream with the given arguments. */
+		void extendHandler(EventType type, EventHandler handler);
+
+        /*! Calls `pushEvents` on the member EventStream. */
         void pushEvents(const std::vector<Event> &events, StreamType streamType);
 
         EntityMap &getEntities() noexcept { return _entities; };
 
       private:
         void updateSystems(double delta);
-        void propagateEvents();
+        void publishEvents();
 
 		UUID64 _id;
         SystemGraph _systemGraph;

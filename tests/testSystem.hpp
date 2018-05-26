@@ -7,26 +7,24 @@ using namespace razaron::core::component;
 using namespace razaron::core::entity;
 using namespace razaron::graph;
 
+// 
 class FooSystem : public System
 {
 public:
-	FooSystem() {}
+	FooSystem() 
+	{
+		extendHandler(EventType::EVENT_1, [&](const Event& e) {
+			auto data = std::static_pointer_cast<int>(e.data);
+
+			count += *data;
+			}
+		);
+	}
+	
 	~FooSystem() {}
 
 	Task update(EntityMap &, double)
 	{
-		auto events = popEvents();
-
-		for (auto &e : events)
-		{
-			if (e.type == EventType::REMOVE_COMPONENT)
-			{
-				auto data = std::static_pointer_cast<int>(e.data);
-
-				count += *data;
-			}
-		}
-
 		return Task{};
 	}
 
@@ -47,7 +45,7 @@ public:
 	{
 		for (auto i = 0; i < 5; i++)
 		{
-			pushEvent(Event{ UUID64{0}, EventType::REMOVE_COMPONENT, std::make_shared<int>(i) });
+			_eventStream.pushEvent(Event{ UUID64{0}, EventType::EVENT_1, std::make_shared<int>(i) }, StreamType::OUTGOING);
 		}
 
 		return Task{};

@@ -105,28 +105,11 @@ Actions = {
         pre = ConditionSet(Condition.new("team", "hasDeposit", true, OPERATION.EQUAL))
         post = ConditionSet(Condition.new("self", "hasResource", true, OPERATION.ASSIGN))
 
-        procPre = ProceduralConditionSet()
-        procPost = ProceduralConditionSet(
-            function()
-                local hasDeposit = false
-                for _, r in pairs(game.deposits) do
-                    if r.team == self.team then
-                        hasDeposit = true
-                        break
-                    end
-                end
-
-                return Condition.new("team", "hasDeposit", hasDeposit, OPERATION.ASSIGN)
-            end
-        )
-
         return Action.new(
             "mine",
             1,
             pre,
-            post,
-            procPre,
-            procPost
+            post
         )
     end,
     craft = function()

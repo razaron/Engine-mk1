@@ -74,15 +74,11 @@ SCENARIO("Graphs can call user defined functions on Vertex and Edge discovery", 
     {
         WHEN("Passing discovery functions")
         {
-            g.vertexFuncs[State::WHITE] = [](TestVertex &v, TestGraph &g) {
-                UNUSED(v);
-
+            g.vertexFuncs[State::WHITE] = [](TestVertex &, TestGraph &g) {
                 g.data.numVertices++;
             };
 
-            g.edgeFuncs[State::WHITE] = [](TestEdge &v, TestGraph &g) {
-                UNUSED(v);
-
+            g.edgeFuncs[State::WHITE] = [](TestEdge &, TestGraph &g) {
                 g.data.numEdges++;
             };
 

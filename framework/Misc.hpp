@@ -3,7 +3,6 @@
 #include <array>
 #include <atomic>
 #include <algorithm>
-#include <bitset>
 #include <random>
 
 // Check windows
@@ -23,9 +22,6 @@
 #define ENVIRONMENT32
 #endif
 #endif
-
-// For removing unused parameter warnings
-#define UNUSED(x) (void)(x)
 
 // Helper function
 template <typename T>
@@ -116,7 +112,7 @@ private:
 // UUID struct 64 bits
 struct UUID64
 {
-	std::bitset<64> uuid;
+	uint64_t uuid;
 
 	UUID64() noexcept
 	{
@@ -125,26 +121,10 @@ struct UUID64
 		std::mt19937_64 e{ s };
 
 		auto random = e();
-		uuid = std::bitset<64>{ random };
+		uuid =  random ;
 	}
 
-	UUID64(int) noexcept : uuid{} {}
-
-	template <std::size_t N>
-	UUID64(std::bitset<N> mask)
-	{
-		std::random_device r;
-		std::seed_seq s{ r(), r(), r(), r(), r(), r(), r(), r() };
-		std::mt19937_64 e{ s };
-
-		auto random = e();
-		uuid = std::bitset<64>{ random };
-
-		for (std::size_t i = 0; i < mask.size(); i++)
-		{
-			uuid[i] = mask[i];
-		}
-	}
+	UUID64(uint64_t id) noexcept : uuid{id} {}
 
 	bool operator==(const UUID64 &rhs) const noexcept
 	{
@@ -159,6 +139,6 @@ struct UUID64
 
 struct UUID64Cmp {
 	bool operator()(const UUID64& lhs, const UUID64& rhs) const {
-		return lhs.uuid.to_ullong() < rhs.uuid.to_ullong();
+		return lhs.uuid < rhs.uuid;
 	}
 };

@@ -1,11 +1,11 @@
 #pragma once
 
+#include "Misc.hpp"
+
 #include <atomic>
 #include <iostream>
 #include <limits>
 #include <map>
-
-#include "Misc.hpp"
 
 /*! Components carry the data for a specific feature. */
 namespace razaron::core::component
@@ -25,6 +25,7 @@ namespace razaron::core::component
 		TRANSFORM,
 		MOTION,
 		SHAPE,
+		COLLIDER,
 		COMPONENT_1,
 		COMPONENT_2,
 		COMPONENT_3,
@@ -56,7 +57,7 @@ namespace razaron::core::component
 			{
 				_id = rhs._id;
 
-				rhs._id.uuid.reset();
+				rhs._id.uuid = 0;
 			}
 
 			return *this;

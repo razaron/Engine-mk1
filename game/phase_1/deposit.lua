@@ -1,5 +1,3 @@
-local nodal = require("nodal")
-
 Deposit = {
 	class = "Deposit",
 	pos = glm.vec2.new(0,0),
@@ -7,8 +5,7 @@ Deposit = {
 	value = 0,
 	elapsed = 0,
 	control = 0.0, -- How close to being taken over
-	serving = 0,
-	interface = {}
+	serving = 0
 }
 
 function Deposit.new(pos, control)
@@ -20,11 +17,6 @@ function Deposit.new(pos, control)
 	self.value = Deposit.value
 	self.control = control or Deposit.control
 	self.serving = Deposit.serving
-	self.interface = DepositNode.new(pos, self) or {}
-
-    table.insert(game.rootNodes, self.interface)
-
-    print(self.interface.pos.x, self.interface.pos.y)
 
 	return self
 end
@@ -67,23 +59,4 @@ function Deposit:update(delta)
 	else
 		self.team = "DEFAULT"
 	end
-end
-
-DepositNode = {
-    deposit = {}
-}
-
-setmetatable(DepositNode, {__index = Node})
-
-function DepositNode.new(pos, deposit)
-    local self = Node.new("Deposit", pos)
-    setmetatable(self, {__index = DepositNode})
-
-    self.deposit = deposit or DepositNode.deposit
-
-    return self
-end
-
-function DepositNode:getText()
-    return tostring(self.deposit.value)
 end

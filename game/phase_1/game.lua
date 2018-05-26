@@ -1,5 +1,4 @@
 local agents = require("agents")
-local nodal = require("nodal")
 local base = require("homebase")
 local deposit = require("deposit")
 
@@ -11,7 +10,6 @@ game = {
     bullets = {},
     deposits = {},
     bases = {},
-    rootNodes = {},
     mouse = glm.vec2.new(0, 0),
     delta = 0.0,
     wins = {blue = 0, red = 0}
@@ -31,7 +29,6 @@ function game.init()
     table.insert(game.deposits, Deposit.new(glm.vec2.new(2048, 2048), 0.0))
     table.insert(game.deposits, Deposit.new(glm.vec2.new(3072, 1024), 0.0))
     table.insert(game.deposits, Deposit.new(glm.vec2.new(3072, 3072), - 1.0))
-    print(#game.rootNodes)
 end
 
 function game.update(delta)
@@ -55,7 +52,6 @@ function game.update(delta)
             game.bullets = {}
             game.deposits = {}
             game.bases = {}
-            game.rootNodes = {}
             game.init()
         end
 

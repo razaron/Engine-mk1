@@ -62,62 +62,13 @@ function input.init()
     ]]--
     input.handlers["m1"] = function(x, y)
         print(tostring(x)..", "..tostring(y))
-        local p = glm.vec2.new(x, y)
-        p = (p/renderer.zoom) + renderer.camera
-
-        local isClicked, node = game.bases[1].interface:getClicked(p)
-
-        if isClicked then
-            node.handler()
-        else
-            game.bases[1].interface:close()
-
-            isClicked, node = game.bases[2].interface:getClicked(p)
-
-            if isClicked then
-                node.handler()
-            else
-                game.bases[2].interface:close()
-            end
-        end
     end
 
     input.handlers["m2"] = function(x, y)
         print(tostring(x)..", "..tostring(y))
-        local p = glm.vec2.new(x, y)
-        p = (p/renderer.zoom) + renderer.camera
-
-        local isClicked, node = game.bases[1].interface:getClicked(p)
-
-        if isClicked then
-            node:open()
-        else
-            game.bases[1].interface:close()
-
-            isClicked, node = game.bases[2].interface:getClicked(p)
-
-            if isClicked then
-                node:open()
-            else
-                game.bases[2].interface:close()
-            end
-        end
     end
 
     input.handlers["move"] = function(x, y)
-        local p = glm.vec2.new(x, y)
-        p = (p/renderer.zoom) + renderer.camera
-
-        game.mouse = p
-
-        local mouse = p
-        for _, node in pairs(game.rootNodes) do
-            if p.x > node.pos.x - node.size and p.x < node.pos.x + node.size and p.y > node.pos.y - node.size and p.y < node.pos.y + node.size then
-                node.isOpen = true
-            elseif #node.children == 0 or not node.children[1].isOpen then
-                node:close()
-            end
-        end
     end
 end
 

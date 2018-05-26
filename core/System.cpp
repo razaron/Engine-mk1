@@ -2,77 +2,72 @@
 
 using namespace razaron::core::system;
 
-
 System::System() noexcept
-	:_id{}, _pool{}, _interval{1.0}, _eventStream{}, _componentTypes{}
+	:_id{}, _pool{}, _interval{ 1.0 }, _eventStream{}, _componentTypes{}
 {
-    registerHandler(EventType::CREATE_COMPONENT, [system = this](const Event & e) {
-        auto data = std::static_pointer_cast<eventdata::CREATE_COMPONENT>(e.data);
+	registerHandler(EventType::SYSTEM_NEW_COMPONENT, [&](const Event & e) {
+		auto data = std::static_pointer_cast<eventdata::SYSTEM_NEW_COMPONENT>(e.data);
 
-        // If ComponentType is valid, do something
-        if (system->_componentTypes.count(data->type))
-        {
-            auto ch = system->createComponent(data->type, data->argsPtr);
+		// If ComponentType is valid, do something
+		if (_componentTypes.count(data->type))
+		{
+			auto ch = createComponent(data->type, data->argsPtr);
 
-            auto ptr = std::make_shared<eventdata::CREATE_COMPONENT>(ch, true);
+			auto ptr = std::make_shared<eventdata::ENTITY_ADD_COMPONENT>(ch);
 
-            system->pushEvent(Event{
-                e.recipient,
-                EventType::CREATE_COMPONENT,
-                ptr
-            });
-        }
-    });
+			Event out{
+				e.recipient,
+				EventType::ENTITY_ADD_COMPONENT,
+				ptr
+			};
 
-    registerHandler(EventType::REMOVE_COMPONENT, [system = this](const Event & e) {
-        auto data = std::static_pointer_cast<eventdata::REMOVE_COMPONENT>(e.data);
+			_eventStream.pushEvent(out, StreamType::OUTGOING);
+		}
+		}
+	);
 
-        // If ComponentType is valid, do something
-        if (system->_componentTypes.count(data->ch.first))
-        {
-            bool result = system->removeComponent(data->ch);
+	registerHandler(EventType::SYSTEM_DELETE_COMPONENT, [&](const Event & e) {
+		auto data = std::static_pointer_cast<eventdata::SYSTEM_DELETE_COMPONENT>(e.data);
 
-            system->pushEvent(Event{
-                e.recipient,
-                EventType::REMOVE_COMPONENT,
-                std::make_shared<eventdata::REMOVE_COMPONENT>(data->ch, result)
-            });
-        }
-    });
+		// If ComponentType is valid, do something
+		if (_componentTypes.count(data->ch.first))
+		{
+			if (removeComponent(data->ch))
+			{
+				Event out{
+					e.recipient,
+					EventType::ENTITY_REMOVE_COMPONENT,
+					std::make_shared<eventdata::ENTITY_REMOVE_COMPONENT>(data->ch)
+				};
+
+				_eventStream.pushEvent(out, StreamType::OUTGOING);
+			}
+		}
+		}
+	);
 }
 
 void System::registerHandler(razaron::eventstream::EventType type, EventHandler handler)
 {
-    _eventStream.registerHandler(type, handler);
+	_eventStream.registerHandler(type, handler);
+}
+
+void System::extendHandler(razaron::eventstream::EventType type, EventHandler handler)
+{
+	_eventStream.extendHandler(type, handler);
 }
 
 void System::processEvents()
 {
-    _eventStream.processEvents();
+	_eventStream.processEvents();
 }
 
-void System::propogateEvents(System &dst)
+void System::pushEvents(const std::vector<Event> &events, StreamType streamType)
 {
-    _eventStream.propogateEvents(dst._eventStream);
+	_eventStream.pushEvents(events, streamType);
 }
 
-void System::propogateEvents(EventStream &stream)
+std::vector<Event> System::popEvents(StreamType streamType)
 {
-    _eventStream.propogateEvents(stream);
-}
-
-void System::pushEvent(Event event)
-{
-    _eventStream.pushEvent(event, StreamType::OUTGOING);
-}
-
-void System::pushEvents(const std::vector<Event> &events)
-{
-    _eventStream.pushEvents(events, StreamType::INCOMING);
-    _eventStream.pushEvents(events, StreamType::OUTGOING);
-}
-
-std::vector<Event> System::popEvents()
-{
-    return _eventStream.popEvents(StreamType::INCOMING);
+	return _eventStream.popEvents(streamType);
 }

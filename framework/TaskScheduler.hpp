@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Graph.hpp"
+
 #include <algorithm>
 #include <array>
 #include <atomic>
@@ -13,8 +15,6 @@
 #include <thread>
 #include <utility>
 #include <vector>
-
-#include "Graph.hpp"
 
 /*! %Task schedulers enable easy concurrency by packaging logic into tasks that can be run in an ordered manner. */
 namespace razaron::taskscheduler

@@ -414,7 +414,11 @@ function Worker:sense()
         ws:add(Condition.new("self", "hasResource", true))
     end
 
-    ws:add(Condition.new("team", "hasDeposit", true))
+    local hasDeposit = false
+    for _, d in pairs(game.deposits) do
+        if d.team == self.team then hasDeposit = true break end
+    end
+    ws:add(Condition.new("team", "hasDeposit", hasDeposit))
 
     return ws
 end
