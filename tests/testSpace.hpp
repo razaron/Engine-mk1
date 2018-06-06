@@ -39,7 +39,7 @@ class SystemA : public System
         switch (type)
         {
         case ComponentType::COMPONENT_1:
-            h = emplaceObject<Foo>(Foo{});
+            h = emplaceObject<Foo>();
             break;
         default:
             h = Handle{};
@@ -116,7 +116,7 @@ class SystemD : public System
         switch (type)
         {
         case ComponentType::COMPONENT_2:
-            h = emplaceObject<Bar>(Bar{});
+            h = emplaceObject<Bar>();
             break;
         default:
             h = Handle{};

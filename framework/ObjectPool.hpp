@@ -33,12 +33,12 @@
 namespace razaron::objectpool
 {
 	/*! @cond */
-	using ArrayA = alignedArray<char, OBJECT_POOL_PAGE_LENGTH * OBJECT_SIZE_2, OBJECT_POOL_PAGE_ALIGNMENT>;
-	using ArrayB = alignedArray<char, OBJECT_POOL_PAGE_LENGTH * OBJECT_SIZE_4, OBJECT_POOL_PAGE_ALIGNMENT>;
-	using ArrayC = alignedArray<char, OBJECT_POOL_PAGE_LENGTH * OBJECT_SIZE_8, OBJECT_POOL_PAGE_ALIGNMENT>;
-	using ArrayD = alignedArray<char, OBJECT_POOL_PAGE_LENGTH * OBJECT_SIZE_16, OBJECT_POOL_PAGE_ALIGNMENT>;
-	using ArrayE = alignedArray<char, OBJECT_POOL_PAGE_LENGTH * OBJECT_SIZE_32, OBJECT_POOL_PAGE_ALIGNMENT>;
-	using ArrayF = alignedArray<char, OBJECT_POOL_PAGE_LENGTH * OBJECT_SIZE_64, OBJECT_POOL_PAGE_ALIGNMENT>;
+	using ArrayA = AlignedArray<char, OBJECT_POOL_PAGE_LENGTH * OBJECT_SIZE_2, OBJECT_POOL_PAGE_ALIGNMENT>;
+	using ArrayB = AlignedArray<char, OBJECT_POOL_PAGE_LENGTH * OBJECT_SIZE_4, OBJECT_POOL_PAGE_ALIGNMENT>;
+	using ArrayC = AlignedArray<char, OBJECT_POOL_PAGE_LENGTH * OBJECT_SIZE_8, OBJECT_POOL_PAGE_ALIGNMENT>;
+	using ArrayD = AlignedArray<char, OBJECT_POOL_PAGE_LENGTH * OBJECT_SIZE_16, OBJECT_POOL_PAGE_ALIGNMENT>;
+	using ArrayE = AlignedArray<char, OBJECT_POOL_PAGE_LENGTH * OBJECT_SIZE_32, OBJECT_POOL_PAGE_ALIGNMENT>;
+	using ArrayF = AlignedArray<char, OBJECT_POOL_PAGE_LENGTH * OBJECT_SIZE_64, OBJECT_POOL_PAGE_ALIGNMENT>;
 
 	using PoolA = std::tuple<Handle *, std::list<std::unique_ptr<ArrayA>>, std::shared_ptr<std::recursive_mutex>>;
 	using PoolB = std::tuple<Handle *, std::list<std::unique_ptr<ArrayB>>, std::shared_ptr<std::recursive_mutex>>;
@@ -206,7 +206,6 @@ namespace razaron::objectpool
 	void ObjectPool::init(PoolTuple &p)
 	{
 		((std::get<2>(std::get<Is>(p)) = std::make_shared<std::recursive_mutex>()), ...);
-		//((std::get<0>(std::get<Is>(p)) = new Handle{ Is,Is,true }), ...);
 	}
 
 	inline ObjectPool::ObjectPool() noexcept
@@ -230,8 +229,7 @@ namespace razaron::objectpool
 		else
 		{
 			std::stringstream message;
-			message << typeid(T).name() << " is too large for ObjectPool. sizeof(" << typeid(T).name() << "): "
-				<< ".";
+			message << typeid(T).name() << " is too large for ObjectPool. sizeof(" << typeid(T).name() << "): " << ".";
 
 			throw std::length_error(message.str());
 		}
@@ -245,13 +243,12 @@ namespace razaron::objectpool
 
 		if (sizeof(T) <= OBJECT_SIZE_64)
 		{
-			return allocateMove<T, Pool>(object);
+			return allocateMove<T, Pool>(std::forward<T>(object));
 		}
 		else
 		{
 			std::stringstream message;
-			message << typeid(T).name() << " is too large for ObjectPool. sizeof(" << typeid(T).name() << "): "
-				<< ".";
+			message << typeid(T).name() << " is too large for ObjectPool. sizeof(" << typeid(T).name() << "): "	<< ".";
 
 			throw std::length_error(message.str());
 		}
@@ -388,9 +385,7 @@ namespace razaron::objectpool
 	template <class T, class Pool, class... Args>
 	inline Handle ObjectPool::allocateConstruct(Args... args)
 	{
-		T temp{ args... };
-
-		return allocateMove<T, Pool>(std::move(temp));
+		return allocateMove<T, Pool>(T{ args... });
 	}
 
 	template <class T, class Pool>

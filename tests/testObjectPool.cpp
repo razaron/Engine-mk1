@@ -7,6 +7,43 @@
 
 using namespace razaron::objectpool;
 
+SCENARIO("ObjectPools can allocate objects in multiple ways", "[objectpool]")
+{
+    GIVEN("An empty ObjectPool")
+    {
+        using Data = std::pair<int, float>;
+
+        ObjectPool p;
+
+        REQUIRE(p.capacity() == 0);
+
+        WHEN("Constructing in-place")
+        {
+            Handle h = p.emplace<Data>(1, 2.f);
+
+			REQUIRE(p.get<Data>(h)->first == 1);
+            REQUIRE(p.get<Data>(h)->second == 2.f);
+        }
+
+        WHEN("Passing a const reference")
+        {
+            Data data{ 1, 2.f };
+            Handle h = p.push<Data>(data);
+
+            REQUIRE(p.get<Data>(h)->first == 1);
+            REQUIRE(p.get<Data>(h)->second == 2.f);
+        }
+
+        WHEN("Passing an rvalue")
+        {
+            Handle h = p.push<Data>(Data{1, 2.f});
+
+            REQUIRE(p.get<Data>(h)->first == 1);
+            REQUIRE(p.get<Data>(h)->second == 2.f);
+        }
+    }
+}
+
 SCENARIO("ObjectPools can add pages as necessary", "[objectpool]")
 {
     GIVEN("An empty ObjectPool")
@@ -17,7 +54,7 @@ SCENARIO("ObjectPools can add pages as necessary", "[objectpool]")
 
         WHEN("A single OBJECT_SIZE_2-byte object is pushed on")
         {
-            p.emplace<std::array<char, OBJECT_SIZE_2>>(std::array<char, OBJECT_SIZE_2>{ "1234567" });
+            p.push<std::array<char, OBJECT_SIZE_2>>(std::array<char, OBJECT_SIZE_2>{ "1234567" });
 
             THEN("the capacity changes")
             {
@@ -29,7 +66,7 @@ SCENARIO("ObjectPools can add pages as necessary", "[objectpool]")
 
             for (auto i = 0; i < OBJECT_POOL_PAGE_LENGTH; i++)
             {
-                p.emplace<std::array<char, OBJECT_SIZE_2>>(std::array<char, OBJECT_SIZE_2>{ "1234567" });
+                p.push<std::array<char, OBJECT_SIZE_2>>(std::array<char, OBJECT_SIZE_2>{ "1234567" });
             }
 
             THEN("the capacity changes")
@@ -40,7 +77,7 @@ SCENARIO("ObjectPools can add pages as necessary", "[objectpool]")
 
         WHEN("A single OBJECT_SIZE_4-byte object is pushed on")
         {
-            p.emplace<std::array<char, OBJECT_SIZE_4>>(std::array<char, OBJECT_SIZE_4>{ "1234567" });
+            p.push<std::array<char, OBJECT_SIZE_4>>(std::array<char, OBJECT_SIZE_4>{ "1234567" });
 
             THEN("the capacity changes")
             {
@@ -52,7 +89,7 @@ SCENARIO("ObjectPools can add pages as necessary", "[objectpool]")
 
             for (auto i = 0; i < OBJECT_POOL_PAGE_LENGTH; i++)
             {
-                p.emplace<std::array<char, OBJECT_SIZE_4>>(std::array<char, OBJECT_SIZE_4>{ "1234567" });
+                p.push<std::array<char, OBJECT_SIZE_4>>(std::array<char, OBJECT_SIZE_4>{ "1234567" });
             }
 
             THEN("the capacity changes")
@@ -63,7 +100,7 @@ SCENARIO("ObjectPools can add pages as necessary", "[objectpool]")
 
         WHEN("A single OBJECT_SIZE_8-byte object is pushed on")
         {
-            p.emplace<std::array<char, OBJECT_SIZE_8>>(std::array<char, OBJECT_SIZE_8>{ "1234567" });
+            p.push<std::array<char, OBJECT_SIZE_8>>(std::array<char, OBJECT_SIZE_8>{ "1234567" });
 
             THEN("the capacity changes")
             {
@@ -75,7 +112,7 @@ SCENARIO("ObjectPools can add pages as necessary", "[objectpool]")
 
             for (auto i = 0; i < OBJECT_POOL_PAGE_LENGTH; i++)
             {
-                p.emplace<std::array<char, OBJECT_SIZE_8>>(std::array<char, OBJECT_SIZE_8>{ "1234567" });
+                p.push<std::array<char, OBJECT_SIZE_8>>(std::array<char, OBJECT_SIZE_8>{ "1234567" });
             }
 
             THEN("the capacity changes")
@@ -86,7 +123,7 @@ SCENARIO("ObjectPools can add pages as necessary", "[objectpool]")
 
         WHEN("A single OBJECT_SIZE_16-byte object is pushed on")
         {
-            p.emplace<std::array<char, OBJECT_SIZE_16>>(std::array<char, OBJECT_SIZE_16>{ "1234567" });
+            p.push<std::array<char, OBJECT_SIZE_16>>(std::array<char, OBJECT_SIZE_16>{ "1234567" });
 
             THEN("the capacity changes")
             {
@@ -98,7 +135,7 @@ SCENARIO("ObjectPools can add pages as necessary", "[objectpool]")
 
             for (auto i = 0; i < OBJECT_POOL_PAGE_LENGTH; i++)
             {
-                p.emplace<std::array<char, OBJECT_SIZE_16>>(std::array<char, OBJECT_SIZE_16>{ "1234567" });
+                p.push<std::array<char, OBJECT_SIZE_16>>(std::array<char, OBJECT_SIZE_16>{ "1234567" });
             }
 
             THEN("the capacity changes")
@@ -109,7 +146,7 @@ SCENARIO("ObjectPools can add pages as necessary", "[objectpool]")
 
         WHEN("A single OBJECT_SIZE_32-byte object is pushed on")
         {
-            p.emplace<std::array<char, OBJECT_SIZE_32>>(std::array<char, OBJECT_SIZE_32>{ "1234567" });
+            p.push<std::array<char, OBJECT_SIZE_32>>(std::array<char, OBJECT_SIZE_32>{ "1234567" });
 
             THEN("the capacity changes")
             {
@@ -121,7 +158,7 @@ SCENARIO("ObjectPools can add pages as necessary", "[objectpool]")
 
             for (auto i = 0; i < OBJECT_POOL_PAGE_LENGTH; i++)
             {
-                p.emplace<std::array<char, OBJECT_SIZE_32>>(std::array<char, OBJECT_SIZE_32>{ "1234567" });
+                p.push<std::array<char, OBJECT_SIZE_32>>(std::array<char, OBJECT_SIZE_32>{ "1234567" });
             }
 
             THEN("the capacity changes")
@@ -132,7 +169,7 @@ SCENARIO("ObjectPools can add pages as necessary", "[objectpool]")
 
         WHEN("A single OBJECT_SIZE_64-byte object is pushed on")
         {
-            p.emplace<std::array<char, OBJECT_SIZE_64>>(std::array<char, OBJECT_SIZE_64>{ "1234567" });
+            p.push<std::array<char, OBJECT_SIZE_64>>(std::array<char, OBJECT_SIZE_64>{ "1234567" });
 
             THEN("the capacity changes")
             {
@@ -144,7 +181,7 @@ SCENARIO("ObjectPools can add pages as necessary", "[objectpool]")
 
             for (auto i = 0; i < OBJECT_POOL_PAGE_LENGTH; i++)
             {
-                p.emplace<std::array<char, OBJECT_SIZE_64>>(std::array<char, OBJECT_SIZE_64>{ "1234567" });
+                p.push<std::array<char, OBJECT_SIZE_64>>(std::array<char, OBJECT_SIZE_64>{ "1234567" });
             }
 
             THEN("the capacity changes")
@@ -171,12 +208,12 @@ SCENARIO("ObjectPools can retrieve objects from Handles", "[objectpool]")
 
     GIVEN("An object pool with a SINGLE page of objects")
     {
-        h2 = p.emplace<std::array<char, OBJECT_SIZE_2>>(std::array<char, OBJECT_SIZE_2>{ "first" });
-        h4 = p.emplace<std::array<char, OBJECT_SIZE_4>>(std::array<char, OBJECT_SIZE_4>{ "second" });
-        h8 = p.emplace<std::array<char, OBJECT_SIZE_8>>(std::array<char, OBJECT_SIZE_8>{ "third" });
-        h16 = p.emplace<std::array<char, OBJECT_SIZE_16>>(std::array<char, OBJECT_SIZE_16>{ "fourth" });
-        h32 = p.emplace<std::array<char, OBJECT_SIZE_32>>(std::array<char, OBJECT_SIZE_32>{ "fifth" });
-        h64 = p.emplace<std::array<char, OBJECT_SIZE_64>>(std::array<char, OBJECT_SIZE_64>{ "sixth" });
+        h2 = p.push<std::array<char, OBJECT_SIZE_2>>(std::array<char, OBJECT_SIZE_2>{ "first" });
+        h4 = p.push<std::array<char, OBJECT_SIZE_4>>(std::array<char, OBJECT_SIZE_4>{ "second" });
+        h8 = p.push<std::array<char, OBJECT_SIZE_8>>(std::array<char, OBJECT_SIZE_8>{ "third" });
+        h16 = p.push<std::array<char, OBJECT_SIZE_16>>(std::array<char, OBJECT_SIZE_16>{ "fourth" });
+        h32 = p.push<std::array<char, OBJECT_SIZE_32>>(std::array<char, OBJECT_SIZE_32>{ "fifth" });
+        h64 = p.push<std::array<char, OBJECT_SIZE_64>>(std::array<char, OBJECT_SIZE_64>{ "sixth" });
 
         THEN("the handles can be converted to objects")
         {
@@ -200,12 +237,12 @@ SCENARIO("ObjectPools can retrieve objects from Handles", "[objectpool]")
     {
         for (auto i = 0; i < 100; i++)
         {
-            h2 = p.emplace<std::array<int, OBJECT_SIZE_2 / sizeof(int)>>(std::array<int, OBJECT_SIZE_2 / sizeof(int)>{ 2 });
-            h4 = p.emplace<std::array<int, OBJECT_SIZE_4 / sizeof(int)>>(std::array<int, OBJECT_SIZE_4 / sizeof(int)>{ 4 });
-            h8 = p.emplace<std::array<int, OBJECT_SIZE_8 / sizeof(int)>>(std::array<int, OBJECT_SIZE_8 / sizeof(int)>{ 8 });
-            h16 = p.emplace<std::array<int, OBJECT_SIZE_16 / sizeof(int)>>(std::array<int, OBJECT_SIZE_16 / sizeof(int)>{ 16 });
-            h32 = p.emplace<std::array<int, OBJECT_SIZE_32 / sizeof(int)>>(std::array<int, OBJECT_SIZE_32 / sizeof(int)>{ 32 });
-            h64 = p.emplace<std::array<int, OBJECT_SIZE_64 / sizeof(int)>>(std::array<int, OBJECT_SIZE_64 / sizeof(int)>{ 64 });
+            h2 = p.push<std::array<int, OBJECT_SIZE_2 / sizeof(int)>>(std::array<int, OBJECT_SIZE_2 / sizeof(int)>{ 2 });
+            h4 = p.push<std::array<int, OBJECT_SIZE_4 / sizeof(int)>>(std::array<int, OBJECT_SIZE_4 / sizeof(int)>{ 4 });
+            h8 = p.push<std::array<int, OBJECT_SIZE_8 / sizeof(int)>>(std::array<int, OBJECT_SIZE_8 / sizeof(int)>{ 8 });
+            h16 = p.push<std::array<int, OBJECT_SIZE_16 / sizeof(int)>>(std::array<int, OBJECT_SIZE_16 / sizeof(int)>{ 16 });
+            h32 = p.push<std::array<int, OBJECT_SIZE_32 / sizeof(int)>>(std::array<int, OBJECT_SIZE_32 / sizeof(int)>{ 32 });
+            h64 = p.push<std::array<int, OBJECT_SIZE_64 / sizeof(int)>>(std::array<int, OBJECT_SIZE_64 / sizeof(int)>{ 64 });
         }
 
         THEN("the handles can be converted to objects")
@@ -222,30 +259,29 @@ SCENARIO("ObjectPools can retrieve objects from Handles", "[objectpool]")
                 auto p32 = *p.get<std::array<int, OBJECT_SIZE_32 / sizeof(int)>>({ OBJECT_SIZE_32, i, false });
                 auto p64 = *p.get<std::array<int, OBJECT_SIZE_64 / sizeof(int)>>({ OBJECT_SIZE_64, i, false });
 
-
-                if(p2[0] != 2)
+                if (p2[0] != 2)
                     result = false;
-                if(p2[1] != 0)
+                if (p2[1] != 0)
                     result = false;
-                if(p4[0] != 4)
+                if (p4[0] != 4)
                     result = false;
-                if(p4[1] != 0)
+                if (p4[1] != 0)
                     result = false;
-                if(p8[0] != 8)
+                if (p8[0] != 8)
                     result = false;
-                if(p8[1] != 0)
+                if (p8[1] != 0)
                     result = false;
-                if(p16[0] != 16)
+                if (p16[0] != 16)
                     result = false;
-                if(p16[1] != 0)
+                if (p16[1] != 0)
                     result = false;
-                if(p32[0] != 32)
+                if (p32[0] != 32)
                     result = false;
-                if(p32[1] != 0)
+                if (p32[1] != 0)
                     result = false;
-                if(p64[0] != 64)
+                if (p64[0] != 64)
                     result = false;
-                if(p64[1] != 0)
+                if (p64[1] != 0)
                     result = false;
             }
 
@@ -319,7 +355,6 @@ SCENARIO("You removes objects from anywhere in the ObjectPool", "[objectpool]")
     }
 }
 
-
 SCENARIO("ObjectPools can reorder objects to earlier free positions, then remove unnecessary pages", "[objectpool]")
 {
     GIVEN("An object pool  with 2 empty pages followed by 2 full pages and 1 (reserved) empty page")
@@ -327,22 +362,22 @@ SCENARIO("ObjectPools can reorder objects to earlier free positions, then remove
         ObjectPool p;
 
         // Creates 4 pages in every sub-pool
-        for (auto i = 0; i < OBJECT_POOL_PAGE_LENGTH*4; i++)
+        for (auto i = 0; i < OBJECT_POOL_PAGE_LENGTH * 4; i++)
         {
-            p.emplace<std::array<int, OBJECT_SIZE_2 / sizeof(int)>>(std::array<int, OBJECT_SIZE_2 / sizeof(int)>{ 2 });
-            p.emplace<std::array<int, OBJECT_SIZE_4 / sizeof(int)>>(std::array<int, OBJECT_SIZE_4 / sizeof(int)>{ 4 });
-            p.emplace<std::array<int, OBJECT_SIZE_8 / sizeof(int)>>(std::array<int, OBJECT_SIZE_8 / sizeof(int)>{ 8 });
-            p.emplace<std::array<int, OBJECT_SIZE_16 / sizeof(int)>>(std::array<int, OBJECT_SIZE_16 / sizeof(int)>{ 16 });
-            p.emplace<std::array<int, OBJECT_SIZE_32 / sizeof(int)>>(std::array<int, OBJECT_SIZE_32 / sizeof(int)>{ 32 });
-            p.emplace<std::array<int, OBJECT_SIZE_64 / sizeof(int)>>(std::array<int, OBJECT_SIZE_64 / sizeof(int)>{ 64 });
+            p.push<std::array<int, OBJECT_SIZE_2 / sizeof(int)>>(std::array<int, OBJECT_SIZE_2 / sizeof(int)>{ 2 });
+            p.push<std::array<int, OBJECT_SIZE_4 / sizeof(int)>>(std::array<int, OBJECT_SIZE_4 / sizeof(int)>{ 4 });
+            p.push<std::array<int, OBJECT_SIZE_8 / sizeof(int)>>(std::array<int, OBJECT_SIZE_8 / sizeof(int)>{ 8 });
+            p.push<std::array<int, OBJECT_SIZE_16 / sizeof(int)>>(std::array<int, OBJECT_SIZE_16 / sizeof(int)>{ 16 });
+            p.push<std::array<int, OBJECT_SIZE_32 / sizeof(int)>>(std::array<int, OBJECT_SIZE_32 / sizeof(int)>{ 32 });
+            p.push<std::array<int, OBJECT_SIZE_64 / sizeof(int)>>(std::array<int, OBJECT_SIZE_64 / sizeof(int)>{ 64 });
         }
 
-        std::size_t expected = 5*OBJECT_POOL_PAGE_LENGTH*(OBJECT_SIZE_2+OBJECT_SIZE_4+OBJECT_SIZE_8+OBJECT_SIZE_16+OBJECT_SIZE_32+OBJECT_SIZE_64);
+        std::size_t expected = 5 * OBJECT_POOL_PAGE_LENGTH * (OBJECT_SIZE_2 + OBJECT_SIZE_4 + OBJECT_SIZE_8 + OBJECT_SIZE_16 + OBJECT_SIZE_32 + OBJECT_SIZE_64);
 
         REQUIRE(expected == p.capacity());
 
         // Erases the first 2 pages from every sub-pool
-        for (HandleIndex i = 0; i < OBJECT_POOL_PAGE_LENGTH*2; i++)
+        for (HandleIndex i = 0; i < OBJECT_POOL_PAGE_LENGTH * 2; i++)
         {
 
             p.erase<std::array<int, OBJECT_SIZE_2 / sizeof(int)>>({ OBJECT_SIZE_2, i, false });
@@ -356,7 +391,7 @@ SCENARIO("ObjectPools can reorder objects to earlier free positions, then remove
         WHEN("The 2nd 2 pages have their objects reordered.")
         {
             // Reorders everything in the 2nd 2 pages of every sub-pool
-            for (HandleIndex i = OBJECT_POOL_PAGE_LENGTH*2; i < OBJECT_POOL_PAGE_LENGTH*4; i++)
+            for (HandleIndex i = OBJECT_POOL_PAGE_LENGTH * 2; i < OBJECT_POOL_PAGE_LENGTH * 4; i++)
             {
 
                 p.reorder<std::array<int, OBJECT_SIZE_2 / sizeof(int)>>({ OBJECT_SIZE_2, i, false });
@@ -369,7 +404,7 @@ SCENARIO("ObjectPools can reorder objects to earlier free positions, then remove
 
             // Verifies that the 2nd 2 pages have been reordered
             bool result = true;
-            for (HandleIndex i = 0; i < OBJECT_POOL_PAGE_LENGTH*2; i++)
+            for (HandleIndex i = 0; i < OBJECT_POOL_PAGE_LENGTH * 2; i++)
             {
 
                 auto p2 = *p.get<std::array<int, OBJECT_SIZE_2 / sizeof(int)>>({ OBJECT_SIZE_2, i, false });
@@ -379,30 +414,29 @@ SCENARIO("ObjectPools can reorder objects to earlier free positions, then remove
                 auto p32 = *p.get<std::array<int, OBJECT_SIZE_32 / sizeof(int)>>({ OBJECT_SIZE_32, i, false });
                 auto p64 = *p.get<std::array<int, OBJECT_SIZE_64 / sizeof(int)>>({ OBJECT_SIZE_64, i, false });
 
-
-                if(p2[0] != 2)
+                if (p2[0] != 2)
                     result = false;
-                if(p2[1] != 0)
+                if (p2[1] != 0)
                     result = false;
-                if(p4[0] != 4)
+                if (p4[0] != 4)
                     result = false;
-                if(p4[1] != 0)
+                if (p4[1] != 0)
                     result = false;
-                if(p8[0] != 8)
+                if (p8[0] != 8)
                     result = false;
-                if(p8[1] != 0)
+                if (p8[1] != 0)
                     result = false;
-                if(p16[0] != 16)
+                if (p16[0] != 16)
                     result = false;
-                if(p16[1] != 0)
+                if (p16[1] != 0)
                     result = false;
-                if(p32[0] != 32)
+                if (p32[0] != 32)
                     result = false;
-                if(p32[1] != 0)
+                if (p32[1] != 0)
                     result = false;
-                if(p64[0] != 64)
+                if (p64[0] != 64)
                     result = false;
-                if(p64[1] != 0)
+                if (p64[1] != 0)
                     result = false;
             }
 
@@ -412,7 +446,7 @@ SCENARIO("ObjectPools can reorder objects to earlier free positions, then remove
             {
                 p.shrink();
 
-                std::size_t expected = 2*OBJECT_POOL_PAGE_LENGTH*(OBJECT_SIZE_2+OBJECT_SIZE_4+OBJECT_SIZE_8+OBJECT_SIZE_16+OBJECT_SIZE_32+OBJECT_SIZE_64);
+                std::size_t expected = 2 * OBJECT_POOL_PAGE_LENGTH * (OBJECT_SIZE_2 + OBJECT_SIZE_4 + OBJECT_SIZE_8 + OBJECT_SIZE_16 + OBJECT_SIZE_32 + OBJECT_SIZE_64);
 
                 REQUIRE(expected == p.capacity());
             }
@@ -426,10 +460,7 @@ void emplacer(ObjectPool &pool, T value, std::vector<Handle> &handles, std::mute
     for (auto i = 0; i < 10000; i++)
     {
         Handle h{};
-        if (i % 2)
-            h = pool.emplace<T>(value);
-        else
-            h = pool.push<T>(value);
+		h = pool.push<T>(value);
 
         {
             std::lock_guard<std::mutex> lk{ mutex };
@@ -446,16 +477,16 @@ void eraser(ObjectPool &pool, std::vector<Handle> &handles, std::mutex &mutex, s
         Handle h{};
 
         {
-            std::lock_guard<std::mutex> lk{mutex};
+            std::lock_guard<std::mutex> lk{ mutex };
 
-            if(handles.size())
+            if (handles.size())
             {
                 h = handles.back();
                 handles.erase(--handles.end());
             }
         }
 
-        if(h.size)
+        if (h.size)
         {
             pool.erase<T>(h);
             counter++;
@@ -471,13 +502,13 @@ void reorderer(ObjectPool &pool, std::vector<Handle> &handles, std::mutex &mutex
         Handle h{};
 
         {
-            std::lock_guard<std::mutex> lk{mutex};
+            std::lock_guard<std::mutex> lk{ mutex };
 
-            if(handles.size())
+            if (handles.size())
                 h = handles.back();
         }
 
-        if(h.size)
+        if (h.size)
             pool.get<T>(h);
     }
 }
@@ -496,7 +527,6 @@ SCENARIO("ObjectPools can be safely accessed from multiple threads.", "[objectpo
         std::vector<Handle> vecSize8;
         std::vector<Handle> vecSize32;
 
-
         std::mutex vecSize2Mutex;
         std::mutex vecSize8Mutex;
         std::mutex vecSize32Mutex;
@@ -513,9 +543,9 @@ SCENARIO("ObjectPools can be safely accessed from multiple threads.", "[objectpo
 
             THEN("If 2 threads are emplacing and 1 thread is erasing")
             {
-                t1 = std::thread{emplacer<Object2>, std::ref(pool), Object2{}, std::ref(vecSize2), std::ref(vecSize2Mutex)};
-                t2 = std::thread{emplacer<Object2>, std::ref(pool), Object2{}, std::ref(vecSize2), std::ref(vecSize2Mutex)};
-                t3 = std::thread{eraser<Object2>, std::ref(pool), std::ref(vecSize2), std::ref(vecSize2Mutex), std::ref(counterSize2)};
+                t1 = std::thread{ emplacer<Object2>, std::ref(pool), Object2{}, std::ref(vecSize2), std::ref(vecSize2Mutex) };
+                t2 = std::thread{ emplacer<Object2>, std::ref(pool), Object2{}, std::ref(vecSize2), std::ref(vecSize2Mutex) };
+                t3 = std::thread{ eraser<Object2>, std::ref(pool), std::ref(vecSize2), std::ref(vecSize2Mutex), std::ref(counterSize2) };
 
                 t1.join();
                 t2.join();
@@ -526,9 +556,9 @@ SCENARIO("ObjectPools can be safely accessed from multiple threads.", "[objectpo
 
             THEN("If 2 threads are erasing and 1 thread is emplacing")
             {
-                t1 = std::thread{emplacer<Object2>, std::ref(pool), Object2{}, std::ref(vecSize2), std::ref(vecSize2Mutex)};
-                t2 = std::thread{eraser<Object2>, std::ref(pool), std::ref(vecSize2), std::ref(vecSize2Mutex), std::ref(counterSize2)};
-                t3 = std::thread{eraser<Object2>, std::ref(pool), std::ref(vecSize2), std::ref(vecSize2Mutex), std::ref(counterSize2)};
+                t1 = std::thread{ emplacer<Object2>, std::ref(pool), Object2{}, std::ref(vecSize2), std::ref(vecSize2Mutex) };
+                t2 = std::thread{ eraser<Object2>, std::ref(pool), std::ref(vecSize2), std::ref(vecSize2Mutex), std::ref(counterSize2) };
+                t3 = std::thread{ eraser<Object2>, std::ref(pool), std::ref(vecSize2), std::ref(vecSize2Mutex), std::ref(counterSize2) };
 
                 t1.join();
                 t2.join();
@@ -539,9 +569,9 @@ SCENARIO("ObjectPools can be safely accessed from multiple threads.", "[objectpo
 
             THEN("If 1 thread is emplacing, 1 thread is erasing and 1 thread is reordering")
             {
-                t1 = std::thread{emplacer<Object2>, std::ref(pool), Object2{}, std::ref(vecSize2), std::ref(vecSize2Mutex)};
-                t2 = std::thread{eraser<Object2>, std::ref(pool), std::ref(vecSize2), std::ref(vecSize2Mutex), std::ref(counterSize2)};
-                t3 = std::thread{reorderer<Object2>, std::ref(pool), std::ref(vecSize2), std::ref(vecSize2Mutex)};
+                t1 = std::thread{ emplacer<Object2>, std::ref(pool), Object2{}, std::ref(vecSize2), std::ref(vecSize2Mutex) };
+                t2 = std::thread{ eraser<Object2>, std::ref(pool), std::ref(vecSize2), std::ref(vecSize2Mutex), std::ref(counterSize2) };
+                t3 = std::thread{ reorderer<Object2>, std::ref(pool), std::ref(vecSize2), std::ref(vecSize2Mutex) };
 
                 t1.join();
                 t2.join();
@@ -565,15 +595,15 @@ SCENARIO("ObjectPools can be safely accessed from multiple threads.", "[objectpo
 
             THEN("If 6 threads are emplacing and 3 threads are erasing")
             {
-                t1 = std::thread{emplacer<Object2>, std::ref(pool), Object2{}, std::ref(vecSize2), std::ref(vecSize2Mutex)};
-                t2 = std::thread{emplacer<Object8>, std::ref(pool), Object8{}, std::ref(vecSize8), std::ref(vecSize8Mutex)};
-                t3 = std::thread{emplacer<Object32>, std::ref(pool), Object32{}, std::ref(vecSize32), std::ref(vecSize32Mutex)};
-                t4 = std::thread{emplacer<Object2>, std::ref(pool), Object2{}, std::ref(vecSize2), std::ref(vecSize2Mutex)};
-                t5 = std::thread{emplacer<Object8>, std::ref(pool), Object8{}, std::ref(vecSize8), std::ref(vecSize8Mutex)};
-                t6 = std::thread{emplacer<Object32>, std::ref(pool), Object32{}, std::ref(vecSize32), std::ref(vecSize32Mutex)};
-                t7 = std::thread{eraser<Object2>, std::ref(pool), std::ref(vecSize2), std::ref(vecSize2Mutex), std::ref(counterSize2)};
-                t8 = std::thread{eraser<Object8>, std::ref(pool), std::ref(vecSize8), std::ref(vecSize8Mutex), std::ref(counterSize8)};
-                t9 = std::thread{eraser<Object32>, std::ref(pool), std::ref(vecSize32), std::ref(vecSize32Mutex), std::ref(counterSize32)};
+                t1 = std::thread{ emplacer<Object2>, std::ref(pool), Object2{}, std::ref(vecSize2), std::ref(vecSize2Mutex) };
+                t2 = std::thread{ emplacer<Object8>, std::ref(pool), Object8{}, std::ref(vecSize8), std::ref(vecSize8Mutex) };
+                t3 = std::thread{ emplacer<Object32>, std::ref(pool), Object32{}, std::ref(vecSize32), std::ref(vecSize32Mutex) };
+                t4 = std::thread{ emplacer<Object2>, std::ref(pool), Object2{}, std::ref(vecSize2), std::ref(vecSize2Mutex) };
+                t5 = std::thread{ emplacer<Object8>, std::ref(pool), Object8{}, std::ref(vecSize8), std::ref(vecSize8Mutex) };
+                t6 = std::thread{ emplacer<Object32>, std::ref(pool), Object32{}, std::ref(vecSize32), std::ref(vecSize32Mutex) };
+                t7 = std::thread{ eraser<Object2>, std::ref(pool), std::ref(vecSize2), std::ref(vecSize2Mutex), std::ref(counterSize2) };
+                t8 = std::thread{ eraser<Object8>, std::ref(pool), std::ref(vecSize8), std::ref(vecSize8Mutex), std::ref(counterSize8) };
+                t9 = std::thread{ eraser<Object32>, std::ref(pool), std::ref(vecSize32), std::ref(vecSize32Mutex), std::ref(counterSize32) };
 
                 t1.join();
                 t2.join();
@@ -592,15 +622,15 @@ SCENARIO("ObjectPools can be safely accessed from multiple threads.", "[objectpo
 
             THEN("If 6 threads are erasing and 3 threads are emplacing")
             {
-                t1 = std::thread{emplacer<Object2>, std::ref(pool), Object2{}, std::ref(vecSize2), std::ref(vecSize2Mutex)};
-                t2 = std::thread{emplacer<Object8>, std::ref(pool), Object8{}, std::ref(vecSize8), std::ref(vecSize8Mutex)};
-                t3 = std::thread{emplacer<Object32>, std::ref(pool), Object32{}, std::ref(vecSize32), std::ref(vecSize32Mutex)};
-                t4 = std::thread{eraser<Object2>, std::ref(pool), std::ref(vecSize2), std::ref(vecSize2Mutex), std::ref(counterSize2)};
-                t5 = std::thread{eraser<Object8>, std::ref(pool), std::ref(vecSize8), std::ref(vecSize8Mutex), std::ref(counterSize8)};
-                t6 = std::thread{eraser<Object32>, std::ref(pool), std::ref(vecSize32), std::ref(vecSize32Mutex), std::ref(counterSize32)};
-                t7 = std::thread{eraser<Object2>, std::ref(pool), std::ref(vecSize2), std::ref(vecSize2Mutex), std::ref(counterSize2)};
-                t8 = std::thread{eraser<Object8>, std::ref(pool), std::ref(vecSize8), std::ref(vecSize8Mutex), std::ref(counterSize8)};
-                t9 = std::thread{eraser<Object32>, std::ref(pool), std::ref(vecSize32), std::ref(vecSize32Mutex), std::ref(counterSize32)};
+                t1 = std::thread{ emplacer<Object2>, std::ref(pool), Object2{}, std::ref(vecSize2), std::ref(vecSize2Mutex) };
+                t2 = std::thread{ emplacer<Object8>, std::ref(pool), Object8{}, std::ref(vecSize8), std::ref(vecSize8Mutex) };
+                t3 = std::thread{ emplacer<Object32>, std::ref(pool), Object32{}, std::ref(vecSize32), std::ref(vecSize32Mutex) };
+                t4 = std::thread{ eraser<Object2>, std::ref(pool), std::ref(vecSize2), std::ref(vecSize2Mutex), std::ref(counterSize2) };
+                t5 = std::thread{ eraser<Object8>, std::ref(pool), std::ref(vecSize8), std::ref(vecSize8Mutex), std::ref(counterSize8) };
+                t6 = std::thread{ eraser<Object32>, std::ref(pool), std::ref(vecSize32), std::ref(vecSize32Mutex), std::ref(counterSize32) };
+                t7 = std::thread{ eraser<Object2>, std::ref(pool), std::ref(vecSize2), std::ref(vecSize2Mutex), std::ref(counterSize2) };
+                t8 = std::thread{ eraser<Object8>, std::ref(pool), std::ref(vecSize8), std::ref(vecSize8Mutex), std::ref(counterSize8) };
+                t9 = std::thread{ eraser<Object32>, std::ref(pool), std::ref(vecSize32), std::ref(vecSize32Mutex), std::ref(counterSize32) };
 
                 t1.join();
                 t2.join();
@@ -619,15 +649,15 @@ SCENARIO("ObjectPools can be safely accessed from multiple threads.", "[objectpo
 
             THEN("If 3 threads are emplacing, 3 threads are erasing and 3 threads are reordering")
             {
-                t1 = std::thread{emplacer<Object2>, std::ref(pool), Object2{}, std::ref(vecSize2), std::ref(vecSize2Mutex)};
-                t2 = std::thread{emplacer<Object8>, std::ref(pool), Object8{}, std::ref(vecSize8), std::ref(vecSize8Mutex)};
-                t3 = std::thread{emplacer<Object32>, std::ref(pool), Object32{}, std::ref(vecSize32), std::ref(vecSize32Mutex)};
-                t4 = std::thread{eraser<Object2>, std::ref(pool), std::ref(vecSize2), std::ref(vecSize2Mutex), std::ref(counterSize2)};
-                t5 = std::thread{eraser<Object8>, std::ref(pool), std::ref(vecSize8), std::ref(vecSize8Mutex), std::ref(counterSize8)};
-                t6 = std::thread{eraser<Object32>, std::ref(pool), std::ref(vecSize32), std::ref(vecSize32Mutex), std::ref(counterSize32)};
-                t7 = std::thread{reorderer<Object2>, std::ref(pool), std::ref(vecSize2), std::ref(vecSize2Mutex)};
-                t8 = std::thread{reorderer<Object8>, std::ref(pool), std::ref(vecSize8), std::ref(vecSize8Mutex)};
-                t9 = std::thread{reorderer<Object32>, std::ref(pool), std::ref(vecSize32), std::ref(vecSize32Mutex)};
+                t1 = std::thread{ emplacer<Object2>, std::ref(pool), Object2{}, std::ref(vecSize2), std::ref(vecSize2Mutex) };
+                t2 = std::thread{ emplacer<Object8>, std::ref(pool), Object8{}, std::ref(vecSize8), std::ref(vecSize8Mutex) };
+                t3 = std::thread{ emplacer<Object32>, std::ref(pool), Object32{}, std::ref(vecSize32), std::ref(vecSize32Mutex) };
+                t4 = std::thread{ eraser<Object2>, std::ref(pool), std::ref(vecSize2), std::ref(vecSize2Mutex), std::ref(counterSize2) };
+                t5 = std::thread{ eraser<Object8>, std::ref(pool), std::ref(vecSize8), std::ref(vecSize8Mutex), std::ref(counterSize8) };
+                t6 = std::thread{ eraser<Object32>, std::ref(pool), std::ref(vecSize32), std::ref(vecSize32Mutex), std::ref(counterSize32) };
+                t7 = std::thread{ reorderer<Object2>, std::ref(pool), std::ref(vecSize2), std::ref(vecSize2Mutex) };
+                t8 = std::thread{ reorderer<Object8>, std::ref(pool), std::ref(vecSize8), std::ref(vecSize8Mutex) };
+                t9 = std::thread{ reorderer<Object32>, std::ref(pool), std::ref(vecSize32), std::ref(vecSize32Mutex) };
 
                 t1.join();
                 t2.join();

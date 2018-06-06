@@ -94,7 +94,7 @@ inline void aligned_free(void *ptr) noexcept
 }
 
 template <class T, std::size_t S, std::size_t A>
-struct alignas(A) alignedArray
+struct alignas(A) AlignedArray
 {
 public:
 	T* data() noexcept { return _array.data(); }
