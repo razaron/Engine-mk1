@@ -455,7 +455,7 @@ SCENARIO("ObjectPools can reorder objects to earlier free positions, then remove
 }
 
 template <typename T>
-void emplacer(ObjectPool &pool, T value, std::vector<Handle> &handles, std::mutex &mutex)
+void pusher(ObjectPool &pool, T value, std::vector<Handle> &handles, std::mutex &mutex)
 {
     for (auto i = 0; i < 10000; i++)
     {
@@ -543,8 +543,8 @@ SCENARIO("ObjectPools can be safely accessed from multiple threads.", "[objectpo
 
             THEN("If 2 threads are emplacing and 1 thread is erasing")
             {
-                t1 = std::thread{ emplacer<Object2>, std::ref(pool), Object2{}, std::ref(vecSize2), std::ref(vecSize2Mutex) };
-                t2 = std::thread{ emplacer<Object2>, std::ref(pool), Object2{}, std::ref(vecSize2), std::ref(vecSize2Mutex) };
+                t1 = std::thread{ pusher<Object2>, std::ref(pool), Object2{}, std::ref(vecSize2), std::ref(vecSize2Mutex) };
+                t2 = std::thread{ pusher<Object2>, std::ref(pool), Object2{}, std::ref(vecSize2), std::ref(vecSize2Mutex) };
                 t3 = std::thread{ eraser<Object2>, std::ref(pool), std::ref(vecSize2), std::ref(vecSize2Mutex), std::ref(counterSize2) };
 
                 t1.join();
@@ -556,7 +556,7 @@ SCENARIO("ObjectPools can be safely accessed from multiple threads.", "[objectpo
 
             THEN("If 2 threads are erasing and 1 thread is emplacing")
             {
-                t1 = std::thread{ emplacer<Object2>, std::ref(pool), Object2{}, std::ref(vecSize2), std::ref(vecSize2Mutex) };
+                t1 = std::thread{ pusher<Object2>, std::ref(pool), Object2{}, std::ref(vecSize2), std::ref(vecSize2Mutex) };
                 t2 = std::thread{ eraser<Object2>, std::ref(pool), std::ref(vecSize2), std::ref(vecSize2Mutex), std::ref(counterSize2) };
                 t3 = std::thread{ eraser<Object2>, std::ref(pool), std::ref(vecSize2), std::ref(vecSize2Mutex), std::ref(counterSize2) };
 
@@ -569,7 +569,7 @@ SCENARIO("ObjectPools can be safely accessed from multiple threads.", "[objectpo
 
             THEN("If 1 thread is emplacing, 1 thread is erasing and 1 thread is reordering")
             {
-                t1 = std::thread{ emplacer<Object2>, std::ref(pool), Object2{}, std::ref(vecSize2), std::ref(vecSize2Mutex) };
+                t1 = std::thread{ pusher<Object2>, std::ref(pool), Object2{}, std::ref(vecSize2), std::ref(vecSize2Mutex) };
                 t2 = std::thread{ eraser<Object2>, std::ref(pool), std::ref(vecSize2), std::ref(vecSize2Mutex), std::ref(counterSize2) };
                 t3 = std::thread{ reorderer<Object2>, std::ref(pool), std::ref(vecSize2), std::ref(vecSize2Mutex) };
 
@@ -595,12 +595,12 @@ SCENARIO("ObjectPools can be safely accessed from multiple threads.", "[objectpo
 
             THEN("If 6 threads are emplacing and 3 threads are erasing")
             {
-                t1 = std::thread{ emplacer<Object2>, std::ref(pool), Object2{}, std::ref(vecSize2), std::ref(vecSize2Mutex) };
-                t2 = std::thread{ emplacer<Object8>, std::ref(pool), Object8{}, std::ref(vecSize8), std::ref(vecSize8Mutex) };
-                t3 = std::thread{ emplacer<Object32>, std::ref(pool), Object32{}, std::ref(vecSize32), std::ref(vecSize32Mutex) };
-                t4 = std::thread{ emplacer<Object2>, std::ref(pool), Object2{}, std::ref(vecSize2), std::ref(vecSize2Mutex) };
-                t5 = std::thread{ emplacer<Object8>, std::ref(pool), Object8{}, std::ref(vecSize8), std::ref(vecSize8Mutex) };
-                t6 = std::thread{ emplacer<Object32>, std::ref(pool), Object32{}, std::ref(vecSize32), std::ref(vecSize32Mutex) };
+                t1 = std::thread{ pusher<Object2>, std::ref(pool), Object2{}, std::ref(vecSize2), std::ref(vecSize2Mutex) };
+                t2 = std::thread{ pusher<Object8>, std::ref(pool), Object8{}, std::ref(vecSize8), std::ref(vecSize8Mutex) };
+                t3 = std::thread{ pusher<Object32>, std::ref(pool), Object32{}, std::ref(vecSize32), std::ref(vecSize32Mutex) };
+                t4 = std::thread{ pusher<Object2>, std::ref(pool), Object2{}, std::ref(vecSize2), std::ref(vecSize2Mutex) };
+                t5 = std::thread{ pusher<Object8>, std::ref(pool), Object8{}, std::ref(vecSize8), std::ref(vecSize8Mutex) };
+                t6 = std::thread{ pusher<Object32>, std::ref(pool), Object32{}, std::ref(vecSize32), std::ref(vecSize32Mutex) };
                 t7 = std::thread{ eraser<Object2>, std::ref(pool), std::ref(vecSize2), std::ref(vecSize2Mutex), std::ref(counterSize2) };
                 t8 = std::thread{ eraser<Object8>, std::ref(pool), std::ref(vecSize8), std::ref(vecSize8Mutex), std::ref(counterSize8) };
                 t9 = std::thread{ eraser<Object32>, std::ref(pool), std::ref(vecSize32), std::ref(vecSize32Mutex), std::ref(counterSize32) };
@@ -622,9 +622,9 @@ SCENARIO("ObjectPools can be safely accessed from multiple threads.", "[objectpo
 
             THEN("If 6 threads are erasing and 3 threads are emplacing")
             {
-                t1 = std::thread{ emplacer<Object2>, std::ref(pool), Object2{}, std::ref(vecSize2), std::ref(vecSize2Mutex) };
-                t2 = std::thread{ emplacer<Object8>, std::ref(pool), Object8{}, std::ref(vecSize8), std::ref(vecSize8Mutex) };
-                t3 = std::thread{ emplacer<Object32>, std::ref(pool), Object32{}, std::ref(vecSize32), std::ref(vecSize32Mutex) };
+                t1 = std::thread{ pusher<Object2>, std::ref(pool), Object2{}, std::ref(vecSize2), std::ref(vecSize2Mutex) };
+                t2 = std::thread{ pusher<Object8>, std::ref(pool), Object8{}, std::ref(vecSize8), std::ref(vecSize8Mutex) };
+                t3 = std::thread{ pusher<Object32>, std::ref(pool), Object32{}, std::ref(vecSize32), std::ref(vecSize32Mutex) };
                 t4 = std::thread{ eraser<Object2>, std::ref(pool), std::ref(vecSize2), std::ref(vecSize2Mutex), std::ref(counterSize2) };
                 t5 = std::thread{ eraser<Object8>, std::ref(pool), std::ref(vecSize8), std::ref(vecSize8Mutex), std::ref(counterSize8) };
                 t6 = std::thread{ eraser<Object32>, std::ref(pool), std::ref(vecSize32), std::ref(vecSize32Mutex), std::ref(counterSize32) };
@@ -649,9 +649,9 @@ SCENARIO("ObjectPools can be safely accessed from multiple threads.", "[objectpo
 
             THEN("If 3 threads are emplacing, 3 threads are erasing and 3 threads are reordering")
             {
-                t1 = std::thread{ emplacer<Object2>, std::ref(pool), Object2{}, std::ref(vecSize2), std::ref(vecSize2Mutex) };
-                t2 = std::thread{ emplacer<Object8>, std::ref(pool), Object8{}, std::ref(vecSize8), std::ref(vecSize8Mutex) };
-                t3 = std::thread{ emplacer<Object32>, std::ref(pool), Object32{}, std::ref(vecSize32), std::ref(vecSize32Mutex) };
+                t1 = std::thread{ pusher<Object2>, std::ref(pool), Object2{}, std::ref(vecSize2), std::ref(vecSize2Mutex) };
+                t2 = std::thread{ pusher<Object8>, std::ref(pool), Object8{}, std::ref(vecSize8), std::ref(vecSize8Mutex) };
+                t3 = std::thread{ pusher<Object32>, std::ref(pool), Object32{}, std::ref(vecSize32), std::ref(vecSize32Mutex) };
                 t4 = std::thread{ eraser<Object2>, std::ref(pool), std::ref(vecSize2), std::ref(vecSize2Mutex), std::ref(counterSize2) };
                 t5 = std::thread{ eraser<Object8>, std::ref(pool), std::ref(vecSize8), std::ref(vecSize8Mutex), std::ref(counterSize8) };
                 t6 = std::thread{ eraser<Object32>, std::ref(pool), std::ref(vecSize32), std::ref(vecSize32Mutex), std::ref(counterSize32) };
