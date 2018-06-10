@@ -27,7 +27,6 @@ SCENARIO("Systems can manage their memory via their ObjectPool", "[system][objec
 
 				auto ptr = reinterpret_cast<Handle*>(aPtr);
 
-				REQUIRE(ptr->isFree == true);
 				REQUIRE(ptr->size == OBJECT_SIZE_64);
 				REQUIRE(ptr->index == 1);
 			}

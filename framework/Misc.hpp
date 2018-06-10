@@ -45,12 +45,11 @@ struct Handle
 {
 	HandleSize size{}; /*!< The size of the Handle%d object. */
 	HandleIndex index{};/*!< The indexed location of the Handle%d object. */
-	bool isFree{true};/*!< Whether the index denotes a free or occupied location. */
 
     /*! Basic equality comparator. */
     bool operator==(const Handle &rhs) noexcept
     {
-        return (size == rhs.size && index == rhs.index && isFree == rhs.isFree);
+        return (size == rhs.size && index == rhs.index);
     }
 };
 
@@ -102,7 +101,11 @@ public:
 	std::size_t alignment() noexcept { return A; }
 
 	T& operator [](std::size_t i) { return _array[i]; }
-	void* operator new(std::size_t sz) { return aligned_malloc(sz, A); }
+        void *operator new(std::size_t sz)
+        {
+            std::cout << "lol" << std::endl;
+            return aligned_malloc(sz, A);
+        }
 	void operator delete(void* ptr) { return aligned_free(ptr); }
 
 private:

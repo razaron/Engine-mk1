@@ -10,9 +10,9 @@ SCENARIO("Entities can be constructed from a ComponentMap, then be added/removed
     GIVEN("A ComponentMap")
     {
         ComponentMap map;
-        map[ComponentType::COMPONENT_1] = Handle{HandleSize{4}, HandleIndex{0}, false};
-        map[ComponentType::COMPONENT_2] = Handle{HandleSize{4}, HandleIndex{1}, false};
-        map[ComponentType::COMPONENT_3] = Handle{HandleSize{4}, HandleIndex{2}, false};
+        map[ComponentType::COMPONENT_1] = Handle{HandleSize{4}, HandleIndex{0}};
+        map[ComponentType::COMPONENT_2] = Handle{HandleSize{4}, HandleIndex{1}};
+        map[ComponentType::COMPONENT_3] = Handle{HandleSize{4}, HandleIndex{2}};
 
         REQUIRE(map[ComponentType::COMPONENT_1].index == 0);
         REQUIRE(map[ComponentType::COMPONENT_2].index == 1);
@@ -28,14 +28,14 @@ SCENARIO("Entities can be constructed from a ComponentMap, then be added/removed
 
             THEN("Adding ComponentHandles")
             {
-                e.addComponent(ComponentHandle{ComponentType::COMPONENT_1, Handle{HandleSize{4}, HandleIndex{3}, false}});
+                e.addComponent(ComponentHandle{ComponentType::COMPONENT_1, Handle{HandleSize{4}, HandleIndex{3}}});
 
                 REQUIRE(e[ComponentType::COMPONENT_1].index == 3);
             }
 
             THEN("Removing ComponentHandles")
             {
-                e.removeComponent(ComponentHandle{ComponentType::COMPONENT_1, Handle{HandleSize{4}, HandleIndex{0}, false}});
+                e.removeComponent(ComponentHandle{ComponentType::COMPONENT_1, Handle{HandleSize{4}, HandleIndex{0}}});
 
                 bool result = false;
 
