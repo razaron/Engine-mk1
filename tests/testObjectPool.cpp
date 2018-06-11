@@ -21,7 +21,7 @@ SCENARIO("ObjectPools can allocate objects in multiple ways", "[objectpool]")
         {
             Handle h = p.emplace<Data>(1, 2.f);
 
-			REQUIRE(p.get<Data>(h)->first == 1);
+            REQUIRE(p.get<Data>(h)->first == 1);
             REQUIRE(p.get<Data>(h)->second == 2.f);
         }
 
@@ -36,7 +36,7 @@ SCENARIO("ObjectPools can allocate objects in multiple ways", "[objectpool]")
 
         WHEN("Passing an rvalue")
         {
-            Handle h = p.push<Data>(Data{1, 2.f});
+            Handle h = p.push<Data>(Data{ 1, 2.f });
 
             REQUIRE(p.get<Data>(h)->first == 1);
             REQUIRE(p.get<Data>(h)->second == 2.f);
@@ -197,32 +197,32 @@ SCENARIO("ObjectPools can retrieve objects from Handles", "[objectpool]")
 
     ObjectPool p;
 
-    Handle h2;
-    Handle h4;
-    Handle h8;
-    Handle h16;
-    Handle h32;
-    Handle h64;
+    std::vector<Handle> h2(100);
+    std::vector<Handle> h4(100);
+    std::vector<Handle> h8(100);
+    std::vector<Handle> h16(100);
+    std::vector<Handle> h32(100);
+    std::vector<Handle> h64(100);
 
     REQUIRE(p.capacity() == 0);
 
     GIVEN("An object pool with a SINGLE page of objects")
     {
-        h2 = p.push<std::array<char, OBJECT_SIZE_2>>(std::array<char, OBJECT_SIZE_2>{ "first" });
-        h4 = p.push<std::array<char, OBJECT_SIZE_4>>(std::array<char, OBJECT_SIZE_4>{ "second" });
-        h8 = p.push<std::array<char, OBJECT_SIZE_8>>(std::array<char, OBJECT_SIZE_8>{ "third" });
-        h16 = p.push<std::array<char, OBJECT_SIZE_16>>(std::array<char, OBJECT_SIZE_16>{ "fourth" });
-        h32 = p.push<std::array<char, OBJECT_SIZE_32>>(std::array<char, OBJECT_SIZE_32>{ "fifth" });
-        h64 = p.push<std::array<char, OBJECT_SIZE_64>>(std::array<char, OBJECT_SIZE_64>{ "sixth" });
+        h2[0] = p.push<std::array<char, OBJECT_SIZE_2>>(std::array<char, OBJECT_SIZE_2>{ "first" });
+        h4[0] = p.push<std::array<char, OBJECT_SIZE_4>>(std::array<char, OBJECT_SIZE_4>{ "second" });
+        h8[0] = p.push<std::array<char, OBJECT_SIZE_8>>(std::array<char, OBJECT_SIZE_8>{ "third" });
+        h16[0] = p.push<std::array<char, OBJECT_SIZE_16>>(std::array<char, OBJECT_SIZE_16>{ "fourth" });
+        h32[0] = p.push<std::array<char, OBJECT_SIZE_32>>(std::array<char, OBJECT_SIZE_32>{ "fifth" });
+        h64[0] = p.push<std::array<char, OBJECT_SIZE_64>>(std::array<char, OBJECT_SIZE_64>{ "sixth" });
 
         THEN("the handles can be converted to objects")
         {
-            auto p2 = *p.get<std::array<char, OBJECT_SIZE_2>>(h2);
-            auto p4 = *p.get<std::array<char, OBJECT_SIZE_4>>(h4);
-            auto p8 = *p.get<std::array<char, OBJECT_SIZE_8>>(h8);
-            auto p16 = *p.get<std::array<char, OBJECT_SIZE_16>>(h16);
-            auto p32 = *p.get<std::array<char, OBJECT_SIZE_32>>(h32);
-            auto p64 = *p.get<std::array<char, OBJECT_SIZE_64>>(h64);
+            auto p2 = *p.get<std::array<char, OBJECT_SIZE_2>>(h2[0]);
+            auto p4 = *p.get<std::array<char, OBJECT_SIZE_4>>(h4[0]);
+            auto p8 = *p.get<std::array<char, OBJECT_SIZE_8>>(h8[0]);
+            auto p16 = *p.get<std::array<char, OBJECT_SIZE_16>>(h16[0]);
+            auto p32 = *p.get<std::array<char, OBJECT_SIZE_32>>(h32[0]);
+            auto p64 = *p.get<std::array<char, OBJECT_SIZE_64>>(h64[0]);
 
             REQUIRE(p2[4] == 't');
             REQUIRE(p4[4] == 'n');
@@ -237,12 +237,12 @@ SCENARIO("ObjectPools can retrieve objects from Handles", "[objectpool]")
     {
         for (auto i = 0; i < 100; i++)
         {
-            h2 = p.push<std::array<int, OBJECT_SIZE_2 / sizeof(int)>>(std::array<int, OBJECT_SIZE_2 / sizeof(int)>{ 2 });
-            h4 = p.push<std::array<int, OBJECT_SIZE_4 / sizeof(int)>>(std::array<int, OBJECT_SIZE_4 / sizeof(int)>{ 4 });
-            h8 = p.push<std::array<int, OBJECT_SIZE_8 / sizeof(int)>>(std::array<int, OBJECT_SIZE_8 / sizeof(int)>{ 8 });
-            h16 = p.push<std::array<int, OBJECT_SIZE_16 / sizeof(int)>>(std::array<int, OBJECT_SIZE_16 / sizeof(int)>{ 16 });
-            h32 = p.push<std::array<int, OBJECT_SIZE_32 / sizeof(int)>>(std::array<int, OBJECT_SIZE_32 / sizeof(int)>{ 32 });
-            h64 = p.push<std::array<int, OBJECT_SIZE_64 / sizeof(int)>>(std::array<int, OBJECT_SIZE_64 / sizeof(int)>{ 64 });
+            h2[i] = p.push<std::array<int, OBJECT_SIZE_2 / sizeof(int)>>(std::array<int, OBJECT_SIZE_2 / sizeof(int)>{ 2 });
+            h4[i] = p.push<std::array<int, OBJECT_SIZE_4 / sizeof(int)>>(std::array<int, OBJECT_SIZE_4 / sizeof(int)>{ 4 });
+            h8[i] = p.push<std::array<int, OBJECT_SIZE_8 / sizeof(int)>>(std::array<int, OBJECT_SIZE_8 / sizeof(int)>{ 8 });
+            h16[i] = p.push<std::array<int, OBJECT_SIZE_16 / sizeof(int)>>(std::array<int, OBJECT_SIZE_16 / sizeof(int)>{ 16 });
+            h32[i] = p.push<std::array<int, OBJECT_SIZE_32 / sizeof(int)>>(std::array<int, OBJECT_SIZE_32 / sizeof(int)>{ 32 });
+            h64[i] = p.push<std::array<int, OBJECT_SIZE_64 / sizeof(int)>>(std::array<int, OBJECT_SIZE_64 / sizeof(int)>{ 64 });
         }
 
         THEN("the handles can be converted to objects")
@@ -252,12 +252,12 @@ SCENARIO("ObjectPools can retrieve objects from Handles", "[objectpool]")
             for (HandleIndex i = 0; i < 100; i++)
             {
 
-                auto p2 = *p.get<std::array<int, OBJECT_SIZE_2 / sizeof(int)>>({ OBJECT_SIZE_2, i });
-                auto p4 = *p.get<std::array<int, OBJECT_SIZE_4 / sizeof(int)>>({ OBJECT_SIZE_4, i });
-                auto p8 = *p.get<std::array<int, OBJECT_SIZE_8 / sizeof(int)>>({ OBJECT_SIZE_8, i });
-                auto p16 = *p.get<std::array<int, OBJECT_SIZE_16 / sizeof(int)>>({ OBJECT_SIZE_16, i });
-                auto p32 = *p.get<std::array<int, OBJECT_SIZE_32 / sizeof(int)>>({ OBJECT_SIZE_32, i });
-                auto p64 = *p.get<std::array<int, OBJECT_SIZE_64 / sizeof(int)>>({ OBJECT_SIZE_64, i });
+                auto p2 = *p.get<std::array<int, OBJECT_SIZE_2 / sizeof(int)>>(h2[i]);
+                auto p4 = *p.get<std::array<int, OBJECT_SIZE_4 / sizeof(int)>>(h4[i]);
+                auto p8 = *p.get<std::array<int, OBJECT_SIZE_8 / sizeof(int)>>(h8[i]);
+                auto p16 = *p.get<std::array<int, OBJECT_SIZE_16 / sizeof(int)>>(h16[i]);
+                auto p32 = *p.get<std::array<int, OBJECT_SIZE_32 / sizeof(int)>>(h32[i]);
+                auto p64 = *p.get<std::array<int, OBJECT_SIZE_64 / sizeof(int)>>(h64[i]);
 
                 if (p2[0] != 2)
                     result = false;
@@ -323,9 +323,7 @@ SCENARIO("You removes objects from anywhere in the ObjectPool", "[objectpool]")
 
             auto ptr = reinterpret_cast<Handle *>(p1);
 
-            // The pointer for first has become a free pointer at position 0 pointing to position 3
-            REQUIRE(ptr->size == OBJECT_SIZE_2);
-            REQUIRE(ptr->index == 3);
+            REQUIRE(pool.get<Arr>(first) == nullptr);
 
             THEN("Removing an object from position 2")
             {
@@ -334,13 +332,7 @@ SCENARIO("You removes objects from anywhere in the ObjectPool", "[objectpool]")
                 // Re-use p3 to see what the position looks like now
                 auto ptr = reinterpret_cast<Handle *>(p3);
 
-                // The pointer for third has become a free pointer at position 2 pointing to position 3
-                REQUIRE(ptr->size == OBJECT_SIZE_2);
-                REQUIRE(ptr->index == 3);
-
-                // Calling get again fails, returning a nullptr
-                auto nullPointer = pool.get<Arr>(third);
-                REQUIRE(nullPointer == nullptr);
+                REQUIRE(pool.get<Arr>(third) == nullptr);
 
                 pool.emplace<Arr>('a', 'l', 'p', 'h', 'a', '\0');
                 pool.emplace<Arr>('g', 'a', 'm', 'm', 'a', '\0');

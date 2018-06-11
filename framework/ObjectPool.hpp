@@ -50,43 +50,60 @@ namespace razaron::objectpool
 	*/
 
     /***
-	 *    ______                
-	 *    | ___ \               
-	 *    | |_/ /_ _  __ _  ___ 
-	 *    |  __/ _` |/ _` |/ _ \
-	 *    | | | (_| | (_| |  __/
-	 *    \_|  \__,_|\__, |\___|
-	 *                __/ |     
-	 *               |___/                              
-	 */
+	*    ______
+	*    | ___ \
+	*    | |_/ /_ _  __ _  ___
+	*    |  __/ _` |/ _` |/ _ \
+	*    | | | (_| | (_| |  __/
+	*    \_|  \__,_|\__, |\___|
+	*                __/ |
+	*               |___/
+	*/
     template <std::size_t S>
     class Page
     {
-        using Data = AlignedArray<std::byte, OBJECT_POOL_PAGE_LENGTH * S, OBJECT_POOL_PAGE_ALIGNMENT>;
-
       public:
+        struct Line
+        {
+            Line *next;
+
+          private:
+            std::array<std::byte, S - sizeof(Line::next)> padding;
+        };
+
+        using ArrayType = AlignedArray<Line, OBJECT_POOL_PAGE_LENGTH, OBJECT_POOL_PAGE_ALIGNMENT>;
+
+        Page() : _data{}
+        {
+            begin = reinterpret_cast<std::size_t>(&_data.data()[0]);
+            end = reinterpret_cast<std::size_t>(&_data.data()[OBJECT_POOL_PAGE_LENGTH * S - 1]);
+        }
+
         constexpr std::size_t size() { return _data.size(); }
         auto data() { return _data.data(); }
 
+        std::size_t begin, end;
+
       private:
-        Data _data{};
-        std::size_t _begin, _end;
+        ArrayType _data;
     };
 
     /***
-	 *    ______             _     _     _   
-	 *    |  ___|           | |   (_)   | |  
-	 *    | |_ _ __ ___  ___| |    _ ___| |_ 
-	 *    |  _| '__/ _ \/ _ \ |   | / __| __|
-	 *    | | | | |  __/  __/ |___| \__ \ |_ 
-	 *    \_| |_|  \___|\___\_____/_|___/\__|
-	 *                                       
-	 *                                                               
-	 */
+	*    ______             _     _     _
+	*    |  ___|           | |   (_)   | |
+	*    | |_ _ __ ___  ___| |    _ ___| |_
+	*    |  _| '__/ _ \/ _ \ |   | / __| __|
+	*    | | | | |  __/  __/ |___| \__ \ |_
+	*    \_| |_|  \___|\___\_____/_|___/\__|
+	*
+	*
+	*/
     template <std::size_t S>
     class FreeList
     {
         using PageType = Page<S>;
+        using LineType = typename PageType::Line;
+        using PageVector = std::vector<std::unique_ptr<PageType>>;
 
       public:
         template <class T>
@@ -104,52 +121,46 @@ namespace razaron::objectpool
         std::size_t capacity()
         {
             if (_pages.size())
-                return _pages.size() * _pages[0]->size();
+                return _pages.size() * sizeof(typename PageType::ArrayType);
             else
                 return 0;
         }
 
       private:
-        template <class T>
-        typename std::enable_if<std::is_pointer<T>::value, HandleIndex>::type getIndex(T ptr);
-
         void addPage();
-        PageType *getPage(HandleIndex index);
+        typename std::size_t getPosition(LineType *ptr);
 
-        std::vector<std::unique_ptr<PageType>> _pages;
-        Handle *_freePtr;
-
-        std::recursive_mutex _mutex;
+        PageVector _pages{};
+        LineType *_freeLinePtr{ nullptr };
+        HandleMap _map{};
+        std::mutex _mutex{};
     };
 
     /* *************************************************
-						PUBLIC FUNCTIONS
+	PUBLIC FUNCTIONS
 	****************************************************/
     template <std::size_t S>
     template <class T>
     inline Handle FreeList<S>::push(T &&object)
     {
-        std::lock_guard<std::recursive_mutex> lk{ _mutex };
-
         // If the next free position pointer points to non-existant page, add a new page
-        size_t totalPositions = _pages.size() * OBJECT_POOL_PAGE_LENGTH;
-        if (totalPositions == 0 || totalPositions <= _freePtr->index)
+        if (_freeLinePtr == nullptr || _freeLinePtr->next == nullptr)
         {
             addPage();
         }
 
-        // Get pointers to the current and next free elements
-        Handle *curFree = _freePtr;
-        Handle *nextFree = get<Handle>(*curFree);
+        // Get pointers to the current and next free lines
+        LineType *curFree = _freeLinePtr;
+        LineType *nextFree = _freeLinePtr->next;
 
         // Copy object data to the location current free pointer
         std::memcpy(curFree, &object, sizeof(T));
 
         // Set the pools first free pointer to the next free pointer
-        _freePtr = nextFree;
+        _freeLinePtr = nextFree;
 
-        // Configure a Handle for the newly placed object
-        Handle h{ HandleSize{ sizeof(T) }, HandleIndex{ getIndex(curFree) } };
+        Handle h{ sizeof(T) };
+        _map[h] = curFree;
 
         return h;
     }
@@ -158,27 +169,24 @@ namespace razaron::objectpool
     template <class T, class... Args>
     inline Handle FreeList<S>::emplace(Args... args)
     {
-        std::lock_guard<std::recursive_mutex> lk{ _mutex };
-
         // If the next free position pointer points to non-existant page, add a new page
-        size_t totalPositions = _pages.size() * OBJECT_POOL_PAGE_LENGTH;
-        if (totalPositions == 0 || totalPositions <= _freePtr->index)
+        if (_freeLinePtr == nullptr || _freeLinePtr->next == nullptr)
         {
             addPage();
         }
 
-        // Get pointers to the current and next free elements
-        Handle *curFree = _freePtr;
-        Handle *nextFree = get<Handle>(*curFree);
+        // Get pointers to the current and next free lines
+        LineType *curFree = _freeLinePtr;
+        LineType *nextFree = _freeLinePtr->next;
 
         // Construct object to the location of current free pointer
         auto ptr = new (curFree) T{ args... };
 
         // Set the pools first free pointer to the next free pointer
-        _freePtr = nextFree;
+        _freeLinePtr = nextFree;
 
-        // Configure a Handle for the newly placed object
-        Handle h{ HandleSize{ sizeof(T) }, HandleIndex{ getIndex(curFree) } };
+        Handle h{ sizeof(T) };
+        _map[h] = curFree;
 
         return h;
     }
@@ -187,182 +195,130 @@ namespace razaron::objectpool
     template <class T>
     inline T *FreeList<S>::get(const Handle &handle)
     {
-        std::lock_guard<std::recursive_mutex> lk{ _mutex };
+        auto it = _map.find(handle);
 
-        // Find the page containg handle
-        auto page = getPage(handle.index);
-
-        // Quotient is the page number and remainder is the position in that page
-        std::div_t d = std::div(handle.index, OBJECT_POOL_PAGE_LENGTH);
-
-        // Find and cast the element refering to objects first byte
-        auto objectPtr = reinterpret_cast<T *>(&page->data()[d.rem * _freePtr->size]);
-
-        return objectPtr;
+        if (it != _map.end())
+        {
+            return static_cast<T *>(it->second);
+        }
+        else
+            return nullptr;
     }
 
     template <std::size_t S>
     template <class T>
     inline void FreeList<S>::erase(const Handle &handle)
     {
-        std::lock_guard<std::recursive_mutex> lk{ _mutex };
+        std::destroy_at(get<T>(handle));
 
-        // Get index of first free position
-        auto posCurFree = getIndex(_freePtr);
-
-        // Fail if first free position and object being removed are the same
-        if (handle.index == posCurFree) return;
-
-        Handle *ptrToRemove = get<Handle>(handle);
-
-        // Call object destructor if it is manually set
-        std::destroy_at(reinterpret_cast<T *>(ptrToRemove));
-
-        // Resets the data back to zero
-        std::memset(ptrToRemove, 0, _freePtr->size);
+        LineType *ptrToRemove = get<LineType>(handle);
 
         // If the object being removed is located BEFORE the first free position
-        if (handle.index < posCurFree)
+        if (getPosition(ptrToRemove) < getPosition(_freeLinePtr))
         {
+            ptrToRemove->next = _freeLinePtr;
 
-            // Setup the object being removed to become the next firstFree pointer
-            ptrToRemove->size = _freePtr->size;
-            ptrToRemove->index = posCurFree;
-
-            _freePtr = ptrToRemove;
+            _freeLinePtr = ptrToRemove;
         }
         // If the object being removed is located AFTER the first free position
         else
         {
-            Handle *ptrPrevFree = nullptr;
-            Handle *ptrNextFree = _freePtr;
+            LineType *prevFree = nullptr;
+            LineType *nextFree = _freeLinePtr;
 
-            std::size_t posNextFree = getIndex(ptrNextFree);
+            std::size_t pos = getPosition(ptrToRemove);
 
-            // Loop through free positions until handle is inbetween prevFree and nextFree
-            while (posNextFree < handle.index)
+            // Loop through free positions until ptrToRemove is inbetween prevFree and nextFree
+            while (getPosition(nextFree) < pos)
             {
-                ptrPrevFree = ptrNextFree;
-
-                ptrNextFree = get<Handle>(*ptrNextFree);
-                posNextFree = getIndex(ptrNextFree);
+                prevFree = nextFree;
+                nextFree = nextFree->next;
             }
 
-            // Currently, ptrToRemove is zeroed, so I have to get it's index from handle
-            ptrPrevFree->index = handle.index;
-
-            // Setup the ptr being removed to be inbetween ptrPrevFree and ptrNextFree
-            ptrToRemove->size = _freePtr->size;
-            ptrToRemove->index = static_cast<HandleIndex>(posNextFree);
+            // Set ptrToRemove to be inbetween ptrPrevFree and ptrNextFree
+            prevFree->next = ptrToRemove;
+            ptrToRemove->next = nextFree;
         }
 
+        if (!_map.erase(handle))
+        {
+            std::stringstream message;
+            message << "Handle{ size: " << handle.size << ", index: " << handle.index << " }"
+                    << " not found in ObjectPool::_hashMap.";
+
+            throw std::out_of_range(message.str());
+        }
         return;
     }
 
     /***************************************************
-					PRIVATE FUNCTIONS
+	PRIVATE FUNCTIONS
 	****************************************************/
     template <std::size_t S>
     inline void FreeList<S>::addPage()
     {
-        // Create and push a new page onto the pool
         auto page = new PageType;
-        _pages.emplace_back(page);
 
-        // Initialize the pages positions with free handles pointing to the next free Handle
-        auto pageData = _pages.back()->data();
-        for (auto i = 0; i < OBJECT_POOL_PAGE_LENGTH; i++)
+        // Initialize the pages lines with pointers pointing to the next free line
+        auto i = 0;
+        for (; i < OBJECT_POOL_PAGE_LENGTH - 1; i++)
         {
-            HandleIndex nextFree = static_cast<HandleIndex>(i + 1 + ((_pages.size() - 1) * OBJECT_POOL_PAGE_LENGTH));
-
-            Handle h = { static_cast<HandleSize>(page->size() / OBJECT_POOL_PAGE_LENGTH), nextFree };
-            std::memcpy(&pageData[i * page->size() / OBJECT_POOL_PAGE_LENGTH], &h, sizeof(h));
+            page->data()[i].next = &page->data()[i + 1];
         }
 
-        // If it's the first page, set the first free position to the beginning of the page
-        if (_freePtr == nullptr)
-            _freePtr = reinterpret_cast<Handle *>(page->data());
+        // Last line points to nullptr
+        page->data()[i].next = nullptr;
+
+        // If first page, set _freePtr to the new pages first free line
+        if (_freeLinePtr == nullptr)
+            _freeLinePtr = &page->data()[0];
+        // Else set the last pages last line to the new pages first line
+        else
+            _pages.back()->data()[i].next = &page->data()[0];
+
+        _pages.emplace_back(page);
     }
 
     template <std::size_t S>
-    inline typename FreeList<S>::PageType *FreeList<S>::getPage(HandleIndex index)
+    inline std::size_t FreeList<S>::getPosition(LineType *ptr)
     {
-        // Quotient is the page number and remainder is the position in that page
-        std::div_t d = std::div(index, OBJECT_POOL_PAGE_LENGTH);
-
-        // Finds a pointer to the correct page
+        std::size_t pos = reinterpret_cast<std::size_t>(ptr);
         PageType *page = nullptr;
+        int pageNum = 0;
         for (auto &p : _pages)
         {
-            if (!d.quot)
+            if (pos >= p->begin && pos <= p->end)
             {
                 page = p.get();
                 break;
             }
-            d.quot--;
+            pageNum++;
         }
 
-        return page;
-    }
-
-    template <std::size_t S>
-    template <class T>
-    inline typename std::enable_if<std::is_pointer<T>::value, HandleIndex>::type FreeList<S>::getIndex(T ptr)
-    {
-        // Find the page that contains ptr
-        std::size_t ptrAdr = reinterpret_cast<std::size_t>(ptr);
-        std::size_t pageAdr = 0;
-        std::size_t diff = 0;
-        int pageNumber = 0;
-
-        for (auto &p : _pages)
+        if (page)
         {
-            pageAdr = reinterpret_cast<std::size_t>(p->data());
-            diff = ptrAdr - pageAdr;
+            std::size_t offset = pos - page->begin;
+            offset /= sizeof(LineType);
 
-            ++pageNumber;
-
-            if (diff >= 0 && diff < sizeof(PageType))
-                break;
+            return pageNum * OBJECT_POOL_PAGE_LENGTH + offset;
         }
 
-        // Throw if no page found
-        if (!(diff >= 0 && diff < sizeof(PageType)))
-        {
-            throw std::out_of_range("Pointer is not in any page.");
-        }
+        std::stringstream message;
+        message << "ptr not found in FreeList.";
 
-        // Calculate index relative to it's page
-        std::size_t position = ptrAdr - pageAdr;
-        position = position / _freePtr->size;
-
-        // Add add sum of preceding positions to get absolute index
-        position = position + (pageNumber - 1) * OBJECT_POOL_PAGE_LENGTH;
-
-        // If position is in valid range, return. Else, throw.
-        if (position <= std::numeric_limits<HandleIndex>::max())
-        {
-            return static_cast<HandleIndex>(position);
-        }
-        else
-        {
-            std::stringstream message;
-            message << "Calculated position too large for HandleIndex max value. std::numeric_limits<HandleIndex>::max()" << std::numeric_limits<HandleIndex>::max();
-
-            throw std::overflow_error(message.str());
-        }
+        throw std::invalid_argument(message.str());
     }
 
     /***
-	 *     _____ _     _           _  ______           _ 
-	 *    |  _  | |   (_)         | | | ___ \         | |
-	 *    | | | | |__  _  ___  ___| |_| |_/ /__   ___ | |
-	 *    | | | | '_ \| |/ _ \/ __| __|  __/ _ \ / _ \| |
-	 *    \ \_/ / |_) | |  __/ (__| |_| | | (_) | (_) | |
-	 *     \___/|_.__/| |\___|\___|\__\_|  \___/ \___/|_|
-	 *               _/ |                                
-	 *              |__/                                 
-	 */
+	*     _____ _     _           _  ______           _
+	*    |  _  | |   (_)         | | | ___ \         | |
+	*    | | | | |__  _  ___  ___| |_| |_/ /__   ___ | |
+	*    | | | | '_ \| |/ _ \/ __| __|  __/ _ \ / _ \| |
+	*    \ \_/ / |_) | |  __/ (__| |_| | | (_) | (_) | |
+	*     \___/|_.__/| |\___|\___|\__\_|  \___/ \___/|_|
+	*               _/ |
+	*              |__/
+	*/
 
     /*!	Stores objects of any type with size upto \c sizeof(std::size_t)*64 Bytes in contiguous aligned memory.
 	*   For more information and examples, see page \ref objectpool.
@@ -381,12 +337,18 @@ namespace razaron::objectpool
 
         // clang-format off
 		template <typename T>
-		using PoolCond1 = std::conditional <sizeof(T) <= OBJECT_SIZE_2, PoolA,
-			typename std::conditional <sizeof(T) <= OBJECT_SIZE_4, PoolB,
-			typename std::conditional <sizeof(T) <= OBJECT_SIZE_8, PoolC,
-			typename std::conditional <sizeof(T) <= OBJECT_SIZE_16, PoolD,
-			typename std::conditional <sizeof(T) <= OBJECT_SIZE_32, PoolE, PoolF>::type>::type>::type>::type>;
-        // clang-format on
+		struct PoolCond {
+			static_assert(sizeof(T) <= OBJECT_SIZE_64, "T does not fit any pool.");
+
+			using Cond = std::conditional <sizeof(T) <= OBJECT_SIZE_2, PoolA,
+				typename std::conditional <sizeof(T) <= OBJECT_SIZE_4, PoolB,
+				typename std::conditional <sizeof(T) <= OBJECT_SIZE_8, PoolC,
+				typename std::conditional <sizeof(T) <= OBJECT_SIZE_16, PoolD,
+				typename std::conditional <sizeof(T) <= OBJECT_SIZE_32, PoolE, PoolF>::type>::type>::type>::type>;
+            // clang-format on
+
+            using type = typename Cond::type;
+        };
         /*! @endcond */
 
       public:
@@ -463,18 +425,17 @@ namespace razaron::objectpool
         void erase(const Handle &handle);
 
         /*! Returns the current total capacity in bytes. */
-        std::size_t capacity(); // add overload with size parameter. Checks how many size bytes long object can fit.
+        std::size_t capacity();
+
+        /*! Returns the current capacity for the pool that fits sizeof(T) in bytes. */
+        template <typename T>
+        std::size_t capacity();
 
       private:
-        template <class T>
-        T *getObject(const Handle &handle);
-
         template <typename... Pools>
         std::size_t capacityImpl();
 
         PoolTuple _pools{};
-        HandleMap _hashMap{};
-        std::mutex _hashMapMutex{};
     };
 
     /* *************************************************
@@ -484,96 +445,41 @@ namespace razaron::objectpool
     inline Handle ObjectPool::push(const T &object)
     {
         // Find the pool that fits T
-        using Pool = typename PoolCond1<T>::type;
+        using Pool = typename PoolCond<T>::type;
         auto &pool = std::get<Pool>(_pools);
 
         T val = object;
 
-        if (sizeof(T) <= OBJECT_SIZE_64)
-        {
-            auto h = pool.push<T>(std::move(val));
-
-            // Adds the new object to the ObjectPools hashmap
-            {
-                std::lock_guard<std::mutex> lk{ _hashMapMutex };
-
-                _hashMap[h] = static_cast<void *>(pool.get<T>(h));
-            }
-
-            return h;
-        }
-        else
-        {
-            std::stringstream message;
-            message << typeid(T).name() << " is too large for ObjectPool. sizeof(" << typeid(T).name() << "): "
-                    << ".";
-
-            throw std::length_error(message.str());
-        }
+        return pool.push<T>(std::move(val));
     }
 
     template <class T>
     inline Handle ObjectPool::push(T &&object)
     {
         // Find the pool that fits T
-        using Pool = typename PoolCond1<T>::type;
+        using Pool = typename PoolCond<T>::type;
         auto &pool = std::get<Pool>(_pools);
 
-        if (sizeof(T) <= OBJECT_SIZE_64)
-        {
-            auto h = pool.push<T>(std::forward<T>(object));
-
-            // Adds the new object to the ObjectPools hashmap
-            {
-                std::lock_guard<std::mutex> lk{ _hashMapMutex };
-
-                _hashMap[h] = static_cast<void *>(pool.get<T>(h));
-            }
-
-            return h;
-        }
-        else
-        {
-            std::stringstream message;
-            message << typeid(T).name() << " is too large for ObjectPool. sizeof(" << typeid(T).name() << "): "
-                    << ".";
-
-            throw std::length_error(message.str());
-        }
+        return pool.push<T>(std::forward<T>(object));
     }
 
     template <class T, class... Args>
     inline Handle ObjectPool::emplace(Args... args)
     {
         // Find the pool that fits T
-        using Pool = typename PoolCond1<T>::type;
+        using Pool = typename PoolCond<T>::type;
         auto &pool = std::get<Pool>(_pools);
 
-        if (sizeof(T) <= OBJECT_SIZE_64)
-        {
-            auto h = pool.emplace<T>(args...);
-
-            // Adds the new object to the ObjectPools hashmap
-            {
-                std::lock_guard<std::mutex> lk{ _hashMapMutex };
-
-                _hashMap[h] = static_cast<void *>(pool.get<T>(h));
-            }
-
-            return h;
-        }
-        else
-        {
-            std::stringstream message;
-            message << typeid(T).name() << " is too large for ObjectPool. sizeof(" << typeid(T).name() << "): " << sizeof(T) << ".";
-
-            throw std::length_error(message.str());
-        }
+        return pool.emplace<T>(args...);
     }
 
     template <class T>
     inline T *ObjectPool::get(const Handle &handle)
     {
+        // Find the pool that fits T
+        using Pool = typename PoolCond<T>::type;
+        auto &pool = std::get<Pool>(_pools);
+
         if (handle.size != sizeof(T))
         {
             std::stringstream message;
@@ -581,24 +487,15 @@ namespace razaron::objectpool
 
             throw std::invalid_argument(message.str());
         }
-        else if (sizeof(T) <= OBJECT_SIZE_64)
-        {
-            return getObject<T>(handle);
-        }
-        else
-        {
-            std::stringstream message;
-            message << "HandleSize (" << handle.size << ") too large for ObjectPool.";
 
-            throw std::length_error(message.str());
-        }
+        return pool.get<T>(handle);
     }
 
     template <class T>
     inline void ObjectPool::erase(const Handle &handle)
     {
         // Find the pool that fits T
-        using Pool = typename PoolCond1<T>::type;
+        using Pool = typename PoolCond<T>::type;
         auto &pool = std::get<Pool>(_pools);
 
         if (handle.size != sizeof(T))
@@ -608,33 +505,10 @@ namespace razaron::objectpool
 
             throw std::invalid_argument(message.str());
         }
-        else if (sizeof(T) <= OBJECT_SIZE_64)
-        {
-            pool.erase<T>(handle);
 
-            // Removes object from the hashmap.
-            {
-                std::lock_guard<std::mutex> lk{ _hashMapMutex };
+        pool.erase<T>(handle);
 
-                if (!_hashMap.erase(handle))
-                {
-                    std::stringstream message;
-                    message << "Handle{ size: " << handle.size << ", index: " << handle.index << " }"
-                            << " not found in ObjectPool::_hashMap.";
-
-                    throw std::out_of_range(message.str());
-                }
-            }
-
-            return;
-        }
-        else
-        {
-            std::stringstream message;
-            message << "HandleSize (" << handle.size << ") too large for ObjectPool.";
-
-            throw std::length_error(message.str());
-        }
+        return;
     }
 
     inline std::size_t ObjectPool::capacity()
@@ -642,24 +516,17 @@ namespace razaron::objectpool
         return capacityImpl<PoolA, PoolB, PoolC, PoolD, PoolE, PoolF>();
     }
 
+    template <typename T>
+    inline std::size_t ObjectPool::capacity()
+    {
+        using Pool = typename PoolCond<T>::type;
+
+        return capacityImpl<Pool>();
+    }
+
     /* *************************************************
 	PRIVATE FUNCTIONS
 	****************************************************/
-    template <class T>
-    inline T *ObjectPool::getObject(const Handle &handle)
-    {
-        std::lock_guard<std::mutex> lk{ _hashMapMutex };
-
-        auto it = _hashMap.find(handle);
-
-        if (it != _hashMap.end())
-        {
-            return static_cast<T *>(it->second);
-        }
-        else
-            return nullptr;
-    }
-
     template <typename... Pools>
     inline std::size_t ObjectPool::capacityImpl()
     {

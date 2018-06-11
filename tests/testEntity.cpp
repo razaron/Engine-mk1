@@ -10,32 +10,37 @@ SCENARIO("Entities can be constructed from a ComponentMap, then be added/removed
     GIVEN("A ComponentMap")
     {
         ComponentMap map;
-        map[ComponentType::COMPONENT_1] = Handle{HandleSize{4}, HandleIndex{0}};
-        map[ComponentType::COMPONENT_2] = Handle{HandleSize{4}, HandleIndex{1}};
-        map[ComponentType::COMPONENT_3] = Handle{HandleSize{4}, HandleIndex{2}};
+        Handle h1{ HandleSize{ 4 } };
+        Handle h2{ HandleSize{ 4 } };
+        Handle h3{ HandleSize{ 4 } };
+        map[ComponentType::COMPONENT_1] = h1;
+        map[ComponentType::COMPONENT_2] = h2;
+        map[ComponentType::COMPONENT_3] = h3;
 
-        REQUIRE(map[ComponentType::COMPONENT_1].index == 0);
-        REQUIRE(map[ComponentType::COMPONENT_2].index == 1);
-        REQUIRE(map[ComponentType::COMPONENT_3].index == 2);
+        REQUIRE(map[ComponentType::COMPONENT_1].index == h1.index);
+        REQUIRE(map[ComponentType::COMPONENT_2].index == h2.index);
+        REQUIRE(map[ComponentType::COMPONENT_3].index == h3.index);
 
         WHEN("An entity is constructed from the ComponentMap")
         {
             Entity e{map};
 
-            REQUIRE(e[ComponentType::COMPONENT_1].index == 0);
-            REQUIRE(e[ComponentType::COMPONENT_2].index == 1);
-            REQUIRE(e[ComponentType::COMPONENT_3].index == 2);
+            REQUIRE(e[ComponentType::COMPONENT_1].index == h1.index);
+            REQUIRE(e[ComponentType::COMPONENT_2].index == h2.index);
+            REQUIRE(e[ComponentType::COMPONENT_3].index == h3.index);
 
             THEN("Adding ComponentHandles")
             {
-                e.addComponent(ComponentHandle{ComponentType::COMPONENT_1, Handle{HandleSize{4}, HandleIndex{3}}});
+                Handle h{ HandleSize{ 4 }};
+                e.addComponent(ComponentHandle{ComponentType::COMPONENT_1, h});
 
-                REQUIRE(e[ComponentType::COMPONENT_1].index == 3);
+                REQUIRE(e[ComponentType::COMPONENT_1].index == h.index);
             }
 
             THEN("Removing ComponentHandles")
             {
-                e.removeComponent(ComponentHandle{ComponentType::COMPONENT_1, Handle{HandleSize{4}, HandleIndex{0}}});
+                Handle h{ HandleSize{ 4 } };
+                e.removeComponent(ComponentHandle{ ComponentType::COMPONENT_1, h1 });
 
                 bool result = false;
 
