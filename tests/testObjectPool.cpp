@@ -27,8 +27,8 @@ SCENARIO("ObjectPools can allocate objects in multiple ways", "[objectpool]")
 
         WHEN("Passing a const reference")
         {
-            Data data{ 1, 2.f };
-            Handle h = p.push<Data>(data);
+            const Data data{ 1, 2.f };
+            Handle h = p.push(data);
 
             REQUIRE(p.get<Data>(h)->first == 1);
             REQUIRE(p.get<Data>(h)->second == 2.f);
@@ -36,7 +36,7 @@ SCENARIO("ObjectPools can allocate objects in multiple ways", "[objectpool]")
 
         WHEN("Passing an rvalue")
         {
-            Handle h = p.push<Data>(Data{ 1, 2.f });
+            Handle h = p.push(Data{ 1, 2.f });
 
             REQUIRE(p.get<Data>(h)->first == 1);
             REQUIRE(p.get<Data>(h)->second == 2.f);
@@ -54,7 +54,7 @@ SCENARIO("ObjectPools can add pages as necessary", "[objectpool]")
 
         WHEN("A single OBJECT_SIZE_2-byte object is pushed on")
         {
-            p.push<std::array<char, OBJECT_SIZE_2>>(std::array<char, OBJECT_SIZE_2>{ "1234567" });
+            p.push(std::array<char, OBJECT_SIZE_2>{ "1234567" });
 
             THEN("the capacity changes")
             {
@@ -66,7 +66,7 @@ SCENARIO("ObjectPools can add pages as necessary", "[objectpool]")
 
             for (auto i = 0; i < OBJECT_POOL_PAGE_LENGTH; i++)
             {
-                p.push<std::array<char, OBJECT_SIZE_2>>(std::array<char, OBJECT_SIZE_2>{ "1234567" });
+                p.push(std::array<char, OBJECT_SIZE_2>{ "1234567" });
             }
 
             THEN("the capacity changes")
@@ -77,7 +77,7 @@ SCENARIO("ObjectPools can add pages as necessary", "[objectpool]")
 
         WHEN("A single OBJECT_SIZE_4-byte object is pushed on")
         {
-            p.push<std::array<char, OBJECT_SIZE_4>>(std::array<char, OBJECT_SIZE_4>{ "1234567" });
+            p.push(std::array<char, OBJECT_SIZE_4>{ "1234567" });
 
             THEN("the capacity changes")
             {
@@ -89,7 +89,7 @@ SCENARIO("ObjectPools can add pages as necessary", "[objectpool]")
 
             for (auto i = 0; i < OBJECT_POOL_PAGE_LENGTH; i++)
             {
-                p.push<std::array<char, OBJECT_SIZE_4>>(std::array<char, OBJECT_SIZE_4>{ "1234567" });
+                p.push(std::array<char, OBJECT_SIZE_4>{ "1234567" });
             }
 
             THEN("the capacity changes")
@@ -100,7 +100,7 @@ SCENARIO("ObjectPools can add pages as necessary", "[objectpool]")
 
         WHEN("A single OBJECT_SIZE_8-byte object is pushed on")
         {
-            p.push<std::array<char, OBJECT_SIZE_8>>(std::array<char, OBJECT_SIZE_8>{ "1234567" });
+            p.push(std::array<char, OBJECT_SIZE_8>{ "1234567" });
 
             THEN("the capacity changes")
             {
@@ -112,7 +112,7 @@ SCENARIO("ObjectPools can add pages as necessary", "[objectpool]")
 
             for (auto i = 0; i < OBJECT_POOL_PAGE_LENGTH; i++)
             {
-                p.push<std::array<char, OBJECT_SIZE_8>>(std::array<char, OBJECT_SIZE_8>{ "1234567" });
+                p.push(std::array<char, OBJECT_SIZE_8>{ "1234567" });
             }
 
             THEN("the capacity changes")
@@ -123,7 +123,7 @@ SCENARIO("ObjectPools can add pages as necessary", "[objectpool]")
 
         WHEN("A single OBJECT_SIZE_16-byte object is pushed on")
         {
-            p.push<std::array<char, OBJECT_SIZE_16>>(std::array<char, OBJECT_SIZE_16>{ "1234567" });
+            p.push(std::array<char, OBJECT_SIZE_16>{ "1234567" });
 
             THEN("the capacity changes")
             {
@@ -135,7 +135,7 @@ SCENARIO("ObjectPools can add pages as necessary", "[objectpool]")
 
             for (auto i = 0; i < OBJECT_POOL_PAGE_LENGTH; i++)
             {
-                p.push<std::array<char, OBJECT_SIZE_16>>(std::array<char, OBJECT_SIZE_16>{ "1234567" });
+                p.push(std::array<char, OBJECT_SIZE_16>{ "1234567" });
             }
 
             THEN("the capacity changes")
@@ -146,7 +146,7 @@ SCENARIO("ObjectPools can add pages as necessary", "[objectpool]")
 
         WHEN("A single OBJECT_SIZE_32-byte object is pushed on")
         {
-            p.push<std::array<char, OBJECT_SIZE_32>>(std::array<char, OBJECT_SIZE_32>{ "1234567" });
+            p.push(std::array<char, OBJECT_SIZE_32>{ "1234567" });
 
             THEN("the capacity changes")
             {
@@ -158,7 +158,7 @@ SCENARIO("ObjectPools can add pages as necessary", "[objectpool]")
 
             for (auto i = 0; i < OBJECT_POOL_PAGE_LENGTH; i++)
             {
-                p.push<std::array<char, OBJECT_SIZE_32>>(std::array<char, OBJECT_SIZE_32>{ "1234567" });
+                p.push(std::array<char, OBJECT_SIZE_32>{ "1234567" });
             }
 
             THEN("the capacity changes")
@@ -169,7 +169,7 @@ SCENARIO("ObjectPools can add pages as necessary", "[objectpool]")
 
         WHEN("A single OBJECT_SIZE_64-byte object is pushed on")
         {
-            p.push<std::array<char, OBJECT_SIZE_64>>(std::array<char, OBJECT_SIZE_64>{ "1234567" });
+            p.push(std::array<char, OBJECT_SIZE_64>{ "1234567" });
 
             THEN("the capacity changes")
             {
@@ -181,7 +181,7 @@ SCENARIO("ObjectPools can add pages as necessary", "[objectpool]")
 
             for (auto i = 0; i < OBJECT_POOL_PAGE_LENGTH; i++)
             {
-                p.push<std::array<char, OBJECT_SIZE_64>>(std::array<char, OBJECT_SIZE_64>{ "1234567" });
+                p.push(std::array<char, OBJECT_SIZE_64>{ "1234567" });
             }
 
             THEN("the capacity changes")
@@ -208,12 +208,12 @@ SCENARIO("ObjectPools can retrieve objects from Handles", "[objectpool]")
 
     GIVEN("An object pool with a SINGLE page of objects")
     {
-        h2[0] = p.push<std::array<char, OBJECT_SIZE_2>>(std::array<char, OBJECT_SIZE_2>{ "first" });
-        h4[0] = p.push<std::array<char, OBJECT_SIZE_4>>(std::array<char, OBJECT_SIZE_4>{ "second" });
-        h8[0] = p.push<std::array<char, OBJECT_SIZE_8>>(std::array<char, OBJECT_SIZE_8>{ "third" });
-        h16[0] = p.push<std::array<char, OBJECT_SIZE_16>>(std::array<char, OBJECT_SIZE_16>{ "fourth" });
-        h32[0] = p.push<std::array<char, OBJECT_SIZE_32>>(std::array<char, OBJECT_SIZE_32>{ "fifth" });
-        h64[0] = p.push<std::array<char, OBJECT_SIZE_64>>(std::array<char, OBJECT_SIZE_64>{ "sixth" });
+        h2[0] = p.push(std::array<char, OBJECT_SIZE_2>{ "first" });
+        h4[0] = p.push(std::array<char, OBJECT_SIZE_4>{ "second" });
+        h8[0] = p.push(std::array<char, OBJECT_SIZE_8>{ "third" });
+        h16[0] = p.push(std::array<char, OBJECT_SIZE_16>{ "fourth" });
+        h32[0] = p.push(std::array<char, OBJECT_SIZE_32>{ "fifth" });
+        h64[0] = p.push(std::array<char, OBJECT_SIZE_64>{ "sixth" });
 
         THEN("the handles can be converted to objects")
         {
@@ -237,12 +237,12 @@ SCENARIO("ObjectPools can retrieve objects from Handles", "[objectpool]")
     {
         for (auto i = 0; i < 100; i++)
         {
-            h2[i] = p.push<std::array<int, OBJECT_SIZE_2 / sizeof(int)>>(std::array<int, OBJECT_SIZE_2 / sizeof(int)>{ 2 });
-            h4[i] = p.push<std::array<int, OBJECT_SIZE_4 / sizeof(int)>>(std::array<int, OBJECT_SIZE_4 / sizeof(int)>{ 4 });
-            h8[i] = p.push<std::array<int, OBJECT_SIZE_8 / sizeof(int)>>(std::array<int, OBJECT_SIZE_8 / sizeof(int)>{ 8 });
-            h16[i] = p.push<std::array<int, OBJECT_SIZE_16 / sizeof(int)>>(std::array<int, OBJECT_SIZE_16 / sizeof(int)>{ 16 });
-            h32[i] = p.push<std::array<int, OBJECT_SIZE_32 / sizeof(int)>>(std::array<int, OBJECT_SIZE_32 / sizeof(int)>{ 32 });
-            h64[i] = p.push<std::array<int, OBJECT_SIZE_64 / sizeof(int)>>(std::array<int, OBJECT_SIZE_64 / sizeof(int)>{ 64 });
+            h2[i] = p.push(std::array<int, OBJECT_SIZE_2 / sizeof(int)>{ 2 });
+            h4[i] = p.push(std::array<int, OBJECT_SIZE_4 / sizeof(int)>{ 4 });
+            h8[i] = p.push(std::array<int, OBJECT_SIZE_8 / sizeof(int)>{ 8 });
+            h16[i] = p.push(std::array<int, OBJECT_SIZE_16 / sizeof(int)>{ 16 });
+            h32[i] = p.push(std::array<int, OBJECT_SIZE_32 / sizeof(int)>{ 32 });
+            h64[i] = p.push(std::array<int, OBJECT_SIZE_64 / sizeof(int)>{ 64 });
         }
 
         THEN("the handles can be converted to objects")
@@ -345,22 +345,22 @@ SCENARIO("You removes objects from anywhere in the ObjectPool", "[objectpool]")
     }
 }
 
-/*
 SCENARIO("ObjectPools can reorder objects to earlier free positions, then remove unnecessary pages", "[objectpool]")
 {
     GIVEN("An object pool  with 2 empty pages followed by 2 full pages and 1 (reserved) empty page")
     {
         ObjectPool p;
+        std::vector<Handle> v1, v2, v3, v4, v5, v6;
 
         // Creates 4 pages in every sub-pool
         for (auto i = 0; i < OBJECT_POOL_PAGE_LENGTH * 4; i++)
         {
-            p.push<std::array<int, OBJECT_SIZE_2 / sizeof(int)>>(std::array<int, OBJECT_SIZE_2 / sizeof(int)>{ 2 });
-            p.push<std::array<int, OBJECT_SIZE_4 / sizeof(int)>>(std::array<int, OBJECT_SIZE_4 / sizeof(int)>{ 4 });
-            p.push<std::array<int, OBJECT_SIZE_8 / sizeof(int)>>(std::array<int, OBJECT_SIZE_8 / sizeof(int)>{ 8 });
-            p.push<std::array<int, OBJECT_SIZE_16 / sizeof(int)>>(std::array<int, OBJECT_SIZE_16 / sizeof(int)>{ 16 });
-            p.push<std::array<int, OBJECT_SIZE_32 / sizeof(int)>>(std::array<int, OBJECT_SIZE_32 / sizeof(int)>{ 32 });
-            p.push<std::array<int, OBJECT_SIZE_64 / sizeof(int)>>(std::array<int, OBJECT_SIZE_64 / sizeof(int)>{ 64 });
+            v1.push_back(p.push(std::array<int, OBJECT_SIZE_2 / sizeof(int)>{ 2 }));
+            v2.push_back(p.push(std::array<int, OBJECT_SIZE_4 / sizeof(int)>{ 4 }));
+            v3.push_back(p.push(std::array<int, OBJECT_SIZE_8 / sizeof(int)>{ 8 }));
+            v4.push_back(p.push(std::array<int, OBJECT_SIZE_16 / sizeof(int)>{ 16 }));
+            v5.push_back(p.push(std::array<int, OBJECT_SIZE_32 / sizeof(int)>{ 32 }));
+            v6.push_back(p.push(std::array<int, OBJECT_SIZE_64 / sizeof(int)>{ 64 }));
         }
 
         std::size_t expected = 5 * OBJECT_POOL_PAGE_LENGTH * (OBJECT_SIZE_2 + OBJECT_SIZE_4 + OBJECT_SIZE_8 + OBJECT_SIZE_16 + OBJECT_SIZE_32 + OBJECT_SIZE_64);
@@ -370,40 +370,52 @@ SCENARIO("ObjectPools can reorder objects to earlier free positions, then remove
         // Erases the first 2 pages from every sub-pool
         for (HandleIndex i = 0; i < OBJECT_POOL_PAGE_LENGTH * 2; i++)
         {
+            p.erase<std::array<int, OBJECT_SIZE_2 / sizeof(int)>>(v1.front());
+            v1.erase(v1.begin());
 
-            p.erase<std::array<int, OBJECT_SIZE_2 / sizeof(int)>>({ OBJECT_SIZE_2, i, false });
-            p.erase<std::array<int, OBJECT_SIZE_4 / sizeof(int)>>({ OBJECT_SIZE_4, i, false });
-            p.erase<std::array<int, OBJECT_SIZE_8 / sizeof(int)>>({ OBJECT_SIZE_8, i, false });
-            p.erase<std::array<int, OBJECT_SIZE_16 / sizeof(int)>>({ OBJECT_SIZE_16, i, false });
-            p.erase<std::array<int, OBJECT_SIZE_32 / sizeof(int)>>({ OBJECT_SIZE_32, i, false });
-            p.erase<std::array<int, OBJECT_SIZE_64 / sizeof(int)>>({ OBJECT_SIZE_64, i, false });
+            p.erase<std::array<int, OBJECT_SIZE_4 / sizeof(int)>>(v2.front());
+            v2.erase(v2.begin());
+
+            p.erase<std::array<int, OBJECT_SIZE_8 / sizeof(int)>>(v3.front());
+            v3.erase(v3.begin());
+
+            p.erase<std::array<int, OBJECT_SIZE_16 / sizeof(int)>>(v4.front());
+            v4.erase(v4.begin());
+
+            p.erase<std::array<int, OBJECT_SIZE_32 / sizeof(int)>>(v5.front());
+            v5.erase(v5.begin());
+
+            p.erase<std::array<int, OBJECT_SIZE_64 / sizeof(int)>>(v6.front());
+            v6.erase(v6.begin());
         }
 
         WHEN("The 2nd 2 pages have their objects reordered.")
         {
             // Reorders everything in the 2nd 2 pages of every sub-pool
-            for (HandleIndex i = OBJECT_POOL_PAGE_LENGTH * 2; i < OBJECT_POOL_PAGE_LENGTH * 4; i++)
-            {
-
-                p.reorder<std::array<int, OBJECT_SIZE_2 / sizeof(int)>>({ OBJECT_SIZE_2, i, false });
-                p.reorder<std::array<int, OBJECT_SIZE_4 / sizeof(int)>>({ OBJECT_SIZE_4, i, false });
-                p.reorder<std::array<int, OBJECT_SIZE_8 / sizeof(int)>>({ OBJECT_SIZE_8, i, false });
-                p.reorder<std::array<int, OBJECT_SIZE_16 / sizeof(int)>>({ OBJECT_SIZE_16, i, false });
-                p.reorder<std::array<int, OBJECT_SIZE_32 / sizeof(int)>>({ OBJECT_SIZE_32, i, false });
-                p.reorder<std::array<int, OBJECT_SIZE_64 / sizeof(int)>>({ OBJECT_SIZE_64, i, false });
-            }
+            p.defragment();
 
             // Verifies that the 2nd 2 pages have been reordered
             bool result = true;
             for (HandleIndex i = 0; i < OBJECT_POOL_PAGE_LENGTH * 2; i++)
             {
 
-                auto p2 = *p.get<std::array<int, OBJECT_SIZE_2 / sizeof(int)>>({ OBJECT_SIZE_2, i, false });
-                auto p4 = *p.get<std::array<int, OBJECT_SIZE_4 / sizeof(int)>>({ OBJECT_SIZE_4, i, false });
-                auto p8 = *p.get<std::array<int, OBJECT_SIZE_8 / sizeof(int)>>({ OBJECT_SIZE_8, i, false });
-                auto p16 = *p.get<std::array<int, OBJECT_SIZE_16 / sizeof(int)>>({ OBJECT_SIZE_16, i, false });
-                auto p32 = *p.get<std::array<int, OBJECT_SIZE_32 / sizeof(int)>>({ OBJECT_SIZE_32, i, false });
-                auto p64 = *p.get<std::array<int, OBJECT_SIZE_64 / sizeof(int)>>({ OBJECT_SIZE_64, i, false });
+                auto p2 = *p.get<std::array<int, OBJECT_SIZE_2 / sizeof(int)>>(v1.front());
+                v1.erase(v1.begin());
+
+                auto p4 = *p.get<std::array<int, OBJECT_SIZE_4 / sizeof(int)>>(v2.front());
+                v2.erase(v2.begin());
+
+                auto p8 = *p.get<std::array<int, OBJECT_SIZE_8 / sizeof(int)>>(v3.front());
+                v3.erase(v3.begin());
+
+                auto p16 = *p.get<std::array<int, OBJECT_SIZE_16 / sizeof(int)>>(v4.front());
+                v4.erase(v4.begin());
+
+                auto p32 = *p.get<std::array<int, OBJECT_SIZE_32 / sizeof(int)>>(v5.front());
+                v5.erase(v5.begin());
+
+                auto p64 = *p.get<std::array<int, OBJECT_SIZE_64 / sizeof(int)>>(v6.front());
+                v6.erase(v6.begin());
 
                 if (p2[0] != 2)
                     result = false;
@@ -439,12 +451,13 @@ SCENARIO("ObjectPools can reorder objects to earlier free positions, then remove
 
                 std::size_t expected = 2 * OBJECT_POOL_PAGE_LENGTH * (OBJECT_SIZE_2 + OBJECT_SIZE_4 + OBJECT_SIZE_8 + OBJECT_SIZE_16 + OBJECT_SIZE_32 + OBJECT_SIZE_64);
 
-                REQUIRE(expected == p.capacity());
+				REQUIRE(expected == p.capacity());
             }
         }
     }
 }
 
+/*
 template <typename T>
 void pusher(ObjectPool &pool, T value, std::vector<Handle> &handles, std::mutex &mutex)
 {

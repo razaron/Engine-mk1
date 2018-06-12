@@ -1,8 +1,6 @@
 #pragma once
 
-#include <algorithm>
 #include <array>
-#include <atomic>
 #include <random>
 
 // Check windows
@@ -45,7 +43,7 @@ using HandleIndex = std::size_t; /*!< Represents the indexed location of Handle%
 struct Handle
 {
     HandleSize size{};                /*!< The size of the Handle%d object. */
-    HandleIndex index{ nextIndex++ }; /*!< The indexed location of the Handle%d object. */
+    HandleIndex id{ nextIndex++ }; /*!< The indexed location of the Handle%d object. */
 
     Handle() {}
     Handle(HandleSize size) : size{ size } {}
@@ -53,7 +51,7 @@ struct Handle
     /*! Basic equality comparator. */
     bool operator==(const Handle &rhs) noexcept
     {
-        return (size == rhs.size && index == rhs.index);
+        return (size == rhs.size && id == rhs.id);
     }
 
   private:
@@ -65,7 +63,7 @@ struct HandleHash
     std::size_t operator()(const Handle &h) const noexcept
     {
         auto hash1 = std::hash<HandleSize>()(h.size);
-        auto hash2 = std::hash<HandleIndex>()(h.index);
+        auto hash2 = std::hash<HandleIndex>()(h.id);
         return hash1 ^= hash2 + 0x9e3779b9 + (hash1 << 6) + (hash1 >> 2);
     }
 };
@@ -74,7 +72,7 @@ struct HandleEqual
 {
     bool operator()(const Handle &lhs, const Handle &rhs) const noexcept
     {
-        return lhs.size == rhs.size && lhs.index == rhs.index;
+        return lhs.size == rhs.size && lhs.id == rhs.id;
     }
 };
 

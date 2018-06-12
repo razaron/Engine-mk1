@@ -17,24 +17,24 @@ SCENARIO("Entities can be constructed from a ComponentMap, then be added/removed
         map[ComponentType::COMPONENT_2] = h2;
         map[ComponentType::COMPONENT_3] = h3;
 
-        REQUIRE(map[ComponentType::COMPONENT_1].index == h1.index);
-        REQUIRE(map[ComponentType::COMPONENT_2].index == h2.index);
-        REQUIRE(map[ComponentType::COMPONENT_3].index == h3.index);
+        REQUIRE(map[ComponentType::COMPONENT_1].id == h1.id);
+        REQUIRE(map[ComponentType::COMPONENT_2].id == h2.id);
+        REQUIRE(map[ComponentType::COMPONENT_3].id == h3.id);
 
         WHEN("An entity is constructed from the ComponentMap")
         {
             Entity e{map};
 
-            REQUIRE(e[ComponentType::COMPONENT_1].index == h1.index);
-            REQUIRE(e[ComponentType::COMPONENT_2].index == h2.index);
-            REQUIRE(e[ComponentType::COMPONENT_3].index == h3.index);
+            REQUIRE(e[ComponentType::COMPONENT_1].id == h1.id);
+            REQUIRE(e[ComponentType::COMPONENT_2].id == h2.id);
+            REQUIRE(e[ComponentType::COMPONENT_3].id == h3.id);
 
             THEN("Adding ComponentHandles")
             {
                 Handle h{ HandleSize{ 4 }};
                 e.addComponent(ComponentHandle{ComponentType::COMPONENT_1, h});
 
-                REQUIRE(e[ComponentType::COMPONENT_1].index == h.index);
+                REQUIRE(e[ComponentType::COMPONENT_1].id == h.id);
             }
 
             THEN("Removing ComponentHandles")
