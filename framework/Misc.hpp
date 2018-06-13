@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <atomic>
 #include <random>
 
 // Check windows
@@ -42,11 +43,11 @@ using HandleIndex = std::size_t; /*!< Represents the indexed location of Handle%
 /*! Handles are used to abstract data access away from pointers. */
 struct Handle
 {
-    HandleType type{};                /*!< The type of the Handle%d object. */
-    HandleIndex id{ nextIndex++ }; /*!< The indexed location of the Handle%d object. */
+    HandleType type; /*!< The type of the Handle%d object. */
+    HandleIndex id;  /*!< The indexed location of the Handle%d object. */
 
-    Handle() {}
-    Handle(HandleType size) : type{ size } {}
+    Handle() : type{}, id{} {}
+    Handle(HandleType type) : type{ type }, id{ nextIndex++ } {}
 
     /*! Basic equality comparator. */
     bool operator==(const Handle &rhs) noexcept
@@ -54,8 +55,14 @@ struct Handle
         return (type == rhs.type && id == rhs.id);
     }
 
+    /*! Basic inequality comparator. */
+    bool operator!=(const Handle &rhs) noexcept
+    {
+        return !(type == rhs.type && id == rhs.id);
+    }
+
   private:
-    static std::size_t nextIndex;
+    static std::atomic<std::size_t> nextIndex;
 };
 
 struct HandleHash

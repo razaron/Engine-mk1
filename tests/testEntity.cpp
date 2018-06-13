@@ -1,6 +1,6 @@
-#include <catch.hpp>
-
 #include "Entity.hpp"
+
+#include <catch.hpp>
 
 using namespace razaron::core::component;
 using namespace razaron::core::entity;

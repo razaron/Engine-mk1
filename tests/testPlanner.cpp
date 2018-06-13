@@ -1,6 +1,6 @@
-#include <catch.hpp>
-
 #include "Planner.hpp"
+
+#include <catch.hpp>
 
 using namespace razaron::planner;
 

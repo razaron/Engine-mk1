@@ -114,6 +114,9 @@ namespace razaron::objectpool
         Object *pushImpl(T &&object);
 
         template <typename T>
+        T *getImpl(const Handle &handle);
+
+        template <typename T>
         void eraseImpl(const Handle &handle, bool destruct);
 
         PageVector _pages{};
@@ -122,13 +125,13 @@ namespace razaron::objectpool
         std::mutex _mutex{};
     };
 
-    /* *************************************************
-	PUBLIC FUNCTIONS
-	****************************************************/
-    template <std::size_t S>
+    //PUBLIC FUNCTIONS
+	template <std::size_t S>
     template <typename T>
     inline Handle FreeList<S>::push(T &&object)
     {
+        std::scoped_lock lk{ _mutex };
+
         Handle h{ typeid(T).hash_code() };
 
         _map[h] = pushImpl(std::forward<T>(object));
@@ -140,6 +143,8 @@ namespace razaron::objectpool
     template <typename T, typename... Args>
     inline Handle FreeList<S>::emplace(Args... args)
     {
+        std::scoped_lock lk{ _mutex };
+
         // If the next free position pointer points to non-existant page, add a new page
         if (_firstFreeLine == nullptr || _firstFreeLine->next == nullptr)
         {
@@ -166,24 +171,21 @@ namespace razaron::objectpool
     template <typename T>
     inline T *FreeList<S>::get(const Handle &handle)
     {
-        auto it = _map.find(handle);
+        std::scoped_lock lk{ _mutex };
 
-        if (it != _map.end())
-        {
-            return static_cast<T *>(it->second);
-        }
-        else
-            return nullptr;
+        return getImpl<T>(handle);
     }
 
     template <std::size_t S>
     template <typename T>
     inline void FreeList<S>::erase(const Handle &handle)
     {
+        std::scoped_lock lk{ _mutex };
+
         eraseImpl<T>(handle, true);
 
         if (!_map.erase(handle))
-            throw error::HandleOutOfRange<S>{ handle };
+            throw error::HandleOutOfRange{ handle, S };
 
         return;
     }
@@ -191,6 +193,8 @@ namespace razaron::objectpool
     template <std::size_t S>
     inline void FreeList<S>::defragment()
     {
+        std::scoped_lock lk{ _mutex };
+
         using Buffer = std::array<std::byte, S>;
 
         int count = 0;
@@ -211,6 +215,8 @@ namespace razaron::objectpool
     template <std::size_t S>
     inline void FreeList<S>::shrink()
     {
+        std::scoped_lock lk{ _mutex };
+
         std::vector<LineType *> freePtrs{ _firstFreeLine };
 
         std::size_t lastPos = _pages.size() * OBJECT_POOL_PAGE_LENGTH - 1;
@@ -248,10 +254,8 @@ namespace razaron::objectpool
         _firstFreeLine = nullptr;
     }
 
-    /***************************************************
-	PRIVATE FUNCTIONS
-	****************************************************/
-    template <std::size_t S>
+    //PRIVATE FUNCTIONS
+	template <std::size_t S>
     inline void FreeList<S>::addPage()
     {
         auto page = new PageType;
@@ -329,12 +333,24 @@ namespace razaron::objectpool
 
     template <std::size_t S>
     template <typename T>
+    inline T *FreeList<S>::getImpl(const Handle &handle)
+    {
+        auto it = _map.find(handle);
+
+        if (it != _map.end())
+            return static_cast<T *>(it->second);
+        else
+            throw error::HandleOutOfRange{ handle, S };
+    }
+
+    template <std::size_t S>
+    template <typename T>
     inline void FreeList<S>::eraseImpl(const Handle &handle, bool destruct)
     {
         if (destruct)
-            std::destroy_at(get<T>(handle));
+            std::destroy_at(getImpl<T>(handle));
 
-        LineType *ptrToRemove = get<LineType>(handle);
+        LineType *ptrToRemove = getImpl<LineType>(handle);
 
         // If the object being removed is located BEFORE the first free position
         if (getIndex(ptrToRemove) < getIndex(_firstFreeLine))
@@ -484,9 +500,7 @@ namespace razaron::objectpool
         PoolTuple _pools{};
     };
 
-    /* *************************************************
-	PUBLIC FUNCTIONS
-	****************************************************/
+	//PUBLIC FUNCTIONS
     template <typename T>
     inline Handle ObjectPool::push(T &&object)
     {
@@ -515,7 +529,7 @@ namespace razaron::objectpool
         auto &pool = std::get<Pool>(_pools);
 
         if (handle.type != typeid(T).hash_code())
-            throw error::TypeMismatch<T>{ handle };
+            throw error::TypeMismatch{ handle, typeid(T).hash_code(), typeid(T).name() };
 
         return pool.get<T>(handle);
     }
@@ -528,11 +542,9 @@ namespace razaron::objectpool
         auto &pool = std::get<Pool>(_pools);
 
         if (handle.type != typeid(T).hash_code())
-            throw error::TypeMismatch<T>{ handle };
+            throw error::TypeMismatch{ handle, typeid(T).hash_code(), typeid(T).name() };
 
-        pool.erase<T>(handle);
-
-        return;
+        return pool.erase<T>(handle);
     }
 
     inline void ObjectPool::defragment()
@@ -558,10 +570,8 @@ namespace razaron::objectpool
         return capacityImpl<Pool>();
     }
 
-    /* *************************************************
-	PRIVATE FUNCTIONS
-	****************************************************/
-    template <typename... Pools>
+    //PRIVATE FUNCTIONS
+	template <typename... Pools>
     inline void ObjectPool::defragmentImpl()
     {
         return (std::get<Pools>(_pools).defragment(), ...);
@@ -592,42 +602,39 @@ namespace razaron::objectpool::error
         static std::string getMessage()
         {
             std::stringstream message;
-            message << "ptr not found in FreeList.";
+            message << "Internal Error: ptr not found in FreeList.";
 
             return message.str();
         }
     };
 
-    template <std::size_t S>
     class HandleOutOfRange : public std::out_of_range
     {
       public:
-        HandleOutOfRange(const Handle &h)
-            : std::out_of_range{ getMessage(h) } {}
+        HandleOutOfRange(const Handle &h, std::size_t s)
+            : std::out_of_range{ getMessage(h, s) } {}
 
       private:
-        static std::string getMessage(const Handle &h)
+        static std::string getMessage(const Handle &h, std::size_t s)
         {
             std::stringstream message;
-            message << "Handle{ size: " << h.type << ", id: " << h.id << " }"
-                    << " not found in FreeList<" << S << ">.";
+            message << "User Error: Handle{ type: " << h.type << ", id: " << h.id << " }" << " not found in FreeList<" << s << ">.";
 
             return message.str();
         }
     };
 
-    template <typename T>
     class TypeMismatch : public std::invalid_argument
     {
       public:
-        TypeMismatch(const Handle &h)
-            : std::invalid_argument{ getMessage(h) } {}
+        TypeMismatch(const Handle &handle, std::size_t hash, const char *name)
+            : std::invalid_argument{ getMessage(handle, hash, name) } {}
 
       private:
-        static std::string getMessage(const Handle &h)
+        static std::string getMessage(const Handle &handle, std::size_t hash, const char *name)
         {
             std::stringstream message;
-            message << "Type mismatch. HandleSize: " << h.type << " != sizeof(T): " << sizeof(T) << ". typeid(T): " << typeid(T).name();
+            message << "User Error: Type mismatch, Handle::type{" << handle.type << "} != T::hash_code{ " << hash << "}. T::name: " << name;
 
             return message.str();
         }

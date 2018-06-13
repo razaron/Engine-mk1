@@ -1,6 +1,6 @@
-#include <catch.hpp>
-
 #include "TaskScheduler.hpp"
+
+#include <catch.hpp>
 
 using namespace razaron::taskscheduler;
 

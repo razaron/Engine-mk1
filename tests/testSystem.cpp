@@ -1,6 +1,6 @@
-#include <catch.hpp>
-
 #include "testSystem.hpp"
+
+#include <catch.hpp>
 
 SCENARIO("Systems can manage their memory via their ObjectPool", "[system][objectpool]")
 {
@@ -25,9 +25,17 @@ SCENARIO("Systems can manage their memory via their ObjectPool", "[system][objec
             {
                 sys.removeObject<std::array<std::size_t, 64>>(a);
 
-                auto ptr = sys.getObject<std::array<std::size_t, 64>>(a);
+				bool result = false;
+                try
+                {
+                    auto ptr = sys.getObject<std::array<std::size_t, 64>>(a);
+                }
+                catch (const error::HandleOutOfRange &)
+                {
+                    result = true;
+                }
 
-                REQUIRE(ptr == nullptr);
+                REQUIRE(result == true);
             }
         }
     }

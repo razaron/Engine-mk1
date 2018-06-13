@@ -1,9 +1,9 @@
-#include <thread>
-#include <array>
+#include "EventStream.hpp"
 
 #include <catch.hpp>
 
-#include "EventStream.hpp"
+#include <thread>
+#include <array>
 
 using namespace razaron::eventstream;
 

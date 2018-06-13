@@ -1,6 +1,6 @@
-#include <catch.hpp>
-
 #include "testSpace.hpp"
+
+#include <catch.hpp>
 
 SCENARIO("Spaces manage Systems and Events, updating them in BF order", "[space][system][graph][eventstream]")
 {

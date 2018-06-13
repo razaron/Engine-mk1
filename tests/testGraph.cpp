@@ -1,7 +1,7 @@
-#include <catch.hpp>
-
 #include "Graph.hpp"
 #include "Misc.hpp"
+
+#include <catch.hpp>
 
 using namespace razaron::graph;
 
