@@ -36,22 +36,22 @@ inline bool includes(T a, T b)
 }
 
 // Handling for pointers etc.
-using HandleSize = std::size_t;  /*!< Represents the size of Handle%d objects. */
+using HandleType = std::size_t;  /*!< Represents the type of Handle%d objects. */
 using HandleIndex = std::size_t; /*!< Represents the indexed location of Handle%d objects. */
 
 /*! Handles are used to abstract data access away from pointers. */
 struct Handle
 {
-    HandleSize size{};                /*!< The size of the Handle%d object. */
+    HandleType type{};                /*!< The type of the Handle%d object. */
     HandleIndex id{ nextIndex++ }; /*!< The indexed location of the Handle%d object. */
 
     Handle() {}
-    Handle(HandleSize size) : size{ size } {}
+    Handle(HandleType size) : type{ size } {}
 
     /*! Basic equality comparator. */
     bool operator==(const Handle &rhs) noexcept
     {
-        return (size == rhs.size && id == rhs.id);
+        return (type == rhs.type && id == rhs.id);
     }
 
   private:
@@ -62,7 +62,7 @@ struct HandleHash
 {
     std::size_t operator()(const Handle &h) const noexcept
     {
-        auto hash1 = std::hash<HandleSize>()(h.size);
+        auto hash1 = std::hash<HandleType>()(h.type);
         auto hash2 = std::hash<HandleIndex>()(h.id);
         return hash1 ^= hash2 + 0x9e3779b9 + (hash1 << 6) + (hash1 >> 2);
     }
@@ -72,46 +72,20 @@ struct HandleEqual
 {
     bool operator()(const Handle &lhs, const Handle &rhs) const noexcept
     {
-        return lhs.size == rhs.size && lhs.id == rhs.id;
+        return lhs.type == rhs.type && lhs.id == rhs.id;
     }
 };
 
 // ALIGNED ARRAY
-inline void *aligned_malloc(size_t size, size_t align) noexcept
-{
-    void *result;
-#ifdef _WIN32
-    result = _aligned_malloc(size, align);
-#else
-    if (posix_memalign(&result, align, size)) result = 0;
-#endif
-    return result;
-}
-
-inline void aligned_free(void *ptr) noexcept
-{
-#ifdef _WIN32
-    _aligned_free(ptr);
-#else
-    free(ptr);
-#endif
-}
-
 template <class T, std::size_t S, std::size_t A>
 struct alignas(A) AlignedArray
 {
   public:
     T *data() noexcept { return _array.data(); }
-    std::size_t size() noexcept { return S; }
-    std::size_t alignment() noexcept { return A; }
+    constexpr auto size() noexcept { return _array.size(); }
+    constexpr auto alignment() noexcept { return A; }
 
     T &operator[](std::size_t i) { return _array[i]; }
-    void *operator new(std::size_t sz)
-    {
-        std::cout << "lol" << std::endl;
-        return aligned_malloc(sz, A);
-    }
-    void operator delete(void *ptr) { return aligned_free(ptr); }
 
   private:
     std::array<T, S> _array{};

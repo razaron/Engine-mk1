@@ -10,9 +10,9 @@ SCENARIO("Entities can be constructed from a ComponentMap, then be added/removed
     GIVEN("A ComponentMap")
     {
         ComponentMap map;
-        Handle h1{ HandleSize{ 4 } };
-        Handle h2{ HandleSize{ 4 } };
-        Handle h3{ HandleSize{ 4 } };
+        Handle h1{ HandleType{ 4 } };
+        Handle h2{ HandleType{ 4 } };
+        Handle h3{ HandleType{ 4 } };
         map[ComponentType::COMPONENT_1] = h1;
         map[ComponentType::COMPONENT_2] = h2;
         map[ComponentType::COMPONENT_3] = h3;
@@ -31,7 +31,7 @@ SCENARIO("Entities can be constructed from a ComponentMap, then be added/removed
 
             THEN("Adding ComponentHandles")
             {
-                Handle h{ HandleSize{ 4 }};
+                Handle h{ HandleType{ 4 }};
                 e.addComponent(ComponentHandle{ComponentType::COMPONENT_1, h});
 
                 REQUIRE(e[ComponentType::COMPONENT_1].id == h.id);
@@ -39,7 +39,7 @@ SCENARIO("Entities can be constructed from a ComponentMap, then be added/removed
 
             THEN("Removing ComponentHandles")
             {
-                Handle h{ HandleSize{ 4 } };
+                Handle h{ HandleType{ 4 } };
                 e.removeComponent(ComponentHandle{ ComponentType::COMPONENT_1, h1 });
 
                 bool result = false;

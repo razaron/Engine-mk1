@@ -46,16 +46,6 @@ namespace razaron::objectpool
 	}
 	*/
 
-    /***
-	*    ______
-	*    | ___ \
-	*    | |_/ /_ _  __ _  ___
-	*    |  __/ _` |/ _` |/ _ \
-	*    | | | (_| | (_| |  __/
-	*    \_|  \__,_|\__, |\___|
-	*                __/ |
-	*               |___/
-	*/
     template <std::size_t S>
     class Page
     {
@@ -66,15 +56,7 @@ namespace razaron::objectpool
             std::size_t index;
         };
 
-        struct alignas(std::max(S, OBJECT_POOL_PAGE_ALIGNMENT)) Array
-        {
-          public:
-            std::size_t size() { return _data.size(); };
-            Line *data() { return _data.data(); };
-
-          private:
-            std::array<Line, OBJECT_POOL_PAGE_LENGTH> _data;
-        };
+        using Array = AlignedArray<Line, OBJECT_POOL_PAGE_LENGTH, std::max(S, OBJECT_POOL_PAGE_ALIGNMENT)>;
 
         Page() : _data{}
         {
@@ -91,16 +73,6 @@ namespace razaron::objectpool
         Array _data;
     };
 
-    /***
-	*    ______             _     _     _
-	*    |  ___|           | |   (_)   | |
-	*    | |_ _ __ ___  ___| |    _ ___| |_
-	*    |  _| '__/ _ \/ _ \ |   | / __| __|
-	*    | | | | |  __/  __/ |___| \__ \ |_
-	*    \_| |_|  \___|\___\_____/_|___/\__|
-	*
-	*
-	*/
     template <std::size_t S>
     class FreeList
     {
@@ -157,9 +129,9 @@ namespace razaron::objectpool
     template <typename T>
     inline Handle FreeList<S>::push(T &&object)
     {
-        Handle h{ sizeof(T) };
-        auto temp = object;
-        _map[h] = pushImpl(object);
+        Handle h{ typeid(T).hash_code() };
+
+        _map[h] = pushImpl(std::forward<T>(object));
 
         return h;
     }
@@ -184,7 +156,7 @@ namespace razaron::objectpool
         // Set the pools first free pointer to the next free pointer
         _firstFreeLine = nextFree;
 
-        Handle h{ sizeof(T) };
+        Handle h{ typeid(T).hash_code() };
         _map[h] = curFree;
 
         return h;
@@ -211,13 +183,8 @@ namespace razaron::objectpool
         eraseImpl<T>(handle, true);
 
         if (!_map.erase(handle))
-        {
-            std::stringstream message;
-            message << "Handle{ size: " << handle.size << ", index: " << handle.id << " }"
-                    << " not found in ObjectPool::_hashMap.";
+            throw error::HandleOutOfRange<S>{ handle };
 
-            throw std::out_of_range(message.str());
-        }
         return;
     }
 
@@ -254,7 +221,7 @@ namespace razaron::objectpool
             freePtrs.push_back(freePtrs.back()->next);
         }
 
-		// return early if not enough free lines
+        // return early if not enough free lines
         if (freePtrs.size() < OBJECT_POOL_PAGE_LENGTH)
             return;
 
@@ -278,7 +245,7 @@ namespace razaron::objectpool
 
         _pages.erase(begin, end);
 
-		_firstFreeLine = nullptr;
+        _firstFreeLine = nullptr;
     }
 
     /***************************************************
@@ -334,10 +301,7 @@ namespace razaron::objectpool
             return pageNum * OBJECT_POOL_PAGE_LENGTH + offset;
         }
 
-        std::stringstream message;
-        message << "ptr not found in FreeList.";
-
-        throw std::invalid_argument(message.str());
+        throw error::InvalidPointer{};
     }
 
     template <std::size_t S>
@@ -404,18 +368,7 @@ namespace razaron::objectpool
         return;
     }
 
-    /***
-	*     _____ _     _           _  ______           _
-	*    |  _  | |   (_)         | | | ___ \         | |
-	*    | | | | |__  _  ___  ___| |_| |_/ /__   ___ | |
-	*    | | | | '_ \| |/ _ \/ __| __|  __/ _ \ / _ \| |
-	*    \ \_/ / |_) | |  __/ (__| |_| | | (_) | (_) | |
-	*     \___/|_.__/| |\___|\___|\__\_|  \___/ \___/|_|
-	*               _/ |
-	*              |__/
-	*/
-
-    /*!	Stores objects of any type with size upto \c sizeof(std::size_t)*64 Bytes in contiguous aligned memory.
+    /*!	Stores objects of any type with type upto \c sizeof(std::size_t)*64 Bytes in contiguous aligned memory.
 	*   For more information and examples, see page \ref objectpool.
 	*/
     class ObjectPool
@@ -508,7 +461,7 @@ namespace razaron::objectpool
         /*! Defragments the ObjectPool such that objects located after the first free position are moved to earlier free positions. */
         void defragment();
 
-		/*! Deletes unused pages from FreeList%s. */
+        /*! Deletes unused pages from FreeList%s. */
         void shrink();
 
         /*! Returns the currently used memory (in bytes) in total for all the FreeList%s. */
@@ -561,13 +514,8 @@ namespace razaron::objectpool
         using Pool = typename PoolCond<T>::type;
         auto &pool = std::get<Pool>(_pools);
 
-        if (handle.size != sizeof(T))
-        {
-            std::stringstream message;
-            message << "Type mismatch. HandleSize: " << handle.size << " != sizeof(T): " << sizeof(T) << ". typeid(T): " << typeid(T).name();
-
-            throw std::invalid_argument(message.str());
-        }
+        if (handle.type != typeid(T).hash_code())
+            throw error::TypeMismatch<T>{ handle };
 
         return pool.get<T>(handle);
     }
@@ -579,13 +527,8 @@ namespace razaron::objectpool
         using Pool = typename PoolCond<T>::type;
         auto &pool = std::get<Pool>(_pools);
 
-        if (handle.size != sizeof(T))
-        {
-            std::stringstream message;
-            message << "Type mismatch. HandleSize: " << handle.size << " != sizeof(T): " << sizeof(T) << ". typeid(T): " << typeid(T).name();
-
-            throw std::invalid_argument(message.str());
-        }
+        if (handle.type != typeid(T).hash_code())
+            throw error::TypeMismatch<T>{ handle };
 
         pool.erase<T>(handle);
 
@@ -635,4 +578,58 @@ namespace razaron::objectpool
     {
         return (std::get<Pools>(_pools).capacity() + ...);
     }
+}
+
+namespace razaron::objectpool::error
+{
+    class InvalidPointer : public std::invalid_argument
+    {
+      public:
+        InvalidPointer()
+            : std::invalid_argument{ getMessage() } {}
+
+      private:
+        static std::string getMessage()
+        {
+            std::stringstream message;
+            message << "ptr not found in FreeList.";
+
+            return message.str();
+        }
+    };
+
+    template <std::size_t S>
+    class HandleOutOfRange : public std::out_of_range
+    {
+      public:
+        HandleOutOfRange(const Handle &h)
+            : std::out_of_range{ getMessage(h) } {}
+
+      private:
+        static std::string getMessage(const Handle &h)
+        {
+            std::stringstream message;
+            message << "Handle{ size: " << h.type << ", id: " << h.id << " }"
+                    << " not found in FreeList<" << S << ">.";
+
+            return message.str();
+        }
+    };
+
+    template <typename T>
+    class TypeMismatch : public std::invalid_argument
+    {
+      public:
+        TypeMismatch(const Handle &h)
+            : std::invalid_argument{ getMessage(h) } {}
+
+      private:
+        static std::string getMessage(const Handle &h)
+        {
+            std::stringstream message;
+            message << "Type mismatch. HandleSize: " << h.type << " != sizeof(T): " << sizeof(T) << ". typeid(T): " << typeid(T).name();
+
+            return message.str();
+        }
+    };
 }
