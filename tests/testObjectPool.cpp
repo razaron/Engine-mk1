@@ -3,8 +3,8 @@
 #include <catch.hpp>
 
 #include <atomic>
-#include <thread>
 #include <chrono>
+#include <thread>
 
 using namespace razaron::objectpool;
 
@@ -195,26 +195,25 @@ SCENARIO("ObjectPools can add pages as necessary", "[objectpool]")
 
 SCENARIO("ObjectPools can retrieve objects from Handles", "[objectpool]")
 {
-
     ObjectPool p;
 
-    std::vector<Handle> h2(100);
-    std::vector<Handle> h4(100);
-    std::vector<Handle> h8(100);
-    std::vector<Handle> h16(100);
-    std::vector<Handle> h32(100);
-    std::vector<Handle> h64(100);
+    std::vector<Handle> h2;
+    std::vector<Handle> h4;
+    std::vector<Handle> h8;
+    std::vector<Handle> h16;
+    std::vector<Handle> h32;
+    std::vector<Handle> h64;
 
     REQUIRE(p.capacity() == 0);
 
     GIVEN("An object pool with a SINGLE page of objects")
     {
-        h2[0] = p.push(std::array<char, OBJECT_SIZE_2>{ "first" });
-        h4[0] = p.push(std::array<char, OBJECT_SIZE_4>{ "second" });
-        h8[0] = p.push(std::array<char, OBJECT_SIZE_8>{ "third" });
-        h16[0] = p.push(std::array<char, OBJECT_SIZE_16>{ "fourth" });
-        h32[0] = p.push(std::array<char, OBJECT_SIZE_32>{ "fifth" });
-        h64[0] = p.push(std::array<char, OBJECT_SIZE_64>{ "sixth" });
+        h2.push_back(p.push(std::array<char, OBJECT_SIZE_2>{ "first" }));
+        h4.push_back(p.push(std::array<char, OBJECT_SIZE_4>{ "second" }));
+        h8.push_back(p.push(std::array<char, OBJECT_SIZE_8>{ "third" }));
+        h16.push_back(p.push(std::array<char, OBJECT_SIZE_16>{ "fourth" }));
+        h32.push_back(p.push(std::array<char, OBJECT_SIZE_32>{ "fifth" }));
+        h64.push_back(p.push(std::array<char, OBJECT_SIZE_64>{ "sixth" }));
 
         THEN("the handles can be converted to objects")
         {
@@ -234,23 +233,23 @@ SCENARIO("ObjectPools can retrieve objects from Handles", "[objectpool]")
         }
     }
 
-    GIVEN("An object pool with some with MULTIPLE pages of objects")
+    GIVEN("An object pool with MULTIPLE pages of objects")
     {
-        for (auto i = 0; i < 100; i++)
+        for (auto i = 0; i < OBJECT_POOL_PAGE_LENGTH * 5; i++)
         {
-            h2[i] = p.push(std::array<int, OBJECT_SIZE_2 / sizeof(int)>{ 2 });
-            h4[i] = p.push(std::array<int, OBJECT_SIZE_4 / sizeof(int)>{ 4 });
-            h8[i] = p.push(std::array<int, OBJECT_SIZE_8 / sizeof(int)>{ 8 });
-            h16[i] = p.push(std::array<int, OBJECT_SIZE_16 / sizeof(int)>{ 16 });
-            h32[i] = p.push(std::array<int, OBJECT_SIZE_32 / sizeof(int)>{ 32 });
-            h64[i] = p.push(std::array<int, OBJECT_SIZE_64 / sizeof(int)>{ 64 });
+            h2.push_back(p.push(std::array<int, OBJECT_SIZE_2 / sizeof(int)>{ 2 }));
+            h4.push_back(p.push(std::array<int, OBJECT_SIZE_4 / sizeof(int)>{ 4 }));
+            h8.push_back(p.push(std::array<int, OBJECT_SIZE_8 / sizeof(int)>{ 8 }));
+            h16.push_back(p.push(std::array<int, OBJECT_SIZE_16 / sizeof(int)>{ 16 }));
+            h32.push_back(p.push(std::array<int, OBJECT_SIZE_32 / sizeof(int)>{ 32 }));
+            h64.push_back(p.push(std::array<int, OBJECT_SIZE_64 / sizeof(int)>{ 64 }));
         }
 
         THEN("the handles can be converted to objects")
         {
             bool result = true;
 
-            for (HandleIndex i = 0; i < 100; i++)
+            for (HandleIndex i = 0; i < OBJECT_POOL_PAGE_LENGTH * 5; i++)
             {
 
                 auto p2 = *p.get<std::array<int, OBJECT_SIZE_2 / sizeof(int)>>(h2[i]);
@@ -473,6 +472,58 @@ SCENARIO("ObjectPools can reorder objects to earlier free positions, then remove
     }
 }
 
+SCENARIO("ObjectPools have helper functions to support automated lifetime management of objects", "[objectpool][lifetime]")
+{
+    ObjectPool pool;
+    auto handle = pool.push(int{ 42 });
+
+    WHEN("Using the helper function `makeUnique`")
+    {
+        auto unique = pool.makeUnique<int>(handle);
+
+        THEN("Deleting the returned `std::unique_ptr` will automatically erase the object")
+        {
+            unique = nullptr;
+
+            bool result = false;
+            try
+            {
+                pool.get<int>(handle);
+            }
+            catch (const error::HandleOutOfRange &)
+            {
+                result = true;
+            }
+
+            REQUIRE(result == true);
+        }
+    }
+
+    WHEN("Using the helper function `makeShared`")
+    {
+        auto shared = pool.makeShared<int>(handle);
+        auto sharedCopy = shared;
+
+        THEN("Deleting the returned `std::shared_ptr` and all copies will automatically erase the object")
+        {
+            shared = nullptr;
+            sharedCopy = nullptr;
+
+            bool result = false;
+            try
+            {
+                pool.get<int>(handle);
+            }
+            catch (const error::HandleOutOfRange &)
+            {
+                result = true;
+            }
+
+            REQUIRE(result == true);
+        }
+    }
+}
+
 template <typename T, std::size_t N>
 void pusher(ObjectPool &pool, T value, std::vector<Handle> &handles, std::mutex &mutex)
 {
@@ -504,11 +555,11 @@ void eraser(ObjectPool &pool, std::vector<Handle> &handles, std::mutex &mutex, s
             }
         }
 
-		if (h != Handle{})
-		{
+        if (h != Handle{})
+        {
             pool.erase<T>(h);
-			counter++;
-		}
+            counter++;
+        }
     }
 }
 
@@ -530,7 +581,7 @@ SCENARIO("ObjectPools can be safely accessed from multiple threads.", "[objectpo
         using Object8 = std::array<char, OBJECT_SIZE_8>;
         using Object32 = std::array<char, OBJECT_SIZE_32>;
 
-		const std::size_t runs{10000};
+        const std::size_t runs{ 10000 };
 
         ObjectPool pool;
 

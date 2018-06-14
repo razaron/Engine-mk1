@@ -26,26 +26,6 @@ const std::size_t OBJECT_SIZE_64 = sizeof(std::size_t) * 64;
 /*! Things related to an aligned generic object pool implementation. */
 namespace razaron::objectpool
 {
-    // returns std::unique_ptr<T, decltype(destroy)>(T*, destroy)
-    /*
-	Handle push<T>(T &&obj)
-	{
-	//blabla
-	return handle;
-	}
-
-	std::unique_ptr<T> make_unique(Handle h)
-	{
-	T* obj = getObject<T>(h);
-
-	auto destroy = [&](Handle *obj){
-	erase<T>(h);
-	};
-
-	returns std::unique_ptr<Handle, decltype(destroy)>(h*, destroy)
-	}
-	*/
-
     template <std::size_t S>
     class Page
     {
@@ -126,7 +106,7 @@ namespace razaron::objectpool
     };
 
     //PUBLIC FUNCTIONS
-	template <std::size_t S>
+    template <std::size_t S>
     template <typename T>
     inline Handle FreeList<S>::push(T &&object)
     {
@@ -217,6 +197,9 @@ namespace razaron::objectpool
     {
         std::scoped_lock lk{ _mutex };
 
+        if (_firstFreeLine == nullptr) 
+			return;
+
         std::vector<LineType *> freePtrs{ _firstFreeLine };
 
         std::size_t lastPos = _pages.size() * OBJECT_POOL_PAGE_LENGTH - 1;
@@ -244,18 +227,19 @@ namespace razaron::objectpool
                 break;
         }
 
-        auto begin = _pages.begin();
-        auto end = _pages.end();
+        // If _firstFreeLine is in an unwanted page, set it to nullptr
+        if (_firstFreeLine->index >= (_pages.size() - toDelete) * OBJECT_POOL_PAGE_LENGTH)
+            _firstFreeLine = nullptr;
 
-        std::advance(begin, _pages.size() - toDelete);
+        // Erase unwanted pages
+        auto it = _pages.begin();
+        std::advance(it, _pages.size() - toDelete);
 
-        _pages.erase(begin, end);
-
-        _firstFreeLine = nullptr;
+        _pages.erase(it, _pages.end());
     }
 
     //PRIVATE FUNCTIONS
-	template <std::size_t S>
+    template <std::size_t S>
     inline void FreeList<S>::addPage()
     {
         auto page = new PageType;
@@ -474,6 +458,12 @@ namespace razaron::objectpool
         template <typename T>
         void erase(const Handle &handle);
 
+        template <typename T>
+        auto makeUnique(const Handle &h);
+
+        template <typename T>
+        auto makeShared(const Handle &h);
+
         /*! Defragments the ObjectPool such that objects located after the first free position are moved to earlier free positions. */
         void defragment();
 
@@ -500,7 +490,7 @@ namespace razaron::objectpool
         PoolTuple _pools{};
     };
 
-	//PUBLIC FUNCTIONS
+    //PUBLIC FUNCTIONS
     template <typename T>
     inline Handle ObjectPool::push(T &&object)
     {
@@ -529,7 +519,7 @@ namespace razaron::objectpool
         auto &pool = std::get<Pool>(_pools);
 
         if (handle.type != typeid(T).hash_code())
-            throw error::TypeMismatch{ handle, typeid(T).hash_code(), typeid(T).name() };
+            throw error::TypeMismatch{ handle, typeid(T) };
 
         return pool.get<T>(handle);
     }
@@ -542,9 +532,35 @@ namespace razaron::objectpool
         auto &pool = std::get<Pool>(_pools);
 
         if (handle.type != typeid(T).hash_code())
-            throw error::TypeMismatch{ handle, typeid(T).hash_code(), typeid(T).name() };
+            throw error::TypeMismatch{ handle, typeid(T) };
 
         return pool.erase<T>(handle);
+    }
+
+    template <typename T>
+    auto ObjectPool::makeUnique(const Handle &handle)
+    {
+        if (handle.type != typeid(T).hash_code())
+            throw error::TypeMismatch{ handle, typeid(T) };
+
+        auto destroy = [&](Handle *h) {
+            erase<T>(*h);
+        };
+
+        return std::unique_ptr<Handle, decltype(destroy)>(new Handle{ handle }, destroy);
+    }
+
+    template <typename T>
+    auto ObjectPool::makeShared(const Handle &handle)
+    {
+        if (handle.type != typeid(T).hash_code())
+            throw error::TypeMismatch{ handle, typeid(T) };
+
+        auto destroy = [&](Handle *h) {
+            erase<T>(*h);
+        };
+
+        return std::shared_ptr<Handle>(new Handle{ handle }, destroy);
     }
 
     inline void ObjectPool::defragment()
@@ -571,7 +587,7 @@ namespace razaron::objectpool
     }
 
     //PRIVATE FUNCTIONS
-	template <typename... Pools>
+    template <typename... Pools>
     inline void ObjectPool::defragmentImpl()
     {
         return (std::get<Pools>(_pools).defragment(), ...);
@@ -618,7 +634,8 @@ namespace razaron::objectpool::error
         static std::string getMessage(const Handle &h, std::size_t s)
         {
             std::stringstream message;
-            message << "User Error: Handle{ type: " << h.type << ", id: " << h.id << " }" << " not found in FreeList<" << s << ">.";
+            message << "User Error: Handle{ type: " << h.type << ", id: " << h.id << " }"
+                    << " not found in FreeList<" << s << ">.";
 
             return message.str();
         }
@@ -627,14 +644,14 @@ namespace razaron::objectpool::error
     class TypeMismatch : public std::invalid_argument
     {
       public:
-        TypeMismatch(const Handle &handle, std::size_t hash, const char *name)
-            : std::invalid_argument{ getMessage(handle, hash, name) } {}
+        TypeMismatch(const Handle &handle, const std::type_info &type)
+            : std::invalid_argument{ getMessage(handle, type) } {}
 
       private:
-        static std::string getMessage(const Handle &handle, std::size_t hash, const char *name)
+        static std::string getMessage(const Handle &handle, const std::type_info &type)
         {
             std::stringstream message;
-            message << "User Error: Type mismatch, Handle::type{" << handle.type << "} != T::hash_code{ " << hash << "}. T::name: " << name;
+            message << "User Error: Type mismatch, Handle::type{" << handle.type << "} != T::hash_code{ " << type.hash_code() << "}. T::name: " << type.name();
 
             return message.str();
         }

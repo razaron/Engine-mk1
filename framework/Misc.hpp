@@ -46,7 +46,7 @@ struct Handle
     HandleType type; /*!< The type of the Handle%d object. */
     HandleIndex id;  /*!< The indexed location of the Handle%d object. */
 
-    Handle() : type{}, id{} {}
+    Handle() = default;
     Handle(HandleType type) : type{ type }, id{ nextIndex++ } {}
 
     /*! Basic equality comparator. */
