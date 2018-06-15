@@ -5,11 +5,11 @@
 #include "Space.hpp"
 #include "LuaHooks.hpp"
 
-using namespace razaron::core::space;
-using namespace razaron::core;
-using namespace razaron::game::systems;
-using namespace razaron::game::components;
-using namespace razaron::taskscheduler;
+using namespace rz::core::space;
+using namespace rz::core;
+using namespace rz::game::systems;
+using namespace rz::game::components;
+using namespace rz::taskscheduler;
 
 int main()
 {
@@ -20,11 +20,11 @@ int main()
 	// Create a new Lue state and load libraries
 	sol::state lua;
 	lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::table, sol::lib::math, sol::lib::os, sol::lib::debug, sol::lib::string, sol::lib::io);
-	razaron::lua::maths::hook(lua);
-	razaron::lua::planner::hook(lua);
+	rz::lua::maths::hook(lua);
+	rz::lua::planner::hook(lua);
 
 	std::vector<Event> events;
-	razaron::lua::entities::hook(lua, events);
+	rz::lua::entities::hook(lua, events);
 	
 	// Create a new space
 	SystemGraph g;

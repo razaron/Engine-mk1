@@ -9,11 +9,11 @@
 
 #pragma warning(pop)
 
-namespace razaron::lua::planner
+namespace rz::lua::planner
 {
 	inline void hook(sol::state_view lua)
 	{
-		using namespace razaron::planner;
+		using namespace rz::planner;
 
 		lua["OPERATION"] = sol::new_table();
 		lua["OPERATION"]["NONE"] = Operation::NONE;
@@ -84,7 +84,7 @@ namespace razaron::lua::planner
 	}
 }
 
-namespace razaron::lua::maths
+namespace rz::lua::maths
 {
 	template <typename Vector>
 	inline Vector limit(const Vector &vec, float max)

@@ -6,7 +6,7 @@
 #include <chrono>
 #include <thread>
 
-using namespace razaron::objectpool;
+using namespace rz::objectpool;
 
 SCENARIO("ObjectPools can allocate objects in multiple ways", "[objectpool]")
 {
@@ -326,7 +326,7 @@ SCENARIO("You removes objects from anywhere in the ObjectPool", "[objectpool]")
             {
                 auto ptr = pool.get<Arr>(first);
             }
-            catch (const error::HandleOutOfRange &)
+            catch (const rz::err::HandleOutOfRange &)
             {
                 result = true;
             }
@@ -342,7 +342,7 @@ SCENARIO("You removes objects from anywhere in the ObjectPool", "[objectpool]")
                 {
                     auto ptr = pool.get<Arr>(third);
                 }
-                catch (const error::HandleOutOfRange &)
+                catch (const rz::err::HandleOutOfRange &)
                 {
                     result = true;
                 }
@@ -490,7 +490,7 @@ SCENARIO("ObjectPools have helper functions to support automated lifetime manage
             {
                 pool.get<int>(handle);
             }
-            catch (const error::HandleOutOfRange &)
+            catch (const rz::err::HandleOutOfRange &)
             {
                 result = true;
             }
@@ -514,7 +514,7 @@ SCENARIO("ObjectPools have helper functions to support automated lifetime manage
             {
                 pool.get<int>(handle);
             }
-            catch (const error::HandleOutOfRange &)
+            catch (const rz::err::HandleOutOfRange &)
             {
                 result = true;
             }

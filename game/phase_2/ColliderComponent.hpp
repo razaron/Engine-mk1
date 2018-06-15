@@ -4,9 +4,9 @@
 
 #include <glm/glm.hpp>
 
-namespace razaron::game::components
+namespace rz::game::components
 {
-	using namespace razaron::core::component;
+	using namespace rz::core::component;
 
 	class ColliderComponent : public Component
 	{

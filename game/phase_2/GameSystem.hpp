@@ -4,9 +4,9 @@
 #include "LuaHooks.hpp"
 #include "config.hpp"
 
-namespace razaron::game::systems
+namespace rz::game::systems
 {
-	using namespace razaron::core::system;
+	using namespace rz::core::system;
 
 	class GameSystem : public System
 	{

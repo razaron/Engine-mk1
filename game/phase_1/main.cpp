@@ -8,8 +8,8 @@
 #include <iostream>
 #include <map>
 
-using namespace razaron::core::space;
-using namespace razaron::game::systems;
+using namespace rz::core::space;
+using namespace rz::game::systems;
 using namespace std::chrono_literals;
 
 int main() {
@@ -20,7 +20,7 @@ int main() {
 	sol::state lua;
 	lua["log"] = false;
 	lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::table, sol::lib::math);
-	razaron::lua::maths::hook(lua);
+	rz::lua::maths::hook(lua);
 
 	SystemGraph g;
 	g.addEdge(0, 1);

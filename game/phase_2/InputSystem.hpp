@@ -5,12 +5,12 @@
 
 #include <SFML/Graphics.hpp>
 
-namespace razaron::game::systems
+namespace rz::game::systems
 {
-	using namespace razaron::core::system;
-	using namespace razaron::core::component;
-	using namespace razaron::core::entity;
-	using namespace razaron::graph;
+	using namespace rz::core::system;
+	using namespace rz::core::component;
+	using namespace rz::core::entity;
+	using namespace rz::graph;
 
 	class InputSystem : public System
 	{

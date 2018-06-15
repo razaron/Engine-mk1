@@ -1,4 +1,5 @@
-#pragma once
+#ifndef RZ_FRAMEWORK_TASKSCHEDULER_H
+#define RZ_FRAMEWORK_TASKSCHEDULER_H
 
 #include "Graph.hpp"
 
@@ -17,19 +18,17 @@
 #include <vector>
 
 /*! %Task schedulers enable easy concurrency by packaging logic into tasks that can be run in an ordered manner. */
-namespace razaron::taskscheduler
+namespace rz::taskscheduler
 {
-    using namespace razaron::graph;
-
     struct Task;
     struct WorkGraphData;
 
-    using TaskList = std::list<Task>;                             /*!< . */
-    using WorkFunc = std::function<void()>;                       /*!< . */
-    using WorkGroup = std::pair<unsigned, std::vector<WorkFunc>>; /*!< . */
-    using WorkGraph = Graph<WorkGroup, char, WorkGraphData>;      /*!< . */
-    using WorkGraphVertex = Vertex<WorkGroup, char>;              /*!< . */
-    using WorkGraphEdge = Edge<char>;                             /*!< . */
+    using TaskList = std::list<Task>;                                   /*!< . */
+    using WorkFunc = std::function<void()>;                             /*!< . */
+    using WorkGroup = std::pair<unsigned, std::vector<WorkFunc>>;       /*!< . */
+    using WorkGraph = rz::graph::Graph<WorkGroup, char, WorkGraphData>; /*!< . */
+    using WorkGraphVertex = rz::graph::Vertex<WorkGroup, char>;         /*!< . */
+    using WorkGraphEdge = rz::graph::Edge<char>;                        /*!< . */
 
     /*! The data to be held by the TaskGraph. */
     struct WorkGraphData
@@ -39,7 +38,7 @@ namespace razaron::taskscheduler
     /*! A data structure for representing a Task. */
     struct Task
     {
-		std::size_t taskID{};        /*!< The ID of this Task. */
+        std::size_t taskID{};        /*!< The ID of this Task. */
         std::size_t parentID{};      /*!< The parents Task ID. */
         std::size_t dependencyID{};  /*!< The ID of the Task that must finish as a prerequisite. */
         WorkFunc work{};             /*!< The work function to run. */
@@ -58,14 +57,14 @@ namespace razaron::taskscheduler
     class TaskScheduler
     {
       public:
-        TaskScheduler() noexcept;						/*!< Default constructor. */
-		TaskScheduler(const TaskScheduler&) = delete;
-		TaskScheduler(TaskScheduler&&) = delete;
-		
-        ~TaskScheduler();								/*!< Default destructor. */
+        TaskScheduler() noexcept; /*!< Default constructor. */
+        TaskScheduler(const TaskScheduler &) = delete;
+        TaskScheduler(TaskScheduler &&) = delete;
 
-		TaskScheduler& operator=(const TaskScheduler &) = delete;
-		TaskScheduler& operator=(TaskScheduler &&) = delete;
+        ~TaskScheduler(); /*!< Default destructor. */
+
+        TaskScheduler &operator=(const TaskScheduler &) = delete;
+        TaskScheduler &operator=(TaskScheduler &&) = delete;
 
         /*! Pushes a new Task to be scheduled.
         *
@@ -114,8 +113,10 @@ namespace razaron::taskscheduler
         std::mutex _taskQueueMutex;
         std::condition_variable _hasWorkCondition;
 
-		std::atomic<bool> _isEnd;
-		std::atomic<bool> _hasOpenWork;
-		std::atomic<bool> _hasWork;
+        std::atomic<bool> _isEnd;
+        std::atomic<bool> _hasOpenWork;
+        std::atomic<bool> _hasWork;
     };
 }
+
+#endif //RZ_FRAMEWORK_TASKSCHEDULER_H

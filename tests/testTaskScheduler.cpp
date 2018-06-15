@@ -2,7 +2,8 @@
 
 #include <catch.hpp>
 
-using namespace razaron::taskscheduler;
+using namespace rz::taskscheduler;
+using namespace rz::graph;
 
 SCENARIO("TaskSchedulers can queue work in several ways", "[taskscheduler][concurrent]")
 {
@@ -211,74 +212,78 @@ SCENARIO("TaskSchedulers can queue work in several ways", "[taskscheduler][concu
             WHEN("The WorkGraph does have dependencies")
             {
                 Task dep{};
-        		for (auto i = 1u; i < 1000; i += 4)
-        		{
-        			WorkGraph g;
+                for (auto i = 1u; i < 1000; i += 4)
+                {
+                    WorkGraph g;
 
-        			g.addEdge(0, 1);
-        			g.addEdge(1, 0);
+                    g.addEdge(0, 1);
+                    g.addEdge(1, 0);
 
-        			g.addEdge(0, 2);
-        			g.addEdge(2, 0);
+                    g.addEdge(0, 2);
+                    g.addEdge(2, 0);
 
-        			g.addEdge(1, 3);
-        			g.addEdge(3, 1);
+                    g.addEdge(1, 3);
+                    g.addEdge(3, 1);
 
-        			g.addEdge(2, 3);
-        			g.addEdge(3, 2);
+                    g.addEdge(2, 3);
+                    g.addEdge(3, 2);
 
-        			g[0].data = WorkGroup{
-        				i,
-        				{ [i, &output, &outputMutex]() {
-        					std::lock_guard<std::mutex> lk(outputMutex);
-        					output.push_back(i);
-        				}, []() {} , []() {} , []() {} , []() {} }
-        			};
+                    g[0].data = WorkGroup{
+                        i,
+                        { [i, &output, &outputMutex]() {
+                             std::lock_guard<std::mutex> lk(outputMutex);
+                             output.push_back(i);
+                         },
+                          []() {}, []() {}, []() {}, []() {} }
+                    };
 
-        			g[1].data = WorkGroup{
-        				i + 1,
-        				{ [i, &output, &outputMutex]() {
-        					std::lock_guard<std::mutex> lk(outputMutex);
-        					output.push_back(i + 1);
-        				}, []() {} , []() {} , []() {} , []() {} }
-        			};
+                    g[1].data = WorkGroup{
+                        i + 1,
+                        { [i, &output, &outputMutex]() {
+                             std::lock_guard<std::mutex> lk(outputMutex);
+                             output.push_back(i + 1);
+                         },
+                          []() {}, []() {}, []() {}, []() {} }
+                    };
 
-        			g[2].data = WorkGroup{
-        				i + 1,
-        				{ [i, &output, &outputMutex]() {
-        					std::lock_guard<std::mutex> lk(outputMutex);
-        					output.push_back(i + 2);
-        				}, []() {} , []() {} , []() {} , []() {} }
-        			};
+                    g[2].data = WorkGroup{
+                        i + 1,
+                        { [i, &output, &outputMutex]() {
+                             std::lock_guard<std::mutex> lk(outputMutex);
+                             output.push_back(i + 2);
+                         },
+                          []() {}, []() {}, []() {}, []() {} }
+                    };
 
-        			g[3].data = WorkGroup{
-        				i + 3,
-        				{ [i, &output, &outputMutex]() {
-        					std::lock_guard<std::mutex> lk(outputMutex);
-        					output.push_back(i + 3);
-        				}, []() {} , []() {} , []() {} , []() {} }
-        			};
+                    g[3].data = WorkGroup{
+                        i + 3,
+                        { [i, &output, &outputMutex]() {
+                             std::lock_guard<std::mutex> lk(outputMutex);
+                             output.push_back(i + 3);
+                         },
+                          []() {}, []() {}, []() {}, []() {} }
+                    };
 
-        			g[3].state = State::GREEN;
+                    g[3].state = State::GREEN;
 
-        			dep = ts.pushGraph(g, dep);
-        		}
+                    dep = ts.pushGraph(g, dep);
+                }
 
-        		ts.helpWorkers();
+                ts.helpWorkers();
 
                 REQUIRE(output.size() == 1000);
 
                 bool isSuccess = true;
                 int pp = -1;
-            	int p = 0;
-            	for (auto i : output)
-            	{
-            		if (!((i == p + 1 && i == pp + 2) || (i == p - 1 && i == pp + 1) || (i == p + 2 && i == pp + 3) || (i == p + 2 && i == pp + 1) || (i==p+1 && i == pp+3)))
-            			isSuccess = false;
+                int p = 0;
+                for (auto i : output)
+                {
+                    if (!((i == p + 1 && i == pp + 2) || (i == p - 1 && i == pp + 1) || (i == p + 2 && i == pp + 3) || (i == p + 2 && i == pp + 1) || (i == p + 1 && i == pp + 3)))
+                        isSuccess = false;
 
-            		pp = p;
-            		p = i;
-            	}
+                    pp = p;
+                    p = i;
+                }
 
                 REQUIRE(isSuccess == true);
             }

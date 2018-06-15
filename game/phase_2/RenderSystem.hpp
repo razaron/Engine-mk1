@@ -11,10 +11,10 @@
 #include <sol.hpp>
 #pragma warning(pop)
 
-namespace razaron::game::systems
+namespace rz::game::systems
 {
-	using namespace razaron::core::system;
-	using namespace razaron::game::components;
+	using namespace rz::core::system;
+	using namespace rz::game::components;
 
 	using ShapeArgs = std::tuple<sol::object, int, glm::u8vec3>;
 

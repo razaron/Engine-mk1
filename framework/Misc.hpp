@@ -1,4 +1,5 @@
-#pragma once
+#ifndef RZ_FRAMEWORK_MISC_H
+#define RZ_FRAMEWORK_MISC_H
 
 #include <array>
 #include <atomic>
@@ -135,3 +136,5 @@ struct UUID64Cmp
         return lhs.uuid < rhs.uuid;
     }
 };
+
+#endif //RZ_FRAMEWORK_MISC_H

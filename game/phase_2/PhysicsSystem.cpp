@@ -1,7 +1,7 @@
 #include "PhysicsSystem.hpp"
 
-using namespace razaron::game::systems;
-using namespace razaron::game::components;
+using namespace rz::game::systems;
+using namespace rz::game::components;
 
 PhysicsSystem::PhysicsSystem(sol::state_view lua)
 	:_lua{ lua }

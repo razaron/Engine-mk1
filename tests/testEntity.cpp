@@ -2,8 +2,7 @@
 
 #include <catch.hpp>
 
-using namespace razaron::core::component;
-using namespace razaron::core::entity;
+using namespace rz::core;
 
 SCENARIO("Entities can be constructed from a ComponentMap, then be added/removed to/from", "[entity][component]")
 {
@@ -23,7 +22,7 @@ SCENARIO("Entities can be constructed from a ComponentMap, then be added/removed
 
         WHEN("An entity is constructed from the ComponentMap")
         {
-            Entity e{map};
+            Entity e{ map };
 
             REQUIRE(e[ComponentType::COMPONENT_1].id == h1.id);
             REQUIRE(e[ComponentType::COMPONENT_2].id == h2.id);
@@ -31,8 +30,8 @@ SCENARIO("Entities can be constructed from a ComponentMap, then be added/removed
 
             THEN("Adding ComponentHandles")
             {
-                Handle h{ HandleType{ 4 }};
-                e.addComponent(ComponentHandle{ComponentType::COMPONENT_1, h});
+                Handle h{ HandleType{ 4 } };
+                e.addComponent(ComponentHandle{ ComponentType::COMPONENT_1, h });
 
                 REQUIRE(e[ComponentType::COMPONENT_1].id == h.id);
             }
@@ -44,12 +43,12 @@ SCENARIO("Entities can be constructed from a ComponentMap, then be added/removed
 
                 bool result = false;
 
-				// COMPONENT_1 removed so access should throw
+                // COMPONENT_1 removed so access should throw
                 try
                 {
                     e[ComponentType::COMPONENT_1];
                 }
-                catch (const std::invalid_argument&)
+                catch (const std::invalid_argument &)
                 {
                     result = true;
                 }

@@ -6572,7 +6572,7 @@ namespace sol {
 	namespace detail {
 		inline void stack_fail(int, int) {
 #ifndef SOL_NO_EXCEPTIONS
-			throw error(detail::direct_error, "imbalanced stack after operation finish");
+			throw rz::err(detail::direct_error, "imbalanced stack after operation finish");
 #else
 			// Lol, what do you want, an error printout? :3c
 			// There's no sane default here. The right way would be C-style abort(), and that's not acceptable, so
@@ -9299,7 +9299,7 @@ namespace stack {
 				lua_pushnumber(L, static_cast<lua_Number>(value));
 				return 1;
 #else
-				throw error(detail::direct_error, "integer value will be misrepresented in lua");
+				throw rz::err(detail::direct_error, "integer value will be misrepresented in lua");
 #endif
 			}
 #endif
@@ -17074,7 +17074,7 @@ namespace sol {
 					case meta_function::construct:
 						if (prop) {
 #ifndef SOL_NO_EXCEPTIONS
-							throw error("sol: 2 separate constructor (new) functions were set on this type. Please specify only 1 sol::meta_function::construct/'new' type AND wrap the function in a sol::factories/initializers call, as shown by the documentation and examples, otherwise you may create problems");
+							throw rz::err("sol: 2 separate constructor (new) functions were set on this type. Please specify only 1 sol::meta_function::construct/'new' type AND wrap the function in a sol::factories/initializers call, as shown by the documentation and examples, otherwise you may create problems");
 #else
 							assert(false && "sol: 2 separate constructor (new) functions were set on this type. Please specify only 1 sol::meta_function::construct/'new' type AND wrap the function in a sol::factories/initializers call, as shown by the documentation and examples, otherwise you may create problems");
 #endif
@@ -17083,7 +17083,7 @@ namespace sol {
 					case meta_function::garbage_collect:
 						if (destructfunc != nullptr) {
 #ifndef SOL_NO_EXCEPTIONS
-							throw error("sol: 2 separate constructor (new) functions were set on this type. Please specify only 1 sol::meta_function::construct/'new' type AND wrap the function in a sol::factories/initializers call, as shown by the documentation and examples, otherwise you may create problems");
+							throw rz::err("sol: 2 separate constructor (new) functions were set on this type. Please specify only 1 sol::meta_function::construct/'new' type AND wrap the function in a sol::factories/initializers call, as shown by the documentation and examples, otherwise you may create problems");
 #else
 							assert(false && "sol: 2 separate constructor (new) functions were set on this type. Please specify only 1 sol::meta_function::construct/'new' type AND wrap the function in a sol::factories/initializers call, as shown by the documentation and examples, otherwise you may create problems");
 #endif
@@ -17819,7 +17819,7 @@ namespace sol {
 						case meta_function::construct:
 							if (prop) {
 #ifndef SOL_NO_EXCEPTIONS
-								throw error("sol: 2 separate constructor (new) functions were set on this type. Please specify only 1 sol::meta_function::construct/'new' type AND wrap the function in a sol::factories/initializers call, as shown by the documentation and examples, otherwise you may create problems");
+								throw rz::err("sol: 2 separate constructor (new) functions were set on this type. Please specify only 1 sol::meta_function::construct/'new' type AND wrap the function in a sol::factories/initializers call, as shown by the documentation and examples, otherwise you may create problems");
 #else
 								assert(false && "sol: 2 separate constructor (new) functions were set on this type. Please specify only 1 sol::meta_function::construct/'new' type AND wrap the function in a sol::factories/initializers call, as shown by the documentation and examples, otherwise you may create problems");
 #endif
@@ -17828,7 +17828,7 @@ namespace sol {
 						case meta_function::garbage_collect:
 							if (prop) {
 #ifndef SOL_NO_EXCEPTIONS
-								throw error("sol: 2 separate constructor (new) functions were set on this type. Please specify only 1 sol::meta_function::construct/'new' type AND wrap the function in a sol::factories/initializers call, as shown by the documentation and examples, otherwise you may create problems");
+								throw rz::err("sol: 2 separate constructor (new) functions were set on this type. Please specify only 1 sol::meta_function::construct/'new' type AND wrap the function in a sol::factories/initializers call, as shown by the documentation and examples, otherwise you may create problems");
 #else
 								assert(false && "sol: 2 separate constructor (new) functions were set on this type. Please specify only 1 sol::meta_function::construct/'new' type AND wrap the function in a sol::factories/initializers call, as shown by the documentation and examples, otherwise you may create problems");
 #endif
@@ -19164,7 +19164,7 @@ namespace sol {
 		stack::push(L, err);
 #else
 		// just throw our error
-		throw error(detail::direct_error, err);
+		throw rz::err(detail::direct_error, err);
 #endif
 		return pfr;
 	}
@@ -19989,10 +19989,10 @@ namespace sol {
 			if (message) {
 				std::string err(message, messagesize);
 				lua_settop(L, 0);
-				throw error(err);
+				throw rz::err(err);
 			}
 			lua_settop(L, 0);
-			throw error(std::string("An unexpected error occurred and forced the lua state to call atpanic"));
+			throw rz::err(std::string("An unexpected error occurred and forced the lua state to call atpanic"));
 #endif
 		}
 

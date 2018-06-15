@@ -1,4 +1,5 @@
-#pragma once
+#ifndef RZ_FRAMEWORK_OBJECTPOOL_H
+#define RZ_FRAMEWORK_OBJECTPOOL_H
 
 #include "Misc.hpp"
 
@@ -24,8 +25,9 @@ const std::size_t OBJECT_SIZE_32 = sizeof(std::size_t) * 32;
 const std::size_t OBJECT_SIZE_64 = sizeof(std::size_t) * 64;
 
 /*! Things related to an aligned generic object pool implementation. */
-namespace razaron::objectpool
+namespace rz::objectpool
 {
+    /*! @cond */
     template <std::size_t S>
     class Page
     {
@@ -44,8 +46,8 @@ namespace razaron::objectpool
             end = reinterpret_cast<std::size_t>(&_data.data()[OBJECT_POOL_PAGE_LENGTH - 1]);
         }
 
-        constexpr std::size_t size() { return _data.size(); }
-        auto data() { return _data.data(); }
+        constexpr std::size_t size() noexcept { return _data.size(); }
+        auto data() noexcept { return _data.data(); }
 
         std::size_t begin, end;
 
@@ -54,7 +56,7 @@ namespace razaron::objectpool
     };
 
     template <std::size_t S>
-    class FreeList
+    class Pool
     {
         using PageType = Page<S>;
         using LineType = typename PageType::Line;
@@ -104,11 +106,12 @@ namespace razaron::objectpool
         HandleMap _map{};
         std::mutex _mutex{};
     };
+    /*! @endcond */
 
     //PUBLIC FUNCTIONS
     template <std::size_t S>
     template <typename T>
-    inline Handle FreeList<S>::push(T &&object)
+    inline Handle Pool<S>::push(T &&object)
     {
         std::scoped_lock lk{ _mutex };
 
@@ -121,7 +124,7 @@ namespace razaron::objectpool
 
     template <std::size_t S>
     template <typename T, typename... Args>
-    inline Handle FreeList<S>::emplace(Args... args)
+    inline Handle Pool<S>::emplace(Args... args)
     {
         std::scoped_lock lk{ _mutex };
 
@@ -149,7 +152,7 @@ namespace razaron::objectpool
 
     template <std::size_t S>
     template <typename T>
-    inline T *FreeList<S>::get(const Handle &handle)
+    inline T *Pool<S>::get(const Handle &handle)
     {
         std::scoped_lock lk{ _mutex };
 
@@ -158,20 +161,20 @@ namespace razaron::objectpool
 
     template <std::size_t S>
     template <typename T>
-    inline void FreeList<S>::erase(const Handle &handle)
+    inline void Pool<S>::erase(const Handle &handle)
     {
         std::scoped_lock lk{ _mutex };
 
         eraseImpl<T>(handle, true);
 
         if (!_map.erase(handle))
-            throw error::HandleOutOfRange{ handle, S };
+            throw rz::err::HandleOutOfRange{ handle, S };
 
         return;
     }
 
     template <std::size_t S>
-    inline void FreeList<S>::defragment()
+    inline void Pool<S>::defragment()
     {
         std::scoped_lock lk{ _mutex };
 
@@ -193,12 +196,12 @@ namespace razaron::objectpool
     }
 
     template <std::size_t S>
-    inline void FreeList<S>::shrink()
+    inline void Pool<S>::shrink()
     {
         std::scoped_lock lk{ _mutex };
 
-        if (_firstFreeLine == nullptr) 
-			return;
+        if (_firstFreeLine == nullptr)
+            return;
 
         std::vector<LineType *> freePtrs{ _firstFreeLine };
 
@@ -240,7 +243,7 @@ namespace razaron::objectpool
 
     //PRIVATE FUNCTIONS
     template <std::size_t S>
-    inline void FreeList<S>::addPage()
+    inline void Pool<S>::addPage()
     {
         auto page = new PageType;
 
@@ -266,7 +269,7 @@ namespace razaron::objectpool
     }
 
     template <std::size_t S>
-    inline std::size_t FreeList<S>::getIndex(void *ptr)
+    inline std::size_t Pool<S>::getIndex(void *ptr)
     {
         std::size_t pos = reinterpret_cast<std::size_t>(ptr);
         PageType *page = nullptr;
@@ -289,12 +292,12 @@ namespace razaron::objectpool
             return pageNum * OBJECT_POOL_PAGE_LENGTH + offset;
         }
 
-        throw error::InvalidPointer{};
+        throw rz::err::InvalidPointer{};
     }
 
     template <std::size_t S>
     template <typename T, typename Object>
-    inline Object *FreeList<S>::pushImpl(T &&object)
+    inline Object *Pool<S>::pushImpl(T &&object)
     {
         // If the next free position pointer points to non-existant page, add a new page
         if (_firstFreeLine == nullptr || _firstFreeLine->next == nullptr)
@@ -317,19 +320,19 @@ namespace razaron::objectpool
 
     template <std::size_t S>
     template <typename T>
-    inline T *FreeList<S>::getImpl(const Handle &handle)
+    inline T *Pool<S>::getImpl(const Handle &handle)
     {
         auto it = _map.find(handle);
 
         if (it != _map.end())
             return static_cast<T *>(it->second);
         else
-            throw error::HandleOutOfRange{ handle, S };
+            throw rz::err::HandleOutOfRange{ handle, S };
     }
 
     template <std::size_t S>
     template <typename T>
-    inline void FreeList<S>::eraseImpl(const Handle &handle, bool destruct)
+    inline void Pool<S>::eraseImpl(const Handle &handle, bool destruct)
     {
         if (destruct)
             std::destroy_at(getImpl<T>(handle));
@@ -368,18 +371,18 @@ namespace razaron::objectpool
         return;
     }
 
-    /*!	Stores objects of any type with type upto \c sizeof(std::size_t)*64 Bytes in contiguous aligned memory.
+    /*!	Stores objects of any type with size upto `sizeof(std::size_t) * 64` Bytes in contiguous aligned memory.
 	*   For more information and examples, see page \ref objectpool.
 	*/
     class ObjectPool
     {
         /*! @cond */
-        using PoolA = FreeList<OBJECT_SIZE_2>;
-        using PoolB = FreeList<OBJECT_SIZE_4>;
-        using PoolC = FreeList<OBJECT_SIZE_8>;
-        using PoolD = FreeList<OBJECT_SIZE_16>;
-        using PoolE = FreeList<OBJECT_SIZE_32>;
-        using PoolF = FreeList<OBJECT_SIZE_64>;
+        using PoolA = Pool<OBJECT_SIZE_2>;
+        using PoolB = Pool<OBJECT_SIZE_4>;
+        using PoolC = Pool<OBJECT_SIZE_8>;
+        using PoolD = Pool<OBJECT_SIZE_16>;
+        using PoolE = Pool<OBJECT_SIZE_32>;
+        using PoolF = Pool<OBJECT_SIZE_64>;
 
         using PoolTuple = std::tuple<PoolA, PoolB, PoolC, PoolD, PoolE, PoolF>;
 
@@ -400,31 +403,27 @@ namespace razaron::objectpool
         /*! @endcond */
 
       public:
-        /*!	Forwards an object of type T into the ObjectPool.
+        /*!	Pushes an object of type T into the ObjectPool.
 		*
-		*	@tparam		T				   The type of the object to be moved int o the ObjectPool.
+		*	@tparam		T				  The type of the object to be moved into the ObjectPool.<sup>[1]</sup>
 		*
-		*	@param		object			   The object to move into the ObjectPool.
+		*	@param		object			  The object to move into the ObjectPool.
 		*
-		*	@exception	std::length_error  T is too large for ObjectPool.
+		*	@return		Handle			  A Handle for accessing the object.
 		*
-		*	@retval		Handle             On success, a Handle for accessing the object.
-		*	@retval		Handle             On failure, an empty Handle.
+		*	<small><sup>[1]</sup> Don't enter this. It <a title="cppreference" href="http://en.cppreference.com/w/cpp/language/template_argument_deduction">deduced</a> by the compiler.</small>
 		*/
         template <typename T>
         Handle push(T &&object);
 
-        /*!	Constructs an object of type T directly into the ObjectPool.
+        /*!	In-place constructs an object of type T into the ObjectPool.
 		*
-		*	@tparam		T				   The type of the object to be moved into the ObjectPool.
+		*	@tparam		T				   The type of the object to be constructed in the ObjectPool.
 		*	@tparam		Args			   The parameter pack used to construct the T object.<sup>[1]</sup>
 		*
 		*	@param		args			   Constructor arguments to pass to the constructor of T.
 		*
-		*	@exception	std::length_error  T is too large for ObjectPool.
-		*
-		*	@retval		Handle		       On success, a Handle for accessing the object.
-		*	@retval		Handle			   On failure, an empty Handle.
+		*	@retval		Handle		       A Handle for accessing the object.
 		*
 		*	<small><sup>[1]</sup> Don't enter this. It <a title="cppreference" href="http://en.cppreference.com/w/cpp/language/template_argument_deduction">deduced</a> by the compiler.</small>
 		*/
@@ -438,7 +437,6 @@ namespace razaron::objectpool
 		*	@param	handle	                   The Handle used to search for the object in the ObjectPool.
 		*
 		*	@exception	std::invalid_argument  T and handle are mismatched.
-		*	@exception	std::length_error      T is too large for ObjectPool.
 		*
 		*	@retval T*                         On success, a pointer to the desired object.
 		*	@retval nullptr                    On failure, a nullptr.
@@ -467,13 +465,13 @@ namespace razaron::objectpool
         /*! Defragments the ObjectPool such that objects located after the first free position are moved to earlier free positions. */
         void defragment();
 
-        /*! Deletes unused pages from FreeList%s. */
+        /*! Deletes unused pages from Pool%s. */
         void shrink();
 
-        /*! Returns the currently used memory (in bytes) in total for all the FreeList%s. */
+        /*! Returns the currently used memory (in bytes) in total for all the Pool%s. */
         std::size_t capacity();
 
-        /*! Returns the currently used memory (in bytes) for the FreeList that fits `sizeof(T)`. */
+        /*! Returns the currently used memory (in bytes) for the Pool that fits `sizeof(T)`. */
         template <typename T>
         std::size_t capacity();
 
@@ -519,7 +517,7 @@ namespace razaron::objectpool
         auto &pool = std::get<Pool>(_pools);
 
         if (handle.type != typeid(T).hash_code())
-            throw error::TypeMismatch{ handle, typeid(T) };
+            throw rz::err::TypeMismatch{ handle, typeid(T) };
 
         return pool.get<T>(handle);
     }
@@ -532,7 +530,7 @@ namespace razaron::objectpool
         auto &pool = std::get<Pool>(_pools);
 
         if (handle.type != typeid(T).hash_code())
-            throw error::TypeMismatch{ handle, typeid(T) };
+            throw rz::err::TypeMismatch{ handle, typeid(T) };
 
         return pool.erase<T>(handle);
     }
@@ -541,7 +539,7 @@ namespace razaron::objectpool
     auto ObjectPool::makeUnique(const Handle &handle)
     {
         if (handle.type != typeid(T).hash_code())
-            throw error::TypeMismatch{ handle, typeid(T) };
+            throw rz::err::TypeMismatch{ handle, typeid(T) };
 
         auto destroy = [&](Handle *h) {
             erase<T>(*h);
@@ -554,7 +552,7 @@ namespace razaron::objectpool
     auto ObjectPool::makeShared(const Handle &handle)
     {
         if (handle.type != typeid(T).hash_code())
-            throw error::TypeMismatch{ handle, typeid(T) };
+            throw rz::err::TypeMismatch{ handle, typeid(T) };
 
         auto destroy = [&](Handle *h) {
             erase<T>(*h);
@@ -606,7 +604,7 @@ namespace razaron::objectpool
     }
 }
 
-namespace razaron::objectpool::error
+namespace rz::err
 {
     class InvalidPointer : public std::invalid_argument
     {
@@ -618,7 +616,7 @@ namespace razaron::objectpool::error
         static std::string getMessage()
         {
             std::stringstream message;
-            message << "Internal Error: ptr not found in FreeList.";
+            message << "Internal Error: ptr not found in Pool.";
 
             return message.str();
         }
@@ -635,7 +633,7 @@ namespace razaron::objectpool::error
         {
             std::stringstream message;
             message << "User Error: Handle{ type: " << h.type << ", id: " << h.id << " }"
-                    << " not found in FreeList<" << s << ">.";
+                    << " not found in Pool<" << s << ">.";
 
             return message.str();
         }
@@ -657,3 +655,5 @@ namespace razaron::objectpool::error
         }
     };
 }
+
+#endif //RZ_FRAMEWORK_OBJECTPOOL_H

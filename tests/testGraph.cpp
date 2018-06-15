@@ -3,7 +3,7 @@
 
 #include <catch.hpp>
 
-using namespace razaron::graph;
+using namespace rz::graph;
 
 struct TestGraphData
 {

@@ -4,9 +4,9 @@
 
 #include "Component.hpp"
 
-namespace razaron::game::components
+namespace rz::game::components
 {
-	using namespace razaron::core::component;
+	using namespace rz::core::component;
 
 	class ShapeComponent : public Component
 	{

@@ -1,13 +1,13 @@
 #include "GameSystem.hpp"
 
-using namespace razaron::game::systems;
+using namespace rz::game::systems;
 
 GameSystem::GameSystem(sol::state_view lua)
 	: _lua(lua)
 {
 	_interval = 0.01;
 	
-	razaron::lua::planner::hook(lua);
+	rz::lua::planner::hook(lua);
 
 	// Load game script
 	auto result = _lua.script_file("game.lua", [](lua_State*, sol::protected_function_result pfr) {

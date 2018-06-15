@@ -12,9 +12,9 @@
 #include <sol.hpp>
 #pragma warning(pop)
 
-namespace razaron::game::systems
+namespace rz::game::systems
 {
-	using namespace razaron::core::system;
+	using namespace rz::core::system;
 
 	using TransformArgs = std::tuple<sol::table, glm::vec2, glm::vec2, float>;
 	using MotionArgs = std::tuple<sol::table, glm::vec2, glm::vec2, float, float, float>;

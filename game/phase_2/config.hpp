@@ -5,7 +5,7 @@
 #include "EventStream.hpp"
 #include "TaskScheduler.hpp"
 
-using namespace razaron::eventstream;
+using namespace rz::eventstream;
 
 const EventType EVENTTYPE_MODEL = EventType::EVENT_1;
 const EventType EVENTTYPE_STEERING = EventType::EVENT_2;

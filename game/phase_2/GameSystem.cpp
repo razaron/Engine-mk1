@@ -1,6 +1,6 @@
 #include "GameSystem.hpp"
 
-using namespace razaron::game::systems;
+using namespace rz::game::systems;
 
 GameSystem::GameSystem(sol::state_view lua)
 	: _lua(lua)

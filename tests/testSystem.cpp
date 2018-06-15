@@ -2,6 +2,9 @@
 
 #include <catch.hpp>
 
+using namespace rz::core;
+using namespace rz::eventstream;
+
 SCENARIO("Systems can manage their memory via their ObjectPool", "[system][objectpool]")
 {
     GIVEN("A derived System, FooSystem")
@@ -25,12 +28,12 @@ SCENARIO("Systems can manage their memory via their ObjectPool", "[system][objec
             {
                 sys.removeObject<std::array<std::size_t, 64>>(a);
 
-				bool result = false;
+                bool result = false;
                 try
                 {
                     auto ptr = sys.getObject<std::array<std::size_t, 64>>(a);
                 }
-                catch (const error::HandleOutOfRange &)
+                catch (const rz::err::HandleOutOfRange &)
                 {
                     result = true;
                 }

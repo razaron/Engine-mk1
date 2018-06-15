@@ -12,11 +12,11 @@
 #include <sol.hpp>
 #pragma warning(pop)
 
-namespace razaron::lua::planner
+namespace rz::lua::planner
 {
 	inline void hook(sol::state_view lua)
 	{
-		using namespace razaron::planner;
+		using namespace rz::planner;
 
 		lua["OPERATION"] = sol::new_table();
 		lua["OPERATION"]["NONE"] = Operation::NONE;
@@ -87,7 +87,7 @@ namespace razaron::lua::planner
 	}
 }
 
-namespace razaron::lua::maths
+namespace rz::lua::maths
 {
 	template <typename Vector>
 	inline Vector limit(const Vector &vec, float max)
@@ -163,12 +163,12 @@ namespace razaron::lua::maths
 	}
 }
 
-namespace razaron::lua::entities
+namespace rz::lua::entities
 {
-	using namespace razaron::core;
-	using namespace razaron::core::eventdata;
-	using namespace razaron::eventstream;
-	using namespace razaron::game::systems;
+	using namespace rz::core;
+	using namespace rz::core::eventdata;
+	using namespace rz::eventstream;
+	using namespace rz::game::systems;
 
 
 	inline void hook(sol::state_view lua, std::vector<Event> &events)
