@@ -831,7 +831,7 @@ static void GCTM (lua_State *L, int propagateerrors) {
         luaO_pushfstring(L, "error in __gc metamethod (%s)", msg);
         status = LUA_ERRGCMM;  /* error in __gc metamethod */
       }
-      luaD_throw(L, status);  /* re-throw rz::err */
+      luaD_throw(L, status);  /* re-throw error */
     }
   }
 }
