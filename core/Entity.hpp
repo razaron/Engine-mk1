@@ -1,5 +1,5 @@
-#ifndef RZ_CORE_ENTITY_H
-#define RZ_CORE_ENTITY_H
+#ifndef RZ_CORE_ENTITY_HPP
+#define RZ_CORE_ENTITY_HPP
 
 #include "Component.hpp"
 
@@ -92,4 +92,4 @@ namespace rz::core
     };
 }
 
-#endif //RZ_CORE_ENTITY_H
+#endif //RZ_CORE_ENTITY_HPP

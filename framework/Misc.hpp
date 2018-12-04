@@ -1,5 +1,5 @@
-#ifndef RZ_FRAMEWORK_MISC_H
-#define RZ_FRAMEWORK_MISC_H
+#ifndef RZ_FRAMEWORK_MISC_HPP
+#define RZ_FRAMEWORK_MISC_HPP
 
 #include <array>
 #include <atomic>
@@ -137,4 +137,4 @@ struct UUID64Cmp
     }
 };
 
-#endif //RZ_FRAMEWORK_MISC_H
+#endif //RZ_FRAMEWORK_MISC_HPP

@@ -1,7 +1,10 @@
 #include "PhysicsSystem.hpp"
 
-using namespace rz::game::systems;
+using namespace rz::core;
+using namespace rz::taskscheduler;
 using namespace rz::game::components;
+using namespace rz::game::systems;
+using namespace rz::eventstream;
 
 PhysicsSystem::PhysicsSystem(sol::state_view lua)
 	:_lua{ lua }

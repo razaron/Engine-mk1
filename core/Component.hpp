@@ -1,5 +1,5 @@
-#ifndef RZ_CORE_COMPONENT_H
-#define RZ_CORE_COMPONENT_H
+#ifndef RZ_CORE_COMPONENT_HPP
+#define RZ_CORE_COMPONENT_HPP
 
 #include "Misc.hpp"
 
@@ -75,4 +75,4 @@ namespace rz::core
     };
 }
 
-#endif // RZ_CORE_COMPONENT_H
+#endif // RZ_CORE_COMPONENT_HPP

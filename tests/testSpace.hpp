@@ -1,5 +1,5 @@
-#ifndef RZ_TESTS_TESTSPACE_H
-#define RZ_TESTS_TESTSPACE_H
+#ifndef RZ_TESTS_TESTSPACE_HPP
+#define RZ_TESTS_TESTSPACE_HPP
 
 #include "Space.hpp"
 
@@ -204,4 +204,4 @@ class SystemF : public rz::core::System
     std::string sysName{ "SystemF" };
 };
 
-#endif //RZ_TESTS_TESTSPACE_H
+#endif //RZ_TESTS_TESTSPACE_HPP

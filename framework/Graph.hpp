@@ -1,5 +1,5 @@
-#ifndef RZ_FRAMEWORK_GRAPH_H
-#define RZ_FRAMEWORK_GRAPH_H
+#ifndef RZ_FRAMEWORK_GRAPH_HPP
+#define RZ_FRAMEWORK_GRAPH_HPP
 
 #include <algorithm>
 #include <functional>
@@ -449,4 +449,4 @@ namespace rz::graph
     }
 }
 
-#endif //RZ_FRAMEWORK_GRAPH_H
+#endif //RZ_FRAMEWORK_GRAPH_HPP

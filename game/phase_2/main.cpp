@@ -5,8 +5,8 @@
 #include "Space.hpp"
 #include "LuaHooks.hpp"
 
-using namespace rz::core::space;
 using namespace rz::core;
+using namespace rz::eventstream;
 using namespace rz::game::systems;
 using namespace rz::game::components;
 using namespace rz::taskscheduler;
@@ -40,7 +40,7 @@ int main()
 
 	Space s{ g };
 	s.registerHandler(EventType::SPACE_NEW_ENTITY, [&s, &lua](const Event & e) {
-		auto data = std::static_pointer_cast<eventdata::SPACE_NEW_ENTITY>(e.data);
+		auto data = std::static_pointer_cast<SPACE_NEW_ENTITY>(e.data);
 
 		auto entity = s.createEntity();
 
@@ -55,7 +55,7 @@ int main()
 			events.push_back(Event{
 				entity.getID(),
 				EventType::SYSTEM_NEW_COMPONENT,
-				std::make_shared<eventdata::SYSTEM_NEW_COMPONENT>(args)
+				std::make_shared<SYSTEM_NEW_COMPONENT>(args)
 				});
 		}
 

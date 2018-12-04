@@ -1,5 +1,5 @@
-#ifndef RZ_CORE_SPACE_H
-#define RZ_CORE_SPACE_H
+#ifndef RZ_CORE_SPACE_HPP
+#define RZ_CORE_SPACE_HPP
 
 #include "Graph.hpp"
 #include "System.hpp"
@@ -89,4 +89,4 @@ namespace rz::core
     };
 }
 
-#endif //RZ_CORE_SPACE_H
+#endif //RZ_CORE_SPACE_HPP

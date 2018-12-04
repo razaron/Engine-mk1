@@ -1,5 +1,5 @@
-#ifndef RZ_FRAMEWORK_OBJECTPOOL_H
-#define RZ_FRAMEWORK_OBJECTPOOL_H
+#ifndef RZ_FRAMEWORK_OBJECTPOOL_HPP
+#define RZ_FRAMEWORK_OBJECTPOOL_HPP
 
 #include "Misc.hpp"
 
@@ -168,7 +168,7 @@ namespace rz::objectpool
         eraseImpl<T>(handle, true);
 
         if (!_map.erase(handle))
-            throw rz::err::HandleOutOfRange{ handle, S };
+            throw error::HandleOutOfRange{ handle, S };
 
         return;
     }
@@ -292,7 +292,7 @@ namespace rz::objectpool
             return pageNum * OBJECT_POOL_PAGE_LENGTH + offset;
         }
 
-        throw rz::err::InvalidPointer{};
+        throw error::InvalidPointer{};
     }
 
     template <std::size_t S>
@@ -327,7 +327,7 @@ namespace rz::objectpool
         if (it != _map.end())
             return static_cast<T *>(it->second);
         else
-            throw rz::err::HandleOutOfRange{ handle, S };
+            throw error::HandleOutOfRange{ handle, S };
     }
 
     template <std::size_t S>
@@ -517,7 +517,7 @@ namespace rz::objectpool
         auto &pool = std::get<Pool>(_pools);
 
         if (handle.type != typeid(T).hash_code())
-            throw rz::err::TypeMismatch{ handle, typeid(T) };
+            throw error::TypeMismatch{ handle, typeid(T) };
 
         return pool.get<T>(handle);
     }
@@ -530,7 +530,7 @@ namespace rz::objectpool
         auto &pool = std::get<Pool>(_pools);
 
         if (handle.type != typeid(T).hash_code())
-            throw rz::err::TypeMismatch{ handle, typeid(T) };
+            throw error::TypeMismatch{ handle, typeid(T) };
 
         return pool.erase<T>(handle);
     }
@@ -539,7 +539,7 @@ namespace rz::objectpool
     auto ObjectPool::makeUnique(const Handle &handle)
     {
         if (handle.type != typeid(T).hash_code())
-            throw rz::err::TypeMismatch{ handle, typeid(T) };
+            throw error::TypeMismatch{ handle, typeid(T) };
 
         auto destroy = [&](Handle *h) {
             erase<T>(*h);
@@ -552,7 +552,7 @@ namespace rz::objectpool
     auto ObjectPool::makeShared(const Handle &handle)
     {
         if (handle.type != typeid(T).hash_code())
-            throw rz::err::TypeMismatch{ handle, typeid(T) };
+            throw error::TypeMismatch{ handle, typeid(T) };
 
         auto destroy = [&](Handle *h) {
             erase<T>(*h);
@@ -604,7 +604,7 @@ namespace rz::objectpool
     }
 }
 
-namespace rz::err
+namespace rz::objectpool::error
 {
     class InvalidPointer : public std::invalid_argument
     {
@@ -656,4 +656,4 @@ namespace rz::err
     };
 }
 
-#endif //RZ_FRAMEWORK_OBJECTPOOL_H
+#endif //RZ_FRAMEWORK_OBJECTPOOL_HPP

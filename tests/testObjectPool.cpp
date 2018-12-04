@@ -326,7 +326,7 @@ SCENARIO("You removes objects from anywhere in the ObjectPool", "[objectpool]")
             {
                 auto ptr = pool.get<Arr>(first);
             }
-            catch (const rz::err::HandleOutOfRange &)
+            catch (const error::HandleOutOfRange &)
             {
                 result = true;
             }
@@ -342,7 +342,7 @@ SCENARIO("You removes objects from anywhere in the ObjectPool", "[objectpool]")
                 {
                     auto ptr = pool.get<Arr>(third);
                 }
-                catch (const rz::err::HandleOutOfRange &)
+                catch (const error::HandleOutOfRange &)
                 {
                     result = true;
                 }
@@ -490,7 +490,7 @@ SCENARIO("ObjectPools have helper functions to support automated lifetime manage
             {
                 pool.get<int>(handle);
             }
-            catch (const rz::err::HandleOutOfRange &)
+            catch (const error::HandleOutOfRange &)
             {
                 result = true;
             }
@@ -514,7 +514,7 @@ SCENARIO("ObjectPools have helper functions to support automated lifetime manage
             {
                 pool.get<int>(handle);
             }
-            catch (const rz::err::HandleOutOfRange &)
+            catch (const error::HandleOutOfRange &)
             {
                 result = true;
             }

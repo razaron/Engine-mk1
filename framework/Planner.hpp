@@ -1,5 +1,5 @@
-#ifndef RZ_FRAMEWORK_PLANNER_H
-#define RZ_FRAMEWORK_PLANNER_H
+#ifndef RZ_FRAMEWORK_PLANNER_HPP
+#define RZ_FRAMEWORK_PLANNER_HPP
 
 #include "Graph.hpp"
 #include "Misc.hpp"
@@ -485,4 +485,4 @@ namespace rz::planner
     };
 }
 
-#endif //RZ_FRAMEWORK_PLANNER_H
+#endif //RZ_FRAMEWORK_PLANNER_HPP

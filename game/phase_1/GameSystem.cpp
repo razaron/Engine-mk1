@@ -1,5 +1,7 @@
 #include "GameSystem.hpp"
 
+using namespace rz::core;
+using namespace rz::taskscheduler;
 using namespace rz::game::systems;
 
 GameSystem::GameSystem(sol::state_view lua)

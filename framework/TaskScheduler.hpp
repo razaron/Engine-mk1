@@ -1,5 +1,5 @@
-#ifndef RZ_FRAMEWORK_TASKSCHEDULER_H
-#define RZ_FRAMEWORK_TASKSCHEDULER_H
+#ifndef RZ_FRAMEWORK_TASKSCHEDULER_HPP
+#define RZ_FRAMEWORK_TASKSCHEDULER_HPP
 
 #include "Graph.hpp"
 
@@ -119,4 +119,4 @@ namespace rz::taskscheduler
     };
 }
 
-#endif //RZ_FRAMEWORK_TASKSCHEDULER_H
+#endif //RZ_FRAMEWORK_TASKSCHEDULER_HPP

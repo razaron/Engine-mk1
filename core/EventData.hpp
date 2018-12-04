@@ -1,5 +1,5 @@
-#ifndef RZ_CORE_EVENTDATA_H
-#define RZ_CORE_EVENTDATA_H
+#ifndef RZ_CORE_EVENTDATA_HPP
+#define RZ_CORE_EVENTDATA_HPP
 
 #include "Component.hpp"
 
@@ -59,4 +59,4 @@ namespace rz::core
     };
 }
 
-#endif //RZ_CORE_EVENTDATA_H
+#endif //RZ_CORE_EVENTDATA_HPP

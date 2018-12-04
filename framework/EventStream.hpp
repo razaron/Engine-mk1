@@ -1,5 +1,5 @@
-#ifndef RZ_FRAMEWORK_EVENTSTREAM_H
-#define RZ_FRAMEWORK_EVENTSTREAM_H
+#ifndef RZ_FRAMEWORK_EVENTSTREAM_HPP
+#define RZ_FRAMEWORK_EVENTSTREAM_HPP
 
 #include "Misc.hpp"
 
@@ -138,4 +138,4 @@ namespace rz::eventstream
     };
 }
 
-#endif //RZ_FRAMEWORK_EVENTSTREAM_H
+#endif //RZ_FRAMEWORK_EVENTSTREAM_HPP

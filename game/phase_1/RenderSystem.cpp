@@ -1,5 +1,7 @@
 #include "RenderSystem.hpp"
 
+using namespace rz::core;
+using namespace rz::taskscheduler;
 using namespace rz::game::systems;
 
 RenderSystem::RenderSystem(sol::state_view lua, sf::RenderWindow *window)

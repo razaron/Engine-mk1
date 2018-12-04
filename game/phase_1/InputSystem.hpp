@@ -1,4 +1,5 @@
-#pragma once
+#ifndef RZ_GAME1_INPUTSYSTEM_HPP
+#define RZ_GAME1_INPUTSYSTEM_HPP
 
 #include "LuaHooks.hpp"
 #include "System.hpp"
@@ -7,28 +8,25 @@
 
 namespace rz::game::systems
 {
-	using namespace rz::core::system;
-	using namespace rz::core::component;
-	using namespace rz::core::entity;
-	using namespace rz::graph;
+    class InputSystem : public rz::core::System
+    {
+      public:
+        InputSystem(sol::state_view lua, sf::RenderWindow *window);
 
-	class InputSystem : public System
-	{
-	public:
-		InputSystem(sol::state_view lua, sf::RenderWindow *window);
+        ~InputSystem();
 
-		~InputSystem();
+        rz::taskscheduler::Task update(rz::core::EntityMap &entities, double delta);
+        rz::core::ComponentHandle createComponent(rz::core::ComponentType type, std::shared_ptr<void> tuplePtr);
+        bool removeComponent(rz::core::ComponentHandle ch);
 
-		Task update(EntityMap &entities, double delta);
-		ComponentHandle createComponent(ComponentType type, std::shared_ptr<void> tuplePtr);
-		bool removeComponent(ComponentHandle ch);
+      private:
+        sol::state_view _lua;
+        sf::RenderWindow *_window;
 
-	private:
-		sol::state_view _lua;
-		sf::RenderWindow *_window;
-
-		const double _pollingRate;
-		double _elapsedKeyboard;
-		double _elapsedMouse;
-	};
+        const double _pollingRate;
+        double _elapsedKeyboard;
+        double _elapsedMouse;
+    };
 }
+
+#endif //RZ_GAME1_INPUTSYSTEM_HPP

@@ -1,5 +1,7 @@
 #include "InputSystem.hpp"
 
+using namespace rz::core;
+using namespace rz::taskscheduler;
 using namespace rz::game::systems;
 
 InputSystem::InputSystem(sol::state_view lua, sf::RenderWindow *window)

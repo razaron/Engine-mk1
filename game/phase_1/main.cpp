@@ -8,7 +8,7 @@
 #include <iostream>
 #include <map>
 
-using namespace rz::core::space;
+using namespace rz::core;
 using namespace rz::game::systems;
 using namespace std::chrono_literals;
 

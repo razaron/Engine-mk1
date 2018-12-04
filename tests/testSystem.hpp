@@ -1,5 +1,5 @@
-#ifndef RZ_TESTS_TESTSYSTEM_H
-#define RZ_TESTS_TESTSYSTEM_H
+#ifndef RZ_TESTS_TESTSYSTEM_HPP
+#define RZ_TESTS_TESTSYSTEM_HPP
 
 #include "System.hpp"
 
@@ -51,4 +51,4 @@ class BarSystem : public rz::core::System
     std::string name{ "BarSystem" };
 };
 
-#endif //RZ_TESTS_TESTSYSTEM_H
+#endif //RZ_TESTS_TESTSYSTEM_HPP

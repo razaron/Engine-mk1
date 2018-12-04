@@ -33,7 +33,7 @@ SCENARIO("Systems can manage their memory via their ObjectPool", "[system][objec
                 {
                     auto ptr = sys.getObject<std::array<std::size_t, 64>>(a);
                 }
-                catch (const rz::err::HandleOutOfRange &)
+                catch (const error::HandleOutOfRange &)
                 {
                     result = true;
                 }

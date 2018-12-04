@@ -1,4 +1,5 @@
-#pragma once
+#ifndef RZ_GAME2_SHAPECOMPONENT_HPP
+#define RZ_GAME2_SHAPECOMPONENT_HPP
 
 #include <glm/glm.hpp>
 
@@ -6,16 +7,16 @@
 
 namespace rz::game::components
 {
-	using namespace rz::core::component;
+    class ShapeComponent : public rz::core::Component
+    {
+      public:
+        ShapeComponent();
+        ShapeComponent(int sides, glm::u8vec3 colour);
+        ~ShapeComponent();
 
-	class ShapeComponent : public Component
-	{
-	public:
-		ShapeComponent();
-		ShapeComponent(int sides, glm::u8vec3 colour);
-		~ShapeComponent();
-
-		int sides;
-		glm::u8vec3 colour;
-	};
+        int sides;
+        glm::u8vec3 colour;
+    };
 }
+
+#endif //RZ_GAME2_SHAPECOMPONENT_HPP

@@ -1,5 +1,5 @@
-#ifndef RZ_CORE_SYSTEM_H
-#define RZ_CORE_SYSTEM_H
+#ifndef RZ_CORE_SYSTEM_HPP
+#define RZ_CORE_SYSTEM_HPP
 
 #include "Entity.hpp"
 #include "EventData.hpp"
@@ -79,4 +79,4 @@ namespace rz::core
     };
 }
 
-#endif //RZ_CORE_SYSTEM_H
+#endif //RZ_CORE_SYSTEM_HPP
