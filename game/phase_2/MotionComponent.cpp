@@ -1,6 +1,6 @@
 #include "MotionComponent.hpp"
 
-using namespace razaron::game::components;
+using namespace rz::game::components;
 
 
 MotionComponent::MotionComponent()
@@ -8,7 +8,7 @@ MotionComponent::MotionComponent()
 {
 }
 
-razaron::game::components::MotionComponent::MotionComponent(glm::vec2 velocity, glm::vec2 acceleration, float maxVelocity, float maxAcceleration, float mass)
+rz::game::components::MotionComponent::MotionComponent(glm::vec2 velocity, glm::vec2 acceleration, float maxVelocity, float maxAcceleration, float mass)
 	: velocity{ velocity }, acceleration{ acceleration }, maxVelocity{ maxVelocity }, maxAcceleration{ maxAcceleration }, mass{ mass }, wanderAngle{}
 {
 }

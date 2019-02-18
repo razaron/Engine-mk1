@@ -1,8 +1,8 @@
-#pragma once
+#ifndef RZ_FRAMEWORK_MISC_HPP
+#define RZ_FRAMEWORK_MISC_HPP
 
 #include <array>
 #include <atomic>
-#include <algorithm>
 #include <random>
 
 // Check windows
@@ -25,120 +25,116 @@
 
 // Helper function
 template <typename T>
-bool includes(T a, T b)
+inline bool includes(T a, T b)
 {
-	int rem = b.size();
-	for (auto &c : a)
-	{
-		if (b.find(c) != b.end())
-			rem--;
-	}
+    int remaining = b.size();
+    for (auto &c : a)
+    {
+        if (b.find(c) != b.end())
+            remaining--;
+    }
 
-	return !rem;
+    return !remaining;
 }
 
 // Handling for pointers etc.
-using HandleSize = std::size_t; /*!< Represents the size of Handle%d objects. */
-using HandleIndex = unsigned short; /*!< Represents the indexed location of Handle%d objects. */
+using HandleType = std::size_t;  /*!< Represents the type of Handle%d objects. */
+using HandleIndex = std::size_t; /*!< Represents the indexed location of Handle%d objects. */
+
 /*! Handles are used to abstract data access away from pointers. */
 struct Handle
 {
-	HandleSize size{}; /*!< The size of the Handle%d object. */
-	HandleIndex index{};/*!< The indexed location of the Handle%d object. */
-	bool isFree{true};/*!< Whether the index denotes a free or occupied location. */
+    HandleType type; /*!< The type of the Handle%d object. */
+    HandleIndex id;  /*!< The indexed location of the Handle%d object. */
+
+    Handle() = default;
+    Handle(HandleType type) : type{ type }, id{ nextIndex++ } {}
 
     /*! Basic equality comparator. */
     bool operator==(const Handle &rhs) noexcept
     {
-        return (size == rhs.size && index == rhs.index && isFree == rhs.isFree);
+        return (type == rhs.type && id == rhs.id);
     }
+
+    /*! Basic inequality comparator. */
+    bool operator!=(const Handle &rhs) noexcept
+    {
+        return !(type == rhs.type && id == rhs.id);
+    }
+
+  private:
+    static std::atomic<std::size_t> nextIndex;
 };
 
 struct HandleHash
 {
-	std::size_t operator()(const Handle &h) const noexcept
-	{
-		auto hash1 = std::hash<HandleSize>()(h.size);
-		auto hash2 = std::hash<HandleIndex>()(h.index);
-		return hash1 ^= hash2 + 0x9e3779b9 + (hash1 << 6) + (hash1 >> 2);
-	}
+    std::size_t operator()(const Handle &h) const noexcept
+    {
+        auto hash1 = std::hash<HandleType>()(h.type);
+        auto hash2 = std::hash<HandleIndex>()(h.id);
+        return hash1 ^= hash2 + 0x9e3779b9 + (hash1 << 6) + (hash1 >> 2);
+    }
 };
 
 struct HandleEqual
 {
-	bool operator()(const Handle &lhs, const Handle &rhs) const noexcept
-	{
-		return lhs.size == rhs.size && lhs.index == rhs.index;
-	}
+    bool operator()(const Handle &lhs, const Handle &rhs) const noexcept
+    {
+        return lhs.type == rhs.type && lhs.id == rhs.id;
+    }
 };
 
-inline void* aligned_malloc(size_t size, size_t align) noexcept
-{
-    void *result;
-    #ifdef _WIN32
-    result = _aligned_malloc(size, align);
-    #else
-    if(posix_memalign(&result, align, size)) result = 0;
-    #endif
-    return result;
-}
-
-inline void aligned_free(void *ptr) noexcept
-{
-    #ifdef _WIN32
-    _aligned_free(ptr);
-    #else
-    free(ptr);
-    #endif
-
-}
-
+// ALIGNED ARRAY
 template <class T, std::size_t S, std::size_t A>
-struct alignas(A) alignedArray
+struct alignas(A) AlignedArray
 {
-public:
-	T* data() noexcept { return _array.data(); }
-	std::size_t size() noexcept { return S; }
-	std::size_t alignment() noexcept { return A; }
+  public:
+    T *data() noexcept { return _array.data(); }
+    constexpr auto size() noexcept { return _array.size(); }
+    constexpr auto alignment() noexcept { return A; }
 
-	T& operator [](std::size_t i) { return _array[i]; }
-	void* operator new(std::size_t sz) { return aligned_malloc(sz, A); }
-	void operator delete(void* ptr) { return aligned_free(ptr); }
+    T &operator[](std::size_t i) { return _array[i]; }
 
-private:
-	std::array<T, S> _array{};
+  private:
+    std::array<T, S> _array{};
 };
 
-// UUID struct 64 bits
+// UUID STRUCT 64 BITS
 struct UUID64
 {
-	uint64_t uuid;
+    uint64_t uuid;
 
-	UUID64() noexcept
-	{
-		std::random_device r;
-		std::seed_seq s{ r(), r(), r(), r(), r(), r(), r(), r() };
-		std::mt19937_64 e{ s };
+    UUID64()
+    noexcept
+    {
+        std::random_device r;
+        std::seed_seq s{ r(), r(), r(), r(), r(), r(), r(), r() };
+        std::mt19937_64 e{ s };
 
-		auto random = e();
-		uuid =  random ;
-	}
+        auto random = e();
+        uuid = random;
+    }
 
-	UUID64(uint64_t id) noexcept : uuid{id} {}
+    UUID64(uint64_t id)
+    noexcept : uuid{ id } {}
 
-	bool operator==(const UUID64 &rhs) const noexcept
-	{
-		return uuid == rhs.uuid;
-	}
+    bool operator==(const UUID64 &rhs) const noexcept
+    {
+        return uuid == rhs.uuid;
+    }
 
-	bool operator!=(const UUID64 &rhs) const noexcept
-	{
-		return uuid != rhs.uuid;
-	}
+    bool operator!=(const UUID64 &rhs) const noexcept
+    {
+        return uuid != rhs.uuid;
+    }
 };
 
-struct UUID64Cmp {
-	bool operator()(const UUID64& lhs, const UUID64& rhs) const {
-		return lhs.uuid < rhs.uuid;
-	}
+struct UUID64Cmp
+{
+    bool operator()(const UUID64 &lhs, const UUID64 &rhs) const
+    {
+        return lhs.uuid < rhs.uuid;
+    }
 };
+
+#endif //RZ_FRAMEWORK_MISC_HPP

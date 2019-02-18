@@ -1,31 +1,26 @@
-#pragma once
-
-#pragma once
+#ifndef RZ_GAME1_GAMESYSTEM_HPP
+#define RZ_GAME1_GAMESYSTEM_HPP
 
 #include "LuaHooks.hpp"
-#include "System.hpp"
 #include "Planner.hpp"
+#include "System.hpp"
 
-namespace razaron::game::systems
+namespace rz::game::systems
 {
-	using namespace razaron::core::system;
-	using namespace razaron::core::component;
-	using namespace razaron::core::entity;
-	using namespace razaron::graph;
-	using namespace razaron::planner;
+    class GameSystem : public rz::core::System
+    {
+      public:
+        GameSystem(sol::state_view lua);
 
-	class GameSystem : public System
-	{
-	public:
-		GameSystem(sol::state_view lua);
+        ~GameSystem();
 
-		~GameSystem();
+        rz::taskscheduler::Task update(rz::core::EntityMap &entities, double delta);
+        rz::core::ComponentHandle createComponent(rz::core::ComponentType type, std::shared_ptr<void> tuplePtr);
+        bool removeComponent(rz::core::ComponentHandle ch);
 
-		Task update(EntityMap &entities, double delta);
-		ComponentHandle createComponent(ComponentType type, std::shared_ptr<void> tuplePtr);
-		bool removeComponent(ComponentHandle ch);
-
-	private:
-		sol::state_view _lua;
-	};
+      private:
+        sol::state_view _lua;
+    };
 }
+
+#endif //RZ_GAME1_GAMESYSTEM_HPP

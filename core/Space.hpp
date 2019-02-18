@@ -1,4 +1,5 @@
-#pragma once
+#ifndef RZ_CORE_SPACE_HPP
+#define RZ_CORE_SPACE_HPP
 
 #include "Graph.hpp"
 #include "System.hpp"
@@ -7,17 +8,13 @@
 #include <memory>
 
 /*! A space is an abstract partition for a group of entities and their related systems. */
-namespace razaron::core::space
+namespace rz::core
 {
-    using namespace razaron::core::system;
-    using namespace razaron::core::component;
-    using namespace razaron::core::entity;
-
     struct SystemGraphData;
 
-    using SystemGraph = razaron::graph::Graph<std::shared_ptr<System>, char, SystemGraphData>;
-    using SystemGraphVertex = razaron::graph::Vertex<std::shared_ptr<System>, char>;
-    using SystemGraphEdge = razaron::graph::Edge<char>;
+    using SystemGraph = rz::graph::Graph<std::shared_ptr<System>, char, SystemGraphData>;
+    using SystemGraphVertex = rz::graph::Vertex<std::shared_ptr<System>, char>;
+    using SystemGraphEdge = rz::graph::Edge<char>;
 
     /*! The data to be held by the SystemGraph. */
     struct SystemGraphData
@@ -69,13 +66,13 @@ namespace razaron::core::space
         //TODO std::vector<Entity>* getEntities() { return &_entities; } /*!<  */
 
         /*! Calls `registerHandler` on the member EventStream with the given arguments. */
-        void registerHandler(EventType type, EventHandler handler);
+        void registerHandler(rz::eventstream::EventType type, rz::eventstream::EventHandler handler);
 
-		/*! Calls `registerHandler` on the member EventStream with the given arguments. */
-		void extendHandler(EventType type, EventHandler handler);
+        /*! Calls `registerHandler` on the member EventStream with the given arguments. */
+        void extendHandler(rz::eventstream::EventType type, rz::eventstream::EventHandler handler);
 
         /*! Calls `pushEvents` on the member EventStream. */
-        void pushEvents(const std::vector<Event> &events, StreamType streamType);
+        void pushEvents(const std::vector<rz::eventstream::Event> &events, rz::eventstream::StreamType streamType);
 
         EntityMap &getEntities() noexcept { return _entities; };
 
@@ -83,11 +80,13 @@ namespace razaron::core::space
         void updateSystems(double delta);
         void publishEvents();
 
-		UUID64 _id;
+        UUID64 _id;
         SystemGraph _systemGraph;
         double _intervalMax;
         EntityMap _entities;
-        EventStream _eventStream;
+        rz::eventstream::EventStream _eventStream;
         std::vector<UUID64> _deletingEntities;
     };
 }
+
+#endif //RZ_CORE_SPACE_HPP

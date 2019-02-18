@@ -1,6 +1,6 @@
 #include "TransformComponent.hpp"
 
-using namespace razaron::game::components;
+using namespace rz::game::components;
 
 TransformComponent::TransformComponent()
 	: translation{ 0.f, 0.f }, scale{ 0.1f, 0.1f }, _rotation{ 0 }

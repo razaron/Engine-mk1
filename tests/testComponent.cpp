@@ -1,11 +1,11 @@
-#include <set>
-#include <vector>
+#include "Component.hpp"
 
 #include <catch.hpp>
 
-#include "Component.hpp"
+#include <set>
+#include <vector>
 
-using namespace razaron::core::component;
+using namespace rz::core;
 
 SCENARIO("Components are generated with unique IDs", "[component]")
 {
@@ -58,7 +58,7 @@ SCENARIO("Classes deriving from class Component are generated with unique IDs", 
 
         THEN("Each will have a unique ID")
         {
-			std::set<UUID64, UUID64Cmp> s;
+            std::set<UUID64, UUID64Cmp> s;
 
             for (std::size_t i = 0; i < v.size(); i++)
             {
