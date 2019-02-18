@@ -55,6 +55,7 @@ namespace rz::objectpool
         Array _data;
     };
 
+	// Basically a freelist
     template <std::size_t S>
     class Pool
     {
@@ -451,14 +452,35 @@ namespace rz::objectpool
 		*
 		*   @tparam	T			The type of the object to remove from the ObjectPool.
 		*
-		*	@param	handle	The Handle of the object to remove from the ObjectPool.
+		*	@param	Handle	The Handle of the object to remove from the ObjectPool.
 		*/
         template <typename T>
         void erase(const Handle &handle);
 
+		// TODO if shared/unique pointer is made, disable manual erase or do something else to avoid shenanigans
+        /*!	Creates a unique pointer for automatic lifetime tracking of an already allocated object.
+		*	Note: Destroying or reasigning the unique pointer will call `ObjectPool::erase` with the
+		*	appropriate destructor. Also, manually calling `ObjectPool::erase` will invalidate the pointer.
+		*	
+		*   @tparam	T						The type of the object to create a unique pointer for.
+		*
+		*	@param	Handle					The Handle of the object to create a unique pointer for.
+		*
+		*	@return	std::unique_ptr<Handle>	A unique pointer to the object in the ObjectPool.
+		*/
         template <typename T>
         auto makeUnique(const Handle &h);
 
+        /*!	Creates a shared pointer for automatic lifetime tracking of an already allocated object.
+		*	Note: Destroying or reasigning the last shared pointer will call `ObjectPool::erase` with the
+		*	appropriate destructor. Also, manually calling `ObjectPool::erase` will invalidate the pointers.
+		*	
+		*   @tparam	T						The type of the object to create a shared pointer for.
+		*
+		*	@param	Handle					The Handle of the object to create a shared pointer for.
+		*
+		*	@return	std::shared_ptr<Handle>	A shared pointer to the object in the ObjectPool.
+		*/
         template <typename T>
         auto makeShared(const Handle &h);
 

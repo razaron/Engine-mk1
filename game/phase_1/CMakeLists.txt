@@ -4,7 +4,7 @@ file(GLOB GAME_SCRIPTS "*.lua")
 
 add_executable (game-phase-1 ${GAME_SOURCES} ${GAME_HEADERS} ${GAME_SCRIPTS})
 set_target_properties(game-phase-1 PROPERTIES COMPILE_FLAGS ${MY_COMPILE_FLAGS} LINK_FLAGS ${MY_LINKER_FLAGS})
-set_target_properties(game-phase-1 PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "$(ProjectDir)/Debug")
+set_target_properties(game-phase-1 PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "$(ProjectDir)/${CONFIGURATION}")
 target_link_libraries (game-phase-1 ${REQUIRED_LIBS})
 
 # COPY LUA FILES
