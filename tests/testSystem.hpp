@@ -1,58 +1,54 @@
-#pragma once
+#ifndef RZ_TESTS_TESTSYSTEM_HPP
+#define RZ_TESTS_TESTSYSTEM_HPP
 
 #include "System.hpp"
 
-using namespace razaron::core::system;
-using namespace razaron::core::component;
-using namespace razaron::core::entity;
-using namespace razaron::graph;
-
-// 
-class FooSystem : public System
+class FooSystem : public rz::core::System
 {
-public:
-	FooSystem() 
-	{
-		extendHandler(EventType::EVENT_1, [&](const Event& e) {
-			auto data = std::static_pointer_cast<int>(e.data);
+  public:
+    FooSystem()
+    {
+        extendHandler(rz::eventstream::EventType::EVENT_1, [&](const rz::eventstream::Event &e) {
+            auto data = std::static_pointer_cast<int>(e.data);
 
-			count += *data;
-			}
-		);
-	}
-	
-	~FooSystem() {}
+            count += *data;
+        });
+    }
 
-	Task update(EntityMap &, double)
-	{
-		return Task{};
-	}
+    ~FooSystem() {}
 
-	ComponentHandle createComponent(ComponentType, std::shared_ptr<void>) { return ComponentHandle{}; }
-	bool removeComponent(ComponentHandle) { return false; }
+    rz::taskscheduler::Task update(rz::core::EntityMap &, double)
+    {
+        return rz::taskscheduler::Task{};
+    }
 
-	int count{};
-	std::string name{ "FooSystem" };
+    rz::core::ComponentHandle createComponent(rz::core::ComponentType, std::shared_ptr<void>) { return rz::core::ComponentHandle{}; }
+    bool removeComponent(rz::core::ComponentHandle) { return false; }
+
+    int count{};
+    std::string name{ "FooSystem" };
 };
 
-class BarSystem : public System
+class BarSystem : public rz::core::System
 {
-public:
-	BarSystem() {}
-	~BarSystem() {}
+  public:
+    BarSystem() {}
+    ~BarSystem() {}
 
-	Task update(EntityMap &, double)
-	{
-		for (auto i = 0; i < 5; i++)
-		{
-			_eventStream.pushEvent(Event{ UUID64{0}, EventType::EVENT_1, std::make_shared<int>(i) }, StreamType::OUTGOING);
-		}
+    rz::taskscheduler::Task update(rz::core::EntityMap &, double)
+    {
+        for (auto i = 0; i < 5; i++)
+        {
+            _eventStream.pushEvent(rz::eventstream::Event{ UUID64{ 0 }, rz::eventstream::EventType::EVENT_1, std::make_shared<int>(i) }, rz::eventstream::StreamType::OUTGOING);
+        }
 
-		return Task{};
-	}
+        return rz::taskscheduler::Task{};
+    }
 
-	ComponentHandle createComponent(ComponentType, std::shared_ptr<void>) { return ComponentHandle{}; }
-	bool removeComponent(ComponentHandle) { return false; }
+    rz::core::ComponentHandle createComponent(rz::core::ComponentType, std::shared_ptr<void>) { return rz::core::ComponentHandle{}; }
+    bool removeComponent(rz::core::ComponentHandle) { return false; }
 
-	std::string name{ "BarSystem" };
+    std::string name{ "BarSystem" };
 };
+
+#endif //RZ_TESTS_TESTSYSTEM_HPP

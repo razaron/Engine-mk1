@@ -1,27 +1,21 @@
-#pragma once
+#ifndef RZ_CORE_SYSTEM_HPP
+#define RZ_CORE_SYSTEM_HPP
 
 #include "Entity.hpp"
-#include "EventStream.hpp"
 #include "EventData.hpp"
+#include "EventStream.hpp"
 #include "ObjectPool.hpp"
 #include "TaskScheduler.hpp"
 
 #include <set>
-#include <vector>
 #include <utility>
+#include <vector>
 
 /*! Systems manage the memory, events and logic for related components.
 *   For more information and examples, see page \ref core.
 */
-namespace razaron::core::system
+namespace rz::core
 {
-    using namespace razaron::eventstream;
-    using namespace razaron::objectpool;
-    using namespace razaron::taskscheduler;
-    using namespace razaron::graph;
-    using namespace razaron::core::entity;
-    using namespace razaron::core::eventdata;
-
     /*! The abstract base class for a System. */
     class System
     {
@@ -31,9 +25,9 @@ namespace razaron::core::system
 		*	@param		entities	A vector of all Entity objects to access relevant Component objects from.
 		*	@param		delta		The time
 		*
-		*	@returns	Returns the TaskGraph needed to run update logic for the Component objects.
+		*	@return		Returns the TaskGraph needed to run update logic for the Component objects.
 		*/
-        virtual Task update(EntityMap &entities, double delta) = 0;
+        virtual rz::taskscheduler::Task update(EntityMap &entities, double delta) = 0;
 
         /*! Creates a new Component in the ObjectPool. */
         virtual ComponentHandle createComponent(ComponentType type, std::shared_ptr<void> tuplePtr) = 0;
@@ -54,19 +48,19 @@ namespace razaron::core::system
         void removeObject(Handle handle) { _pool.erase<T>(handle); };
 
         /*! Calls `registerHandler` on the member EventStream with the given arguments. */
-        void registerHandler(EventType type, EventHandler handler);
+        void registerHandler(rz::eventstream::EventType type, rz::eventstream::EventHandler handler);
 
-		/*! Calls `extendHandler` on the member EventStream with the given arguments. */
-		void extendHandler(EventType type, EventHandler handler);
+        /*! Calls `extendHandler` on the member EventStream with the given arguments. */
+        void extendHandler(rz::eventstream::EventType type, rz::eventstream::EventHandler handler);
 
         /*! Calls `processEvents` on the member EventStream. */
         void processEvents();
 
-		/*! Calls `pushEvents` on the member EventStream. */
-		void pushEvents(const std::vector<Event> &events, StreamType streamType);
+        /*! Calls `pushEvents` on the member EventStream. */
+        void pushEvents(const std::vector<rz::eventstream::Event> &events, rz::eventstream::StreamType streamType);
 
-		/*! Calls `popEvents` on the member EventStream. */
-		std::vector<Event> popEvents(StreamType streamType);
+        /*! Calls `popEvents` on the member EventStream. */
+        std::vector<rz::eventstream::Event> popEvents(rz::eventstream::StreamType streamType);
 
         /*! Gets the set interval (in ms) between updates for this System. */
         double getInterval() noexcept { return _interval; }
@@ -77,10 +71,12 @@ namespace razaron::core::system
       protected:
         System() noexcept;
 
-		UUID64 _id;									/*!< The unique id of this system. */
-        ObjectPool _pool;							/*!< The ObjectPool used to manage the memory of this System. */
-        double _interval;							/*!< The max interval (in seconds) between updates for this System. */
-        EventStream _eventStream;					/*!< The EventStream belonging to this System. */
-        std::set<ComponentType> _componentTypes;	/*!< The set of ComponentType%s supported by this System. */
+        UUID64 _id;                                /*!< The unique id of this system. */
+        rz::objectpool::ObjectPool _pool;          /*!< The ObjectPool used to manage the memory of this System. */
+        double _interval;                          /*!< The max interval (in seconds) between updates for this System. */
+        rz::eventstream::EventStream _eventStream; /*!< The EventStream belonging to this System. */
+        std::set<ComponentType> _componentTypes;   /*!< The set of ComponentType%s supported by this System. */
     };
 }
+
+#endif //RZ_CORE_SYSTEM_HPP

@@ -1,9 +1,9 @@
-#include <catch.hpp>
-
 #include "Graph.hpp"
 #include "Misc.hpp"
 
-using namespace razaron::graph;
+#include <catch.hpp>
+
+using namespace rz::graph;
 
 struct TestGraphData
 {

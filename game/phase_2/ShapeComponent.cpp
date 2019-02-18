@@ -1,6 +1,6 @@
 #include "ShapeComponent.hpp"
 
-using namespace razaron::game::components;
+using namespace rz::game::components;
 
 ShapeComponent::ShapeComponent()
 	:sides{4}, colour{glm::u8vec3{255, 255, 255}}

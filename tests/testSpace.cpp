@@ -1,6 +1,9 @@
+#include "testSpace.hpp"
+
 #include <catch.hpp>
 
-#include "testSpace.hpp"
+using namespace rz::core;
+using namespace rz::eventstream;
 
 SCENARIO("Spaces manage Systems and Events, updating them in BF order", "[space][system][graph][eventstream]")
 {
@@ -27,14 +30,14 @@ SCENARIO("Spaces manage Systems and Events, updating them in BF order", "[space]
         g.addEdge(V::D, V::F);
         g.addEdge(V::E, V::F);
 
-		g[V::A].data = a;
-		g[V::B].data = b;
-		g[V::C].data = c;
-		g[V::D].data = d;
-		g[V::E].data = e;
-		g[V::F].data = f;
+        g[V::A].data = a;
+        g[V::B].data = b;
+        g[V::C].data = c;
+        g[V::D].data = d;
+        g[V::E].data = e;
+        g[V::F].data = f;
 
-        Space s{g};
+        Space s{ g };
 
         WHEN("Updating the Space to update the Systems")
         {
@@ -66,51 +69,49 @@ SCENARIO("Spaces can add/remove enitities, generating relavant components in the
 {
     GIVEN("A space with some systems")
     {
-		auto a = std::make_shared<SystemA>();
-		auto b = std::make_shared<SystemB>();
-		auto c = std::make_shared<SystemC>();
-		auto d = std::make_shared<SystemD>();
-		auto e = std::make_shared<SystemE>();
-		auto f = std::make_shared<SystemF>();
+        auto a = std::make_shared<SystemA>();
+        auto b = std::make_shared<SystemB>();
+        auto c = std::make_shared<SystemC>();
+        auto d = std::make_shared<SystemD>();
+        auto e = std::make_shared<SystemE>();
+        auto f = std::make_shared<SystemF>();
 
-		SystemGraph g;
+        SystemGraph g;
 
-		// clang-format off
+        // clang-format off
 		enum V { A, B, C, D, E, F, G, H };
 
-		// clang-format on
+        // clang-format on
 
-		g.addEdge(V::A, V::B);
-		g.addEdge(V::A, V::C);
-		g.addEdge(V::B, V::D);
-		g.addEdge(V::C, V::E);
-		g.addEdge(V::D, V::F);
-		g.addEdge(V::E, V::F);
+        g.addEdge(V::A, V::B);
+        g.addEdge(V::A, V::C);
+        g.addEdge(V::B, V::D);
+        g.addEdge(V::C, V::E);
+        g.addEdge(V::D, V::F);
+        g.addEdge(V::E, V::F);
 
-		g[V::A].data = a;
-		g[V::B].data = b;
-		g[V::C].data = c;
-		g[V::D].data = d;
-		g[V::E].data = e;
-		g[V::F].data = f;
+        g[V::A].data = a;
+        g[V::B].data = b;
+        g[V::C].data = c;
+        g[V::D].data = d;
+        g[V::E].data = e;
+        g[V::F].data = f;
 
-        Space s{g};
+        Space s{ g };
 
         WHEN("Creating new Entities (Foo+Bar)")
         {
             std::vector<Event> events;
 
-            for(auto i=0;i<10;i++)
+            for (auto i = 0; i < 10; i++)
             {
                 Event e{
-					UUID64{0}, // Entity ID. 0 because unneeded
+                    UUID64{ 0 },                 // Entity ID. 0 because unneeded
                     EventType::SPACE_NEW_ENTITY, // Event type enum
-                    std::make_shared<core::eventdata::SPACE_NEW_ENTITY>(
+                    std::make_shared<SPACE_NEW_ENTITY>(
                         std::list<ComponentArgs>{
-                            ComponentArgs{ComponentType::COMPONENT_1, nullptr},
-                            ComponentArgs{ComponentType::COMPONENT_2, nullptr}
-                        }
-                    )
+                            ComponentArgs{ ComponentType::COMPONENT_1, nullptr },
+                            ComponentArgs{ ComponentType::COMPONENT_2, nullptr } })
                 };
 
                 events.push_back(e);
@@ -118,7 +119,7 @@ SCENARIO("Spaces can add/remove enitities, generating relavant components in the
 
             s.pushEvents(events, StreamType::INCOMING);
 
-            for(auto i=0;i<100;i++)
+            for (auto i = 0; i < 100; i++)
             {
                 s.update(0);
             }
@@ -129,12 +130,12 @@ SCENARIO("Spaces can add/remove enitities, generating relavant components in the
             {
                 std::vector<Event> events;
 
-                for(auto& [id, entity] : s.getEntities())
+                for (auto & [ id, entity ] : s.getEntities())
                 {
-					Event e{
-                        id, // Entity ID.
+                    Event e{
+                        id,                             // Entity ID.
                         EventType::SPACE_DELETE_ENTITY, // Event type enum
-                        std::make_shared<core::eventdata::SPACE_DELETE_ENTITY>()
+                        std::make_shared<SPACE_DELETE_ENTITY>()
                     };
 
                     events.push_back(e);
@@ -142,7 +143,7 @@ SCENARIO("Spaces can add/remove enitities, generating relavant components in the
 
                 s.pushEvents(events, StreamType::INCOMING);
 
-                for(auto i=0;i<10;i++)
+                for (auto i = 0; i < 10; i++)
                 {
                     s.update(0);
                 }

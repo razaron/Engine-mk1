@@ -1,14 +1,13 @@
-#pragma once
+#ifndef RZ_GAME2_COLLIDERCOMPONENT_HPP
+#define RZ_GAME2_COLLIDERCOMPONENT_HPP
 
 #include "Component.hpp"
 
 #include <glm/glm.hpp>
 
-namespace razaron::game::components
+namespace rz::game::components
 {
-	using namespace razaron::core::component;
-
-	class ColliderComponent : public Component
+    class ColliderComponent : public rz::core::Component
 	{
 	public:
 		ColliderComponent(float radius, int group) :radius{ radius }, group{ group } {}
@@ -19,3 +18,5 @@ namespace razaron::game::components
 		int group;
 	};
 }
+
+#endif //RZ_GAME2_COLLIDERCOMPONENT_HPP

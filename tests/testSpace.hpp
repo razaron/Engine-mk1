@@ -1,66 +1,60 @@
-#pragma once
+#ifndef RZ_TESTS_TESTSPACE_HPP
+#define RZ_TESTS_TESTSPACE_HPP
 
 #include "Space.hpp"
 
-using namespace razaron::core::space;
-using namespace razaron::core::system;
-using namespace razaron::graph;
-using namespace razaron;
-
-class Foo : public Component
+class Foo : public rz::core::Component
 {
 };
 
-class Bar : public Component
+class Bar : public rz::core::Component
 {
 };
 
-class SystemA : public System
+class SystemA : public rz::core::System
 {
   public:
     SystemA()
     {
-        _componentTypes.insert(ComponentType::COMPONENT_1);
+        _componentTypes.insert(rz::core::ComponentType::COMPONENT_1);
     }
 
     ~SystemA() {}
 
-    Task update(EntityMap &, double)
+    rz::taskscheduler::Task update(rz::core::EntityMap &, double)
     {
         count++;
 
-        return Task{};
+        return rz::taskscheduler::Task{};
     }
 
-    ComponentHandle createComponent(ComponentType type, std::shared_ptr<void>)
+    rz::core::ComponentHandle createComponent(rz::core::ComponentType type, std::shared_ptr<void>)
     {
         Handle h;
 
         switch (type)
         {
-        case ComponentType::COMPONENT_1:
-            h = emplaceObject<Foo>();
-            break;
-        default:
-            h = Handle{};
-            break;
+            case rz::core::ComponentType::COMPONENT_1:
+                h = emplaceObject<Foo>();
+                break;
+            default:
+                h = Handle{};
+                break;
         }
 
-        return ComponentHandle{ type, h };
+        return rz::core::ComponentHandle{ type, h };
     }
 
-    bool removeComponent(ComponentHandle ch)
+    bool removeComponent(rz::core::ComponentHandle ch)
     {
-        Handle h;
-
         switch (ch.first)
         {
-        case ComponentType::COMPONENT_1:
-            removeObject<Foo>(ch.second);
-            break;
-        default:
-            return false;
-            break;
+            case rz::core::ComponentType::COMPONENT_1:
+                removeObject<Foo>(ch.second);
+                break;
+            default:
+                return false;
+                break;
         }
 
         return true;
@@ -72,20 +66,20 @@ class SystemA : public System
     std::string sysName{ "SystemA" };
 };
 
-class SystemC : public System
+class SystemC : public rz::core::System
 {
   public:
     SystemC() {}
     ~SystemC() {}
 
-	Task update(EntityMap &, double)
-	{
-		count++;
-		return Task{};
-	}
+    rz::taskscheduler::Task update(rz::core::EntityMap &, double)
+    {
+        count++;
+        return rz::taskscheduler::Task{};
+    }
 
-	ComponentHandle createComponent(ComponentType, std::shared_ptr<void>) { return ComponentHandle{}; }
-	bool removeComponent(ComponentHandle) { return false; }
+    rz::core::ComponentHandle createComponent(rz::core::ComponentType, std::shared_ptr<void>) { return rz::core::ComponentHandle{}; }
+    bool removeComponent(rz::core::ComponentHandle) { return false; }
 
     int count{};
 
@@ -93,51 +87,49 @@ class SystemC : public System
     std::string sysName{ "SystemC" };
 };
 
-class SystemD : public System
+class SystemD : public rz::core::System
 {
   public:
     SystemD()
     {
-        _componentTypes.insert(ComponentType::COMPONENT_2);
+        _componentTypes.insert(rz::core::ComponentType::COMPONENT_2);
     }
     ~SystemD() {}
 
-    Task update(EntityMap &, double)
+    rz::taskscheduler::Task update(rz::core::EntityMap &, double)
     {
         count++;
 
-        return Task{};
+        return rz::taskscheduler::Task{};
     }
 
-    ComponentHandle createComponent(ComponentType type, std::shared_ptr<void>)
+    rz::core::ComponentHandle createComponent(rz::core::ComponentType type, std::shared_ptr<void>)
     {
         Handle h;
 
         switch (type)
         {
-        case ComponentType::COMPONENT_2:
-            h = emplaceObject<Bar>();
-            break;
-        default:
-            h = Handle{};
-            break;
+            case rz::core::ComponentType::COMPONENT_2:
+                h = emplaceObject<Bar>();
+                break;
+            default:
+                h = Handle{};
+                break;
         }
 
-        return ComponentHandle{ type, h };
+        return rz::core::ComponentHandle{ type, h };
     }
 
-    bool removeComponent(ComponentHandle ch)
+    bool removeComponent(rz::core::ComponentHandle ch)
     {
-        Handle h;
-
         switch (ch.first)
         {
-        case ComponentType::COMPONENT_2:
-            removeObject<Bar>(ch.second);
-            break;
-        default:
-            return false;
-            break;
+            case rz::core::ComponentType::COMPONENT_2:
+                removeObject<Bar>(ch.second);
+                break;
+            default:
+                return false;
+                break;
         }
 
         return true;
@@ -149,20 +141,20 @@ class SystemD : public System
     std::string sysName{ "SystemD" };
 };
 
-class SystemB : public System
+class SystemB : public rz::core::System
 {
   public:
     SystemB() {}
     ~SystemB() {}
 
-	Task update(EntityMap &, double)
-	{
-		count++;
-		return Task{};
-	}
+    rz::taskscheduler::Task update(rz::core::EntityMap &, double)
+    {
+        count++;
+        return rz::taskscheduler::Task{};
+    }
 
-	ComponentHandle createComponent(ComponentType, std::shared_ptr<void>) { return ComponentHandle{}; }
-	bool removeComponent(ComponentHandle) { return false; }
+    rz::core::ComponentHandle createComponent(rz::core::ComponentType, std::shared_ptr<void>) { return rz::core::ComponentHandle{}; }
+    bool removeComponent(rz::core::ComponentHandle) { return false; }
 
     int count{};
 
@@ -170,20 +162,20 @@ class SystemB : public System
     std::string sysName{ "SystemB" };
 };
 
-class SystemE : public System
+class SystemE : public rz::core::System
 {
   public:
     SystemE() {}
     ~SystemE() {}
 
-	Task update(EntityMap &, double)
-	{
-		count++;
-		return Task{};
-	}
+    rz::taskscheduler::Task update(rz::core::EntityMap &, double)
+    {
+        count++;
+        return rz::taskscheduler::Task{};
+    }
 
-	ComponentHandle createComponent(ComponentType, std::shared_ptr<void>) { return ComponentHandle{}; }
-	bool removeComponent(ComponentHandle) { return false; }
+    rz::core::ComponentHandle createComponent(rz::core::ComponentType, std::shared_ptr<void>) { return rz::core::ComponentHandle{}; }
+    bool removeComponent(rz::core::ComponentHandle) { return false; }
 
     int count{};
 
@@ -191,23 +183,25 @@ class SystemE : public System
     std::string sysName{ "SystemE" };
 };
 
-class SystemF : public System
+class SystemF : public rz::core::System
 {
   public:
     SystemF() {}
     ~SystemF() {}
 
-    Task update(EntityMap &, double)
+    rz::taskscheduler::Task update(rz::core::EntityMap &, double)
     {
         count++;
-        return Task{};
+        return rz::taskscheduler::Task{};
     }
 
-	ComponentHandle createComponent(ComponentType, std::shared_ptr<void>) { return ComponentHandle{}; }
-	bool removeComponent(ComponentHandle) { return false; }
+    rz::core::ComponentHandle createComponent(rz::core::ComponentType, std::shared_ptr<void>) { return rz::core::ComponentHandle{}; }
+    bool removeComponent(rz::core::ComponentHandle) { return false; }
 
     int count{};
 
   private:
     std::string sysName{ "SystemF" };
 };
+
+#endif //RZ_TESTS_TESTSPACE_HPP
