@@ -12,6 +12,7 @@
 #include <typeinfo>
 #include <unordered_map>
 #include <vector>
+#include <cstddef>
 
 const std::size_t OBJECT_POOL_PAGE_LENGTH = 32;
 const std::size_t OBJECT_POOL_PAGE_ALIGNMENT = 64;
@@ -27,6 +28,58 @@ const std::size_t OBJECT_SIZE_64 = sizeof(std::size_t) * 64;
 /*! Things related to an aligned generic object pool implementation. */
 namespace rz::objectpool
 {
+  namespace error
+  {
+      class InvalidPointer : public std::invalid_argument
+      {
+        public:
+          InvalidPointer()
+              : std::invalid_argument{ getMessage() } {}
+
+        private:
+          static std::string getMessage()
+          {
+              std::stringstream message;
+              message << "Internal Error: ptr not found in Pool.";
+
+              return message.str();
+          }
+      };
+
+      class HandleOutOfRange : public std::out_of_range
+      {
+        public:
+          HandleOutOfRange(const Handle &h, std::size_t s)
+              : std::out_of_range{ getMessage(h, s) } {}
+
+        private:
+          static std::string getMessage(const Handle &h, std::size_t s)
+          {
+              std::stringstream message;
+              message << "User Error: Handle{ type: " << h.type << ", id: " << h.id << " }"
+                      << " not found in Pool<" << s << ">.";
+
+              return message.str();
+          }
+      };
+
+      class TypeMismatch : public std::invalid_argument
+      {
+        public:
+          TypeMismatch(const Handle &handle, const std::type_info &type)
+              : std::invalid_argument{ getMessage(handle, type) } {}
+
+        private:
+          static std::string getMessage(const Handle &handle, const std::type_info &type)
+          {
+              std::stringstream message;
+              message << "User Error: Type mismatch, Handle::type{" << handle.type << "} != T::hash_code{ " << type.hash_code() << "}. T::name: " << type.name();
+
+              return message.str();
+          }
+      };
+  }
+
     /*! @cond */
     template <std::size_t S>
     class Page
@@ -461,7 +514,7 @@ namespace rz::objectpool
         /*!	Creates a unique pointer for automatic lifetime tracking of an already allocated object.
 		*	Note: Destroying or reasigning the unique pointer will call `ObjectPool::erase` with the
 		*	appropriate destructor. Also, manually calling `ObjectPool::erase` will invalidate the pointer.
-		*	
+		*
 		*   @tparam	T						The type of the object to create a unique pointer for.
 		*
 		*	@param	Handle					The Handle of the object to create a unique pointer for.
@@ -474,7 +527,7 @@ namespace rz::objectpool
         /*!	Creates a shared pointer for automatic lifetime tracking of an already allocated object.
 		*	Note: Destroying or reasigning the last shared pointer will call `ObjectPool::erase` with the
 		*	appropriate destructor. Also, manually calling `ObjectPool::erase` will invalidate the pointers.
-		*	
+		*
 		*   @tparam	T						The type of the object to create a shared pointer for.
 		*
 		*	@param	Handle					The Handle of the object to create a shared pointer for.
@@ -528,7 +581,7 @@ namespace rz::objectpool
         using Pool = typename PoolCond<T>::type;
         auto &pool = std::get<Pool>(_pools);
 
-        return pool.emplace<T>(args...);
+        return pool.template emplace<T>(args...);
     }
 
     template <typename T>
@@ -541,7 +594,7 @@ namespace rz::objectpool
         if (handle.type != typeid(T).hash_code())
             throw error::TypeMismatch{ handle, typeid(T) };
 
-        return pool.get<T>(handle);
+        return pool.template get<T>(handle);
     }
 
     template <typename T>
@@ -554,7 +607,7 @@ namespace rz::objectpool
         if (handle.type != typeid(T).hash_code())
             throw error::TypeMismatch{ handle, typeid(T) };
 
-        return pool.erase<T>(handle);
+        return pool.template erase<T>(handle);
     }
 
     template <typename T>
@@ -568,11 +621,11 @@ namespace rz::objectpool
         };
 
         return std::unique_ptr<Handle, decltype(destroy)>(new Handle{ handle }, destroy);
-    }
+      }
 
-    template <typename T>
-    auto ObjectPool::makeShared(const Handle &handle)
-    {
+      template <typename T>
+      auto ObjectPool::makeShared(const Handle &handle)
+      {
         if (handle.type != typeid(T).hash_code())
             throw error::TypeMismatch{ handle, typeid(T) };
 
@@ -626,56 +679,6 @@ namespace rz::objectpool
     }
 }
 
-namespace rz::objectpool::error
-{
-    class InvalidPointer : public std::invalid_argument
-    {
-      public:
-        InvalidPointer()
-            : std::invalid_argument{ getMessage() } {}
 
-      private:
-        static std::string getMessage()
-        {
-            std::stringstream message;
-            message << "Internal Error: ptr not found in Pool.";
-
-            return message.str();
-        }
-    };
-
-    class HandleOutOfRange : public std::out_of_range
-    {
-      public:
-        HandleOutOfRange(const Handle &h, std::size_t s)
-            : std::out_of_range{ getMessage(h, s) } {}
-
-      private:
-        static std::string getMessage(const Handle &h, std::size_t s)
-        {
-            std::stringstream message;
-            message << "User Error: Handle{ type: " << h.type << ", id: " << h.id << " }"
-                    << " not found in Pool<" << s << ">.";
-
-            return message.str();
-        }
-    };
-
-    class TypeMismatch : public std::invalid_argument
-    {
-      public:
-        TypeMismatch(const Handle &handle, const std::type_info &type)
-            : std::invalid_argument{ getMessage(handle, type) } {}
-
-      private:
-        static std::string getMessage(const Handle &handle, const std::type_info &type)
-        {
-            std::stringstream message;
-            message << "User Error: Type mismatch, Handle::type{" << handle.type << "} != T::hash_code{ " << type.hash_code() << "}. T::name: " << type.name();
-
-            return message.str();
-        }
-    };
-}
 
 #endif //RZ_FRAMEWORK_OBJECTPOOL_HPP
