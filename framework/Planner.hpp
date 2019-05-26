@@ -60,6 +60,7 @@ namespace rz::planner
         Operation op;         /*!< The Operation used to evaluate or apply a condition. */
         int weight;           /*!< A weight applied to the result of distToSatisfy. */
 
+        //TODO consider whether these should be ommited in release builds
         std::string debugID;
         std::string debugType;
 
@@ -483,6 +484,6 @@ namespace rz::planner
 
         std::vector<std::tuple<ConditionSet, Action, ActionSet>> _oldPlans;
     };
-}
+} // namespace rz::planner
 
 #endif //RZ_FRAMEWORK_PLANNER_HPP

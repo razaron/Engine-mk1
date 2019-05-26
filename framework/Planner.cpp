@@ -5,7 +5,7 @@ using namespace rz::graph;
 
 ActionSet Planner::plan(ActionSet actions, Action goal)
 {
-    for (auto & [ ws, g, p ] : _oldPlans)
+    for (auto &[ws, g, p] : _oldPlans)
     {
         if (g == goal && std::equal(ws.begin(), ws.end(), _worldState.begin(), _worldState.end(), [](const Condition &a, const Condition &b) { return a.id == b.id && a.type == b.type && a.value == b.value; }))
         {
@@ -98,7 +98,39 @@ void Planner::savePlan(std::string filename)
 
     _lastPlan.breadthFirstTraversal(0);
 
-    const auto vAttr = [](const ActionVertex &v) {
+    std::map<Operation, std::string> opMap{
+        { Operation::ASSIGN, "=" },
+        { Operation::PLUS, "+" },
+        { Operation::MINUS, "-" },
+        { Operation::TIMES, "*" },
+        { Operation::DIVIDE, "/" },
+        { Operation::EQUAL, "==" },
+        { Operation::GREATER, ">" },
+        { Operation::GREATER_EQUAL, ">=" },
+        { Operation::LESS, "<" },
+        { Operation::LESS_EQUAL, "<=" },
+        { Operation::NONE, ":" }
+    };
+
+    auto getValue = [](Condition &cond) {
+        switch (cond.value.index())
+        {
+            case 0:
+            {
+                return std::string{ (std::get<bool>(cond.value)) ? "true" : "false" };
+            }
+            case 1:
+            {
+                return std::to_string(std::get<int>(cond.value));
+            }
+            default:
+            {
+                throw std::runtime_error("This should be impossible.");
+            }
+        }
+    };
+
+    const auto vAttr = [&opMap, &getValue](const ActionVertex &v) {
         const auto id = v.id;
         const auto name = v.data.action.name;
 
@@ -120,10 +152,47 @@ void Planner::savePlan(std::string filename)
                 colour = "red";
                 break;
             }
+            case State::WHITE:
+            {
+                colour = "white";
+                break;
+            }
+
+            case State::BLACK:
+            {
+                colour = "black";
+                break;
+            }
         }
 
         std::stringstream attributes;
-        attributes << std::to_string(id) << "[label = \"" << name << "\" style=filled fillcolor=" << colour << "];\n";
+        attributes << std::to_string(id) << "[label=\"" << name << "\" tooltip=\"";
+
+        attributes << "Current State:\\n";
+        for (auto cond : v.data.currentState)
+        {
+            attributes << "&#9;&#9;&#9;&#9;" << cond.debugID << "(" << cond.debugType << ") " << opMap[cond.op] << " " << getValue(cond) << "\\n";
+        }
+
+        attributes << "Goal State:\\n";
+        for (auto cond : v.data.goalState)
+        {
+            attributes << "&#9;&#9;&#9;&#9;" << cond.debugID << "(" << cond.debugType << ") " << opMap[cond.op] << " " << getValue(cond) << "\\n";
+        }
+
+        attributes << "\\nPre-Conditions:\\n";
+        for (auto cond : v.data.action.preconditions)
+        {
+            attributes << "&#9;&#9;&#9;&#9;" << cond.debugID << "(" << cond.debugType << ") " << opMap[cond.op] << " " << getValue(cond) << "\\n";
+        }
+
+        attributes << "Post-Conditions:\\n";
+        for (auto cond : v.data.action.postconditions)
+        {
+            attributes << "&#9;&#9;&#9;&#9;" << cond.debugID << "(" << cond.debugType << ") " << opMap[cond.op] << " " << getValue(cond) << "\\n";
+        }
+
+        attributes << "\" style=filled fillcolor=" << colour << "];\n";
 
         return attributes.str();
     };
@@ -133,7 +202,7 @@ void Planner::savePlan(std::string filename)
 
         auto node = _lastPlan[e.target].data;
 
-        attr << "[dir=back label=\"F(" << node.f << ") G(" << node.g << ") H(" << node.h << ")\"]\n";
+        attr << "[dir=back label=\"F(" << node.f << ")\" labeltooltip=\"G(" << node.g << ")\\nH(" << node.h << ")\"]\n";
 
         return attr.str();
     };
