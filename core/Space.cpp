@@ -135,7 +135,7 @@ void Space::publishEvents()
 
     // Gather all outgoing events
     _systemGraph.reset();
-    _systemGraph.vertexFuncs[State::WHITE] = [&events](SystemGraphVertex &v, SystemGraph &g) {
+    _systemGraph.vertexFuncs[State::WHITE] = [&events](SystemGraphVertex &v, SystemGraph &) {
         auto temp = v.data->popEvents(StreamType::OUTGOING);
         events.insert(events.end(), temp.begin(), temp.end());
     };
@@ -147,7 +147,7 @@ void Space::publishEvents()
 
     // Publish gathered events to systems incoming streams
     _systemGraph.reset();
-    _systemGraph.vertexFuncs[State::WHITE] = [&events](SystemGraphVertex &v, SystemGraph &g) {
+    _systemGraph.vertexFuncs[State::WHITE] = [&events](SystemGraphVertex &v, SystemGraph &) {
         v.data->pushEvents(events, StreamType::INCOMING);
     };
     _systemGraph.breadthFirstTraversal(0);

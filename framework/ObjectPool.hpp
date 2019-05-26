@@ -193,7 +193,7 @@ namespace rz::objectpool
         LineType *nextFree = _firstFreeLine->next;
 
         // Construct object to the location of current free pointer
-        auto ptr = new (curFree) T{ args... };
+        new (curFree) T{ args... };
 
         // Set the pools first free pointer to the next free pointer
         _firstFreeLine = nextFree;
@@ -302,7 +302,7 @@ namespace rz::objectpool
         auto page = new PageType;
 
         // Initialize the pages lines with pointers pointing to the next free line
-        auto i = 0;
+        auto i = 0u;
         for (; i < OBJECT_POOL_PAGE_LENGTH - 1; i++)
         {
             page->data()[i].next = &page->data()[i + 1];

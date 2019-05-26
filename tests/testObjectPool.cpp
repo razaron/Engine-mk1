@@ -65,7 +65,7 @@ SCENARIO("ObjectPools can add pages as necessary", "[objectpool]")
         WHEN(std::to_string(OBJECT_POOL_PAGE_LENGTH) + " OBJECT_SIZE_2-byte objects are pushed on")
         {
 
-            for (auto i = 0; i < OBJECT_POOL_PAGE_LENGTH; i++)
+            for (auto i = 0u; i < OBJECT_POOL_PAGE_LENGTH; i++)
             {
                 p.push(std::array<char, OBJECT_SIZE_2>{ "1234567" });
             }
@@ -88,7 +88,7 @@ SCENARIO("ObjectPools can add pages as necessary", "[objectpool]")
         WHEN(std::to_string(OBJECT_POOL_PAGE_LENGTH) + " OBJECT_SIZE_4-byte objects are pushed on")
         {
 
-            for (auto i = 0; i < OBJECT_POOL_PAGE_LENGTH; i++)
+            for (auto i = 0u; i < OBJECT_POOL_PAGE_LENGTH; i++)
             {
                 p.push(std::array<char, OBJECT_SIZE_4>{ "1234567" });
             }
@@ -111,7 +111,7 @@ SCENARIO("ObjectPools can add pages as necessary", "[objectpool]")
         WHEN(std::to_string(OBJECT_POOL_PAGE_LENGTH) + " OBJECT_SIZE_8-byte objects are pushed on")
         {
 
-            for (auto i = 0; i < OBJECT_POOL_PAGE_LENGTH; i++)
+            for (auto i = 0u; i < OBJECT_POOL_PAGE_LENGTH; i++)
             {
                 p.push(std::array<char, OBJECT_SIZE_8>{ "1234567" });
             }
@@ -134,7 +134,7 @@ SCENARIO("ObjectPools can add pages as necessary", "[objectpool]")
         WHEN(std::to_string(OBJECT_POOL_PAGE_LENGTH) + " OBJECT_SIZE_16-byte objects are pushed on")
         {
 
-            for (auto i = 0; i < OBJECT_POOL_PAGE_LENGTH; i++)
+            for (auto i = 0u; i < OBJECT_POOL_PAGE_LENGTH; i++)
             {
                 p.push(std::array<char, OBJECT_SIZE_16>{ "1234567" });
             }
@@ -157,7 +157,7 @@ SCENARIO("ObjectPools can add pages as necessary", "[objectpool]")
         WHEN(std::to_string(OBJECT_POOL_PAGE_LENGTH) + " OBJECT_SIZE_32-byte objects are pushed on")
         {
 
-            for (auto i = 0; i < OBJECT_POOL_PAGE_LENGTH; i++)
+            for (auto i = 0u; i < OBJECT_POOL_PAGE_LENGTH; i++)
             {
                 p.push(std::array<char, OBJECT_SIZE_32>{ "1234567" });
             }
@@ -180,7 +180,7 @@ SCENARIO("ObjectPools can add pages as necessary", "[objectpool]")
         WHEN(std::to_string(OBJECT_POOL_PAGE_LENGTH) + " OBJECT_SIZE_64-byte objects are pushed on")
         {
 
-            for (auto i = 0; i < OBJECT_POOL_PAGE_LENGTH; i++)
+            for (auto i = 0u; i < OBJECT_POOL_PAGE_LENGTH; i++)
             {
                 p.push(std::array<char, OBJECT_SIZE_64>{ "1234567" });
             }
@@ -235,7 +235,7 @@ SCENARIO("ObjectPools can retrieve objects from Handles", "[objectpool]")
 
     GIVEN("An object pool with MULTIPLE pages of objects")
     {
-        for (auto i = 0; i < OBJECT_POOL_PAGE_LENGTH * 5; i++)
+        for (auto i = 0u; i < OBJECT_POOL_PAGE_LENGTH * 5; i++)
         {
             h2.push_back(p.push(std::array<int, OBJECT_SIZE_2 / sizeof(int)>{ 2 }));
             h4.push_back(p.push(std::array<int, OBJECT_SIZE_4 / sizeof(int)>{ 4 }));
@@ -368,7 +368,7 @@ SCENARIO("ObjectPools can reorder objects to earlier free positions, then remove
         std::vector<Handle> v1, v2, v3, v4, v5, v6;
 
         // Creates 4 pages in every sub-pool
-        for (auto i = 0; i < OBJECT_POOL_PAGE_LENGTH * 4; i++)
+        for (auto i = 0u; i < OBJECT_POOL_PAGE_LENGTH * 4; i++)
         {
             v1.push_back(p.push(std::array<int, OBJECT_SIZE_2 / sizeof(int)>{ 2 }));
             v2.push_back(p.push(std::array<int, OBJECT_SIZE_4 / sizeof(int)>{ 4 }));
@@ -527,7 +527,7 @@ SCENARIO("ObjectPools have helper functions to support automated lifetime manage
 template <typename T, std::size_t N>
 void pusher(ObjectPool &pool, T value, std::vector<Handle> &handles, std::mutex &mutex)
 {
-    for (auto i = 0; i < N; i++)
+    for (auto i = 0u; i < N; i++)
     {
         Handle h = pool.push(value);
 
@@ -541,7 +541,7 @@ void pusher(ObjectPool &pool, T value, std::vector<Handle> &handles, std::mutex 
 template <typename T, std::size_t N>
 void eraser(ObjectPool &pool, std::vector<Handle> &handles, std::mutex &mutex, std::atomic<unsigned> &counter)
 {
-    for (auto i = 0; i < N; i++)
+    for (auto i = 0u; i < N; i++)
     {
         Handle h{};
 
@@ -564,9 +564,9 @@ void eraser(ObjectPool &pool, std::vector<Handle> &handles, std::mutex &mutex, s
 }
 
 template <typename T>
-void reorderer(ObjectPool &pool, std::vector<Handle> &handles, std::mutex &mutex)
+void reorderer(ObjectPool &pool, std::vector<Handle> &, std::mutex &)
 {
-    for (auto i = 0; i < 10; i++)
+    for (auto i = 0u; i < 10; i++)
     {
         std::this_thread::sleep_for(std::chrono::duration<double>(0.1));
         pool.defragment();
