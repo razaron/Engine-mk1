@@ -36,14 +36,13 @@ namespace rz::graph
     template <class V, class E>
     struct Vertex
     {
-        V data;                           /*!< The data held by this Vertex. */
-        std::list<Edge<E>> adjacencyList; /*!< An std::list of connected Edge%s. */
-        std::size_t id;                   /*!< An ID that doubles as an index value. */
-        State state;
-        ; /*!< The current state of the Vertex, represented by a bitfield. */
+        V data{};                           /*!< The data held by this Vertex. */
+        std::list<Edge<E>> adjacencyList{}; /*!< An std::list of connected Edge%s. */
+        std::size_t id{};                   /*!< An ID that doubles as an index value. */
+        State state{};                      /*!< The current state of the Vertex, represented by a bitfield. */
 
         /*! Constructs an empty Vertex with the ID `index`. */
-        Vertex(std::size_t index) : data{}, adjacencyList{}, id{ index }, state{} {}
+        Vertex(std::size_t index) : id{ index } {}
 
         /*! Basic equality comparator. */
         bool operator==(const Vertex<V, E> &rhs) const noexcept
@@ -59,11 +58,11 @@ namespace rz::graph
     template <class E>
     struct Edge
     {
-        E data;             /*!< The data held by this Edge. */
-        std::size_t source; /*!< The ID of the source Vertex. */
-        std::size_t target; /*!< The ID of the target Vertex. */
-        State state;        /*!< The current state of the Edge, represented by a bitfield. */
-        float cost;
+        E data{};             /*!< The data held by this Edge. */
+        std::size_t source{}; /*!< The ID of the source Vertex. */
+        std::size_t target{}; /*!< The ID of the target Vertex. */
+        State state{};        /*!< The current state of the Edge, represented by a bitfield. */
+        float cost{};
     };
 
     /*!	A template class for representing Graph objects.
@@ -447,6 +446,6 @@ namespace rz::graph
         if (!unvisited)
             (*this)[origin].state = State::GREY;
     }
-}
+} // namespace rz::graph
 
 #endif //RZ_FRAMEWORK_GRAPH_HPP
