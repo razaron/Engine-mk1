@@ -7,3 +7,7 @@ small {
     font-weight: bold;
     vertical-align: top;
 }
+
+div.fragment {
+    padding: 16px;
+}

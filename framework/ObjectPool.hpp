@@ -231,19 +231,26 @@ namespace rz::objectpool
     inline void Pool<S>::defragment()
     {
         std::scoped_lock lk{ _mutex };
-
+        
         using Buffer = std::array<std::byte, S>;
 
+        // TODO ??? return `count` to log objects moved or get rid of `count` 
         int count = 0;
+        // Loop throught allocated objects
         for (auto & [ hdl, ptr ] : _map)
         {
+            // If allocated object is located after first free position
             if (getIndex(ptr) > _firstFreeLine->index)
             {
                 count++;
 
+                // Store raw value of object
                 Buffer data = *static_cast<Buffer *>(ptr);
 
+                // Erases underlying object data without removing it from the map
                 eraseImpl<Buffer>(hdl, false);
+
+                // Moves object data to earliest free location in Pool and updates previously mapped pointer
                 ptr = pushImpl(std::move(data));
             }
         }
@@ -498,7 +505,9 @@ namespace rz::objectpool
         template <typename T>
         T *get(const Handle &handle);
 
-        //TODO template<typename T> std::vector<T*> get(std::vector<Handle> handles);
+        //TODO template<typename T> std::vector<T*> get(std::unique_ptr<Handle> &);        
+        //TODO template<typename T> std::vector<T*> get(std::shared_ptr<Handle> &);        
+        //TODO template<typename T> std::vector<T*> get(const std::vector<Handle> &);
 
         /*!	Removes an object from the ObjectPool and free's the space for reuse.
 		*	It calls the destructor for non-trivially destructible objects.
@@ -523,7 +532,10 @@ namespace rz::objectpool
 		*/
         template <typename T>
         auto makeUnique(const Handle &h);
-
+        // TODO template <typename T> auto makeUnique(Args ...args);
+        // TODO template <typename T> auto makeUnique(T &&);
+        // TODO template <typename T> auto makeUnique(const T &);
+        
         /*!	Creates a shared pointer for automatic lifetime tracking of an already allocated object.
 		*	Note: Destroying or reasigning the last shared pointer will call `ObjectPool::erase` with the
 		*	appropriate destructor. Also, manually calling `ObjectPool::erase` will invalidate the pointers.
@@ -536,8 +548,13 @@ namespace rz::objectpool
 		*/
         template <typename T>
         auto makeShared(const Handle &h);
+        // TODO template <typename T> auto makeShared(Args ...args);
+        // TODO template <typename T> auto makeShared(T &&);
+        // TODO template <typename T> auto makeShared(const T &);
 
-        /*! Defragments the ObjectPool such that objects located after the first free position are moved to earlier free positions. */
+        /*! Defragments the ObjectPool such that objects located after the first free position are moved to earlier free positions. 
+        *   Note: Potentialy invalidates pointers but does not invalidate Handle%s. 
+        */
         void defragment();
 
         /*! Deletes unused pages from Pool%s. */

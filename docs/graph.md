@@ -2,38 +2,12 @@ Graph                         {#graph}
 =============
 The Graph library is used to create directed graphs (cyclic or acyclic) and run various traversal algorithms on them.
 
-## Example
+## Examples
 
 ### Setting Up
 It's generally a good idea to define some commonly used types and aliases beforehand.
 
 ```{cpp}
-template <class V, class E, class G>
-inline void Graph<V, E, G>::addEdge(std::size_t source, std::size_t target, E edgeData)
-{
-    auto it = std::find(_vertices.begin(), _vertices.end(), Vertex<V, E>{ source });
-
-    if (it == _vertices.end())
-    {
-        if (source >= _vertices.size())
-            _vertices.emplace_back(source);
-        else
-            _vertices.emplace(_vertices.begin() + source, source);
-    }
-
-    it = std::find(_vertices.begin(), _vertices.end(), Vertex<V, E>{ target });
-
-    if (it == _vertices.end())
-    {
-        if (target >= _vertices.size())
-            _vertices.emplace_back(target);
-        else
-            _vertices.emplace(_vertices.begin() + target, target);
-    }
-
-    (*this)[source].adjacencyList.push_back({ edgeData, source, target, State::WHITE });
-}
-
 // Define custom data types
 struct VertexData {char name; int value;};
 using V = VertexData;
