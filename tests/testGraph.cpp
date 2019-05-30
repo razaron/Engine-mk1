@@ -16,13 +16,14 @@ typedef Graph<int, const char *, TestGraphData> TestGraph;
 typedef Vertex<int, const char *> TestVertex;
 typedef Edge<const char *> TestEdge;
 
+// TODO test depth first and branch traversal
+// TODO test dot file generation
 SCENARIO("Graphs can be traversed in several ways", "[graph]")
 {
     GIVEN("The Graph {{0,1}, {0,2}, {1,3}, {2,3}, {3,4}}")
     {
         TestGraph g;
 
-        g.addEdge(0, 0, "0");
         g.addEdge(0, 1, "0->1");
         g.addEdge(0, 2, "0->2");
         g.addEdge(1, 3, "1->3");
@@ -37,7 +38,7 @@ SCENARIO("Graphs can be traversed in several ways", "[graph]")
 
         REQUIRE(g.order() == 5);
 
-        WHEN("Performing depth first search")
+        WHEN("Performing a breadth first traversal")
         {
             g.vertexFuncs[State::WHITE] = [](TestVertex &v, TestGraph &g) {
                 g.data.v.push_back(v.data);
@@ -55,7 +56,6 @@ SCENARIO("Graphs can call user defined functions on Vertex and Edge discovery", 
 {
     TestGraph g;
 
-    g.addEdge(0, 0, "0");
     g.addEdge(0, 1, "0->1");
     g.addEdge(0, 2, "0->2");
     g.addEdge(1, 3, "1->3");
@@ -84,7 +84,7 @@ SCENARIO("Graphs can call user defined functions on Vertex and Edge discovery", 
 
             g.breadthFirstTraversal(0);
 
-            REQUIRE(g.data.numEdges == 6);
+            REQUIRE(g.data.numEdges == 5);
             REQUIRE(g.data.numVertices == 5);
         }
     }
