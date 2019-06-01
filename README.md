@@ -25,7 +25,7 @@ cd ../build
 cmake -G "Unix Makefiles" ../engine-mk1/
 make
 ````
-## TODO
+## To Do
 ### Documentation
 - Comment source (non-doxy)
 - Flesh out doxy with guidelines

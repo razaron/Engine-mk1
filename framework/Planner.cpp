@@ -192,7 +192,7 @@ void Planner::savePlan(std::string filename)
             attributes << "&#9;&#9;&#9;&#9;" << cond.debugID << "(" << cond.debugType << ") " << opMap[cond.op] << " " << getValue(cond) << "\\n";
         }
 
-        attributes << "\" style=filled fillcolor=" << colour << "];\n";
+        attributes << "\" style=filled fillcolor=" << colour << "]";
 
         return attributes.str();
     };
@@ -202,7 +202,7 @@ void Planner::savePlan(std::string filename)
 
         auto node = _lastPlan[e.target].data;
 
-        attr << "[dir=back label=\"F(" << node.f << ")\" labeltooltip=\"G(" << node.g << ")\\nH(" << node.h << ")\"]\n";
+        attr << "[dir=back label=\"F(" << node.f << ")\" labeltooltip=\"G(" << node.g << ")\\nH(" << node.h << ")\"]";
 
         return attr.str();
     };

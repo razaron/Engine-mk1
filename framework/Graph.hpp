@@ -80,6 +80,9 @@ namespace rz::graph
       public:
         Graph(std::size_t prealloc = 0) noexcept; /*!< Default constructor. */
 
+        /*  TODO have invalid index fail compilation. 
+            Idea: have static and dynamic mode. dynamic mode as is, static mode requires (templated) preallocation against which static checks can be done.
+        */
         /*!	Get's a reference to the Vertex with `id == index`.
 		*
 		*	@exception	std::out_of_range	index out of range for _vertices.
@@ -131,14 +134,18 @@ namespace rz::graph
 		*	If no Vertex objects exist with the IDs `source` or `target`, constructs and adds new Vertex
 		*   objects for the missing IDs to the Graph.
 		*
-		*	@param	edgeData	The data held by the edge.
 		*	@param	source		The ID of the source Vertex.
 		*	@param	target		The ID of the target Vertex.
+		*	@param	edgeData	The data held by the edge.
 		*/
         void addEdge(std::size_t source, std::size_t target, E edgeData = E{});
 
-        /*! Resets the state of all Edge and Vertex objects belonging to the Graph to `State::WHITE`. */
-        void reset();
+        /*! Resets the state of all Edge and Vertex objects belonging to the Graph to `State::WHITE`. 
+        *   Also resets Vertex and Edge discovery functions to nullptr.
+        * 
+        *   @param  resetFuncs  If true sets discovery functions to nullptr, else leaves them as is. 
+        */
+        void reset(bool resetFuncs = true);
 
         /*! Returns the number of Vertex objects. */
         std::size_t order() { return _vertices.size(); }
@@ -328,7 +335,7 @@ namespace rz::graph
     }
 
     template <class V, class E, class G>
-    inline void Graph<V, E, G>::reset()
+    inline void Graph<V, E, G>::reset(bool resetFuncs)
     {
         for (auto &v : _vertices)
         {
@@ -342,21 +349,24 @@ namespace rz::graph
             }
         }
 
-        vertexFuncs = {
-            { State::WHITE, nullptr },
-            { State::GREY, nullptr },
-            { State::BLACK, nullptr },
-            { State::RED, nullptr },
-            { State::GREEN, nullptr }
-        };
+        if(resetFuncs)
+        {
+            vertexFuncs = {
+                { State::WHITE, nullptr },
+                { State::GREY, nullptr },
+                { State::BLACK, nullptr },
+                { State::RED, nullptr },
+                { State::GREEN, nullptr }
+            };
 
-        edgeFuncs = {
-            { State::WHITE, nullptr },
-            { State::GREY, nullptr },
-            { State::BLACK, nullptr },
-            { State::RED, nullptr },
-            { State::GREEN, nullptr }
-        };
+            edgeFuncs = {
+                { State::WHITE, nullptr },
+                { State::GREY, nullptr },
+                { State::BLACK, nullptr },
+                { State::RED, nullptr },
+                { State::GREEN, nullptr }
+            };
+        }
     }
 
     template <class V, class E, class G>
@@ -392,11 +402,11 @@ namespace rz::graph
 
         for (const auto &e : edges)
         {
-            dot << std::to_string(e.source) << " -> " << std::to_string(e.target);
+            dot << '\t' << std::to_string(e.source) << " -> " << std::to_string(e.target);
 
             if (edgeAttributes)
             {
-                dot << edgeAttributes(e);
+                dot << edgeAttributes(e) << ";\n";
             }
             else
                 dot << ";\n";
@@ -406,7 +416,7 @@ namespace rz::graph
         {
             for (const auto &v : _vertices)
             {
-                dot << vertexAttributes(v);
+                dot << '\t' <<  vertexAttributes(v) << ";\n";
             }
         }
 

@@ -1,0 +1,24 @@
+digraph G {
+	0 -> 1[labeltooltip="Origin->A"];
+	0 -> 2[labeltooltip="Origin->B"];
+	1 -> 3[labeltooltip="A->C"];
+	1 -> 4[labeltooltip="A->D"];
+	2 -> 5[labeltooltip="B->E"];
+	3 -> 6[labeltooltip="C->F"];
+	4 -> 6[labeltooltip="D->F"];
+	4 -> 7[labeltooltip="D->G"];
+	5 -> 9[labeltooltip="E->I"];
+	6 -> 8[labeltooltip="F->H"];
+	7 -> 8[labeltooltip="G->H"];
+	9 -> 8[labeltooltip="I->H"];
+	0[label="Z:0"];
+	1[label="A:0"];
+	2[label="B:0"];
+	3[label="C:0"];
+	4[label="D:0"];
+	5[label="E:0"];
+	6[label="F:0"];
+	7[label="G:0"];
+	8[label="H:0"];
+	9[label="I:0"];
+}

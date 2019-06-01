@@ -38,6 +38,7 @@ int main()
     double elapsedT{};
     unsigned frames{};
     unsigned framesT{};
+    
     while (window.isOpen())
     {
         auto start = std::chrono::high_resolution_clock::now();
@@ -61,7 +62,10 @@ int main()
         }
     }
 
-    std::cout << framesT / elapsedT << std::endl;
+    std::cout << "Average FPS:" << framesT / elapsedT << std::endl;
+
+    std::cout << "Press enter to continue." << std::endl;
     std::cin.get();
+
     return 0;
 }
