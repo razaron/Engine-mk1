@@ -47,6 +47,7 @@ namespace rz::planner
     using ConditionSet = std::list<Condition>;
     using ActionSet = std::list<Action>;
 
+    // TODO OOP-ify with `enum Operation` also sub-classed
     /*! Represents a world state property, condition or modifier in a format interpretable by the planner.
 	*	Properties have an `op` value of `Operation::NONE` while all other `op` values denote a condition or modifier.
 	*/
