@@ -58,7 +58,10 @@ void System::extendHandler(rz::eventstream::EventType type, EventHandler handler
 
 void System::processEvents()
 {
-    _eventStream.processEvents();
+    if(_taskScheduler)
+        _parentTask = _taskScheduler->push([this](){ _eventStream.processEvents(); }, _parentTask);
+    else
+        _eventStream.processEvents();
 }
 
 void System::pushEvents(const std::vector<Event> &events, StreamType streamType)

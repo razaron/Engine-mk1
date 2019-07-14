@@ -76,6 +76,8 @@ namespace rz::core
 
         EntityMap &getEntities() noexcept { return _entities; };
 
+        std::shared_ptr<rz::taskscheduler::TaskScheduler> _taskScheduler;
+      
       private:
         void updateSystems(double delta);
         void publishEvents();
@@ -85,7 +87,7 @@ namespace rz::core
         double _intervalMax;
         EntityMap _entities;
         rz::eventstream::EventStream _eventStream;
-        std::vector<UUID64> _deletingEntities;
+        std::vector<UUID64> _deletingEntities;  
     };
 }
 

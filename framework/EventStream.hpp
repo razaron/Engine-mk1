@@ -109,19 +109,19 @@ namespace rz::eventstream
 		*/
         std::vector<Event> popEvents(StreamType streamType);
 
-        /*!< Register an EventHandler to the passed EventType.
+        /*! Register an EventHandler to the passed EventType.
 		*
 		*   @remark Thread-safe, blocking. Allows for 1 thread to register an EventHandler at a time.
 		*/
         void registerHandler(EventType type, EventHandler handler);
 
-        /*!< Extend the EventHandler of the passed EventType by calling
+        /*! Extend the EventHandler of the passed EventType by calling
 		*
 		*   @remark Thread-safe, blocking. Allows for 1 thread to register an EventHandler at a time.
 		*/
         void extendHandler(EventType type, EventHandler extensionHandler);
 
-        /*!< Processes all incoming Event%s with their respective handlers.
+        /*! Processes all incoming Event%s with their respective handlers.
 		*
 		*   @remark Thread-safe, blocking. Allows for 1 thread to process events at a time.
 		*/

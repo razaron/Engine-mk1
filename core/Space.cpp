@@ -3,6 +3,7 @@
 using namespace rz::eventstream;
 using namespace rz::graph;
 using namespace rz::core;
+using namespace rz::taskscheduler;
 
 Space::Space(const SystemGraph &systemGraph)
     : _id{}, _systemGraph{ systemGraph }, _intervalMax{}, _entities{}, _eventStream{}, _deletingEntities{}
@@ -122,6 +123,10 @@ void Space::update(double delta)
 
         updateSystems(elapsed);
 
+        // Wait for System Tasks to finish before continuing
+        if(_taskScheduler)
+            _taskScheduler->helpWorkers();
+
         _eventStream.processEvents();
         publishEvents();
 
@@ -167,6 +172,12 @@ void Space::updateSystems(double delta)
 
     // Reset SystemGraph and update all Systems
     _systemGraph.reset();
+
+    // TODO Account for Systems with multiple child Systems
+    _systemGraph.edgeFuncs[State::WHITE] = [](SystemGraphEdge &e, SystemGraph &g){
+        g[e.target].data->setParentTask(g[e.source].data->getParentTask());
+    };
+
     _systemGraph.vertexFuncs[State::WHITE] = [&entities, delta](SystemGraphVertex &v, SystemGraph &) {
         double remaining = delta;
 
@@ -181,6 +192,7 @@ void Space::updateSystems(double delta)
             if (remaining == 0) break; // For instant frame updates (e.g. initial setup)
         }
     };
+
     _systemGraph.breadthFirstTraversal(0);
 }
 

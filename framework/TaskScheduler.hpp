@@ -26,8 +26,6 @@ namespace rz::taskscheduler
 
     using TaskList = std::list<Task>;                                   /*!< . */
     using WorkFunc = std::function<void()>;                             /*!< . */
-    // TODO struct WorkGroup
-    //using WorkGroup = std::pair<unsigned, std::vector<WorkFunc>>;       /*!< . */
     using WorkGraph = rz::graph::Graph<WorkGroup, char, WorkGraphData>; /*!< . */
     using WorkGraphVertex = rz::graph::Vertex<WorkGroup, char>;         /*!< . */
     using WorkGraphEdge = rz::graph::Edge<char>;                        /*!< . */

@@ -34,7 +34,7 @@ namespace rz::core
 		*
 		*	@returns	A reference to the mapped Handle.
 		*/
-        Handle &operator[](ComponentType type)
+        const Handle &operator[](ComponentType type) const
         {
             auto it = _components.find(type);
             if (it != _components.end())
@@ -66,7 +66,7 @@ namespace rz::core
         }
 
         template <typename... Types>
-        bool has(Types... types)
+        bool has(Types... types) const
         {
             return (_components.count(types) && ...);
         }

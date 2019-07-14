@@ -21,12 +21,12 @@ namespace rz::core
     {
       public:
         /*! Generates a TaskGraph used to update all relevant Component objects.
-		*
-		*	@param		entities	A vector of all Entity objects to access relevant Component objects from.
-		*	@param		delta		The time
-		*
-		*	@return		Returns the TaskGraph needed to run update logic for the Component objects.
-		*/
+        *
+        *	  @param		entities	A vector of all Entity objects to access relevant Component objects from.
+        *	  @param		delta		The time
+        * 
+        *	  @return		Returns the TaskGraph needed to run update logic for the Component objects.
+        */
         virtual rz::taskscheduler::Task update(EntityMap &entities, double delta) = 0;
 
         /*! Creates a new Component in the ObjectPool. */
@@ -68,6 +68,18 @@ namespace rz::core
         /*! Gets the current TaskGraph of this System. */
         double getTaskGraph() noexcept { return static_cast<double>(_interval) / 1000; }
 
+        /*! Sets the TaskScheduler used by this System. */
+        void setTaskScheduler(std::shared_ptr<rz::taskscheduler::TaskScheduler> taskScheduler) { _taskScheduler = taskScheduler; }
+
+        /*! Gets a reference to the TaskScheduler used by this System. */
+        rz::taskscheduler::TaskScheduler &getTaskScheduler() { return *_taskScheduler; }
+
+        /*! Sets the parent Task of this System. */
+        void setParentTask(rz::taskscheduler::Task parentTask) { _parentTask = parentTask; }
+
+        /*! Gets the parent Task of this System. */
+        rz::taskscheduler::Task &getParentTask() { return _parentTask; }
+
       protected:
         System() noexcept;
 
@@ -76,7 +88,10 @@ namespace rz::core
         double _interval;                          /*!< The max interval (in seconds) between updates for this System. */
         rz::eventstream::EventStream _eventStream; /*!< The EventStream belonging to this System. */
         std::set<ComponentType> _componentTypes;   /*!< The set of ComponentType%s supported by this System. */
+
+        std::shared_ptr<rz::taskscheduler::TaskScheduler> _taskScheduler;
+        rz::taskscheduler::Task _parentTask;
     };
-}
+} // namespace rz::core
 
 #endif //RZ_CORE_SYSTEM_HPP
