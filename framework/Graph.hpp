@@ -341,9 +341,7 @@ namespace rz::graph
         {
             v.state = State::WHITE;
 
-            auto adjList = (*this)[v.id].adjacencyList;
-
-            for (auto &e : adjList)
+            for (auto &e : (*this)[v.id].adjacencyList)
             {
                 e.state = State::WHITE;
             }
