@@ -22,10 +22,12 @@ namespace rz::taskscheduler
 {
     struct Task;
     struct WorkGraphData;
+    struct WorkGroup;
 
     using TaskList = std::list<Task>;                                   /*!< . */
     using WorkFunc = std::function<void()>;                             /*!< . */
-    using WorkGroup = std::pair<unsigned, std::vector<WorkFunc>>;       /*!< . */
+    // TODO struct WorkGroup
+    //using WorkGroup = std::pair<unsigned, std::vector<WorkFunc>>;       /*!< . */
     using WorkGraph = rz::graph::Graph<WorkGroup, char, WorkGraphData>; /*!< . */
     using WorkGraphVertex = rz::graph::Vertex<WorkGroup, char>;         /*!< . */
     using WorkGraphEdge = rz::graph::Edge<char>;                        /*!< . */
@@ -33,6 +35,12 @@ namespace rz::taskscheduler
     /*! The data to be held by the TaskGraph. */
     struct WorkGraphData
     {
+    };
+
+    struct WorkGroup
+    {
+      unsigned depth;
+      std::vector<WorkFunc> workFuncs;
     };
 
     /*! A data structure for representing a Task. */
@@ -73,6 +81,7 @@ namespace rz::taskscheduler
         *
         *   @return A copy of the created Task.
         */
+        // TODO const references for arguments
         Task push(WorkFunc work, Task dependency = Task{});
 
         /*! Pushes a group Task to be scheduled.
@@ -91,7 +100,7 @@ namespace rz::taskscheduler
         *   @param  workGraph     The Graph of WorkFunc%s to convert into Task%s.
         *   @param  dependency    <\em optional> The Task that must finish before this one can run.
         *
-        *   @return The task generated from the WorkGroup with `state == State::GREEN`.
+        *   @return The task generated from the WorkGraph with `state == State::GREEN`.
         */
         Task pushGraph(WorkGraph workGraph, Task dependency = Task{});
 

@@ -72,17 +72,17 @@ SCENARIO("TaskSchedulers can queue work in several ways", "[taskscheduler][concu
                 for (auto i = 0; i < 1000; i += 10)
                 {
                     WorkGroup group;
-                    group.second.push_back([&output, &outputMutex, i]() {
+                    group.workFuncs.push_back([&output, &outputMutex]() {
                         std::lock_guard<std::mutex> lk(outputMutex);
-                        output.push_back(i);
+                        output.push_back(0);
                     });
 
                     // Create 9 child tasks for `current`
-                    for (auto j = 0; j < 9; j++)
+                    for (auto j = 1; j < 10; j++)
                     {
-                        group.second.push_back([&output, &outputMutex, i]() {
+                        group.workFuncs.push_back([&output, &outputMutex, j]() {
                             std::lock_guard<std::mutex> lk(outputMutex);
-                            output.push_back(i);
+                            output.push_back(j);
                         });
                     }
 
@@ -92,6 +92,12 @@ SCENARIO("TaskSchedulers can queue work in several ways", "[taskscheduler][concu
                 ts.helpWorkers();
 
                 REQUIRE(output.size() == 1000);
+
+                auto sum = 0;
+                for (auto i : output)
+                    sum += i;
+
+                REQUIRE(sum == (1+2+3+4+5+6+7+8+9) * 100);
             }
 
             WHEN("The WorkGroup does have dependencies")
@@ -100,7 +106,7 @@ SCENARIO("TaskSchedulers can queue work in several ways", "[taskscheduler][concu
                 for (auto i = 0; i < 1000; i += 10)
                 {
                     WorkGroup group;
-                    group.second.push_back([&output, &outputMutex, i]() {
+                    group.workFuncs.push_back([&output, &outputMutex, i]() {
                         std::lock_guard<std::mutex> lk(outputMutex);
                         output.push_back(i);
                     });
@@ -108,7 +114,7 @@ SCENARIO("TaskSchedulers can queue work in several ways", "[taskscheduler][concu
                     // Create 9 child tasks for `current`
                     for (auto j = 0; j < 9; j++)
                     {
-                        group.second.push_back([&output, &outputMutex, i]() {
+                        group.workFuncs.push_back([&output, &outputMutex, i]() {
                             std::lock_guard<std::mutex> lk(outputMutex);
                             output.push_back(i);
                         });

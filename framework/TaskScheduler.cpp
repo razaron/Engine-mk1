@@ -64,12 +64,14 @@ Task TaskScheduler::push(WorkGroup group, Task dependency)
 {
     const std::lock_guard<std::mutex> lk(_taskQueueMutex);
 
-    // Create new task
+    auto work = group.workFuncs.begin();
+
+    // Create parent task
     Task parent{
         _nextTaskID++,
         0,
         dependency.taskID,
-        group.second[0],
+        *work,
         1
     };
 
@@ -85,18 +87,18 @@ Task TaskScheduler::push(WorkGroup group, Task dependency)
     else
         _openTasks.push_back(parent);
 
-    auto work = group.second.begin();
 
-    if (work != group.second.end())
+    // Increment by 1 to ignore work in parent
+    if (work != group.workFuncs.end())
         std::advance(work, 1);
 
-    while (work != group.second.end())
+    while (work != group.workFuncs.end())
     {
         Task task{
             _nextTaskID++,
             parent.taskID,
             dependency.taskID,
-            group.second[0],
+            *work,
             1
         };
 
@@ -136,14 +138,15 @@ Task TaskScheduler::pushGraph(WorkGraph workGraph, Task dependency)
     std::map<std::size_t, Task> parents;
 
     auto fillTaskList = [this, &tasks, &parents, &dependency](WorkGraphVertex &v, WorkGraph &g) {
-        const unsigned depth = v.data.first;
+        const unsigned depth = v.data.depth;
 
         std::vector<WorkGraphVertex> dependencies;
 
         // Get all dependency work groups
         for (auto &e : v.adjacencyList)
         {
-            if (g[e.target].data.first < depth)
+            // TODO WorkGroup::first is depth. Investigate alternatives, if none auto-generate (currently manually set as in testTaskScheduler.cpp)
+            if (g[e.target].data.depth < depth)
             {
                 dependencies.push_back(g[e.target]);
             }
@@ -155,7 +158,7 @@ Task TaskScheduler::pushGraph(WorkGraph workGraph, Task dependency)
                 _nextTaskID++,
                 0,
                 depID,
-                v.data.second[0],
+                v.data.workFuncs[0],
                 1
             };
 
@@ -166,12 +169,12 @@ Task TaskScheduler::pushGraph(WorkGraph workGraph, Task dependency)
             parents[v.id] = parent;
 
             // Add childen tasks to the task list
-            auto work = v.data.second.begin();
+            auto work = v.data.workFuncs.begin();
 
-            if (work != v.data.second.end())
+            if (work != v.data.workFuncs.end())
                 std::advance(work, 1);
 
-            while (work != v.data.second.end())
+            while (work != v.data.workFuncs.end())
             {
                 Task child{
                     _nextTaskID++,
