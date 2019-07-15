@@ -3,4 +3,7 @@ file(GLOB CORE_HEADERS "*.hpp")
 
 add_library(engine-core ${CORE_SOURCES} ${CORE_HEADERS})
 
+message(STATUS "MY_COMPILE_FLAGS: " ${MY_COMPILE_FLAGS})
+message(STATUS "MY_LINKER_FLAGS: " ${MY_LINKER_FLAGS})
+
 set_target_properties(engine-core PROPERTIES COMPILE_FLAGS ${MY_COMPILE_FLAGS} LINK_FLAGS ${MY_LINKER_FLAGS})
