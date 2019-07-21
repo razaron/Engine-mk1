@@ -91,6 +91,8 @@ namespace rz::core
 
         std::shared_ptr<rz::taskscheduler::TaskScheduler> _taskScheduler;
         rz::taskscheduler::Task _parentTask;
+
+        EntityMap _entities;
     };
 } // namespace rz::core
 

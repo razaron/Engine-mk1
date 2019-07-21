@@ -43,6 +43,11 @@ namespace rz::core
                 throw std::invalid_argument("ComponentType not found in Entity: " + std::to_string(_id.uuid));
         }
 
+        bool operator==(const Entity &rhs) const noexcept
+        {
+            return _id == rhs._id && _components == rhs._components;
+        }
+
         /*!	Adds a ComponentHandle to the ComponentMap of Entity.
 		*
 		*	@param	component		The ComponentHandle to add.

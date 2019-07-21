@@ -51,13 +51,13 @@ struct Handle
     Handle(HandleType type) : type{ type }, id{ nextIndex++ } {}
 
     /*! Basic equality comparator. */
-    bool operator==(const Handle &rhs) noexcept
+    bool operator==(const Handle &rhs) const noexcept
     {
         return (type == rhs.type && id == rhs.id);
     }
 
     /*! Basic inequality comparator. */
-    bool operator!=(const Handle &rhs) noexcept
+    bool operator!=(const Handle &rhs) const noexcept
     {
         return !(type == rhs.type && id == rhs.id);
     }
