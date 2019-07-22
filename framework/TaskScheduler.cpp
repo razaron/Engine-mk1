@@ -62,6 +62,8 @@ Task TaskScheduler::push(WorkFunc work, Task dependency)
 
 Task TaskScheduler::push(WorkGroup group, Task dependency)
 {
+    if(!group.workFuncs.size()) return dependency;
+
     const std::lock_guard<std::mutex> lk(_taskQueueMutex);
 
     auto work = group.workFuncs.begin();
