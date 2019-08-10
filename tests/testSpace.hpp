@@ -3,6 +3,8 @@
 
 #include "Space.hpp"
 
+#include <functional>
+
 class Foo : public rz::core::Component
 {
 };
@@ -16,7 +18,7 @@ class SystemA : public rz::core::System
   public:
     SystemA()
     {
-        _componentTypes.insert(rz::core::ComponentType::COMPONENT_1);
+        _componentTypes.insert(rz::core::ComponentType{ "FOO" });
     }
 
     ~SystemA() {}
@@ -30,32 +32,20 @@ class SystemA : public rz::core::System
 
     rz::core::ComponentHandle createComponent(rz::core::ComponentType type, std::shared_ptr<void>)
     {
-        Handle h;
+        Handle h{};
 
-        switch (type)
-        {
-            case rz::core::ComponentType::COMPONENT_1:
-                h = emplaceObject<Foo>();
-                break;
-            default:
-                h = Handle{};
-                break;
-        }
+        if (type == std::string{ "FOO" })
+            h = emplaceObject<Foo>();
 
         return rz::core::ComponentHandle{ type, h };
     }
 
     bool removeComponent(rz::core::ComponentHandle ch)
     {
-        switch (ch.first)
-        {
-            case rz::core::ComponentType::COMPONENT_1:
-                removeObject<Foo>(ch.second);
-                break;
-            default:
-                return false;
-                break;
-        }
+        if (ch.first == std::string{ "FOO" })
+            removeObject<Foo>(ch.second);
+        else
+            return false;
 
         return true;
     }
@@ -78,7 +68,7 @@ class SystemC : public rz::core::System
         return rz::taskscheduler::Task{};
     }
 
-    rz::core::ComponentHandle createComponent(rz::core::ComponentType, std::shared_ptr<void>) { return rz::core::ComponentHandle{}; }
+    rz::core::ComponentHandle createComponent(rz::core::ComponentType, std::shared_ptr<void>) { return {}; }
     bool removeComponent(rz::core::ComponentHandle) { return false; }
 
     int count{};
@@ -92,7 +82,7 @@ class SystemD : public rz::core::System
   public:
     SystemD()
     {
-        _componentTypes.insert(rz::core::ComponentType::COMPONENT_2);
+        _componentTypes.insert(rz::core::ComponentType{ "BAR" });
     }
     ~SystemD() {}
 
@@ -105,32 +95,20 @@ class SystemD : public rz::core::System
 
     rz::core::ComponentHandle createComponent(rz::core::ComponentType type, std::shared_ptr<void>)
     {
-        Handle h;
+        Handle h{};
 
-        switch (type)
-        {
-            case rz::core::ComponentType::COMPONENT_2:
-                h = emplaceObject<Bar>();
-                break;
-            default:
-                h = Handle{};
-                break;
-        }
+        if (type == std::string{ "BAR" })
+            h = emplaceObject<Bar>();
 
         return rz::core::ComponentHandle{ type, h };
     }
 
     bool removeComponent(rz::core::ComponentHandle ch)
     {
-        switch (ch.first)
-        {
-            case rz::core::ComponentType::COMPONENT_2:
-                removeObject<Bar>(ch.second);
-                break;
-            default:
-                return false;
-                break;
-        }
+        if (ch.first == std::string{ "BAR" })
+            removeObject<Bar>(ch.second);
+        else
+            return false;
 
         return true;
     }
@@ -153,7 +131,7 @@ class SystemB : public rz::core::System
         return rz::taskscheduler::Task{};
     }
 
-    rz::core::ComponentHandle createComponent(rz::core::ComponentType, std::shared_ptr<void>) { return rz::core::ComponentHandle{}; }
+    rz::core::ComponentHandle createComponent(rz::core::ComponentType, std::shared_ptr<void>) { return {}; }
     bool removeComponent(rz::core::ComponentHandle) { return false; }
 
     int count{};
@@ -174,7 +152,7 @@ class SystemE : public rz::core::System
         return rz::taskscheduler::Task{};
     }
 
-    rz::core::ComponentHandle createComponent(rz::core::ComponentType, std::shared_ptr<void>) { return rz::core::ComponentHandle{}; }
+    rz::core::ComponentHandle createComponent(rz::core::ComponentType, std::shared_ptr<void>) { return {}; }
     bool removeComponent(rz::core::ComponentHandle) { return false; }
 
     int count{};
@@ -195,7 +173,7 @@ class SystemF : public rz::core::System
         return rz::taskscheduler::Task{};
     }
 
-    rz::core::ComponentHandle createComponent(rz::core::ComponentType, std::shared_ptr<void>) { return rz::core::ComponentHandle{}; }
+    rz::core::ComponentHandle createComponent(rz::core::ComponentType, std::shared_ptr<void>) { return {}; }
     bool removeComponent(rz::core::ComponentHandle) { return false; }
 
     int count{};

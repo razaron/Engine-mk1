@@ -110,8 +110,8 @@ SCENARIO("Spaces can add/remove enitities, generating relavant components in the
                     EventType::SPACE_NEW_ENTITY, // Event type enum
                     std::make_shared<SPACE_NEW_ENTITY>(
                         std::list<ComponentArgs>{
-                            ComponentArgs{ ComponentType::COMPONENT_1, nullptr },
-                            ComponentArgs{ ComponentType::COMPONENT_2, nullptr } })
+                            ComponentArgs{ ComponentType{"FOO"}, nullptr },
+                            ComponentArgs{ ComponentType{"BAR"}, nullptr } })
                 };
 
                 events.push_back(e);

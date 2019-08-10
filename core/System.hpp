@@ -87,7 +87,7 @@ namespace rz::core
         rz::objectpool::ObjectPool _pool;          /*!< The ObjectPool used to manage the memory of this System. */
         double _interval;                          /*!< The max interval (in seconds) between updates for this System. */
         rz::eventstream::EventStream _eventStream; /*!< The EventStream belonging to this System. */
-        std::set<ComponentType> _componentTypes;   /*!< The set of ComponentType%s supported by this System. */
+        std::set<ComponentType, ComponentTypeCmp> _componentTypes;   /*!< The set of ComponentType%s supported by this System. */
 
         std::shared_ptr<rz::taskscheduler::TaskScheduler> _taskScheduler;
         rz::taskscheduler::Task _parentTask;

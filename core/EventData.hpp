@@ -31,8 +31,8 @@ namespace rz::core
         ComponentType type;
         std::shared_ptr<void> argsPtr;
 
-        template <ComponentType Type, class... Args>
-        SYSTEM_NEW_COMPONENT(std::tuple<Args...> args) : type{ Type }, argsPtr{ std::make_shared<std::tuple<Args...>>(args) } {}
+        template <class... Args>
+        SYSTEM_NEW_COMPONENT(ComponentType type, std::tuple<Args...> args) : type{ type }, argsPtr{ std::make_shared<std::tuple<Args...>>(args) } {}
 
         SYSTEM_NEW_COMPONENT(ComponentArgs args) : type{ args.first }, argsPtr{ args.second } {}
     };

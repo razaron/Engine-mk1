@@ -4,6 +4,7 @@
 #include "Misc.hpp"
 
 #include <atomic>
+#include <functional>
 #include <iostream>
 #include <limits>
 #include <map>
@@ -11,28 +12,68 @@
 /*! Components carry the data for a specific feature. */
 namespace rz::core
 {
-    enum class ComponentType;
+    //enum class ComponentType;
+    struct ComponentType;
+    struct ComponentTypeCmp;
 
     /*! Combines the size and position info of a Handle with the type information of a ComponentType. */
     using ComponentHandle = std::pair<ComponentType, Handle>;
 
     /*! A std::map type mapping Component Handle%s to their ComponentType%s. */
-    using ComponentMap = std::map<ComponentType, Handle>;
+    using ComponentMap = std::map<ComponentType, Handle, ComponentTypeCmp>;
+
 
     /*! Denotes the type of a derived Component object. */
-    enum class ComponentType
+    struct ComponentType
     {
-        DEFAULT,
-        TRANSFORM,
-        MOTION,
-        SHAPE,
-        COLLIDER,
-        COMPONENT_1,
-        COMPONENT_2,
-        COMPONENT_3,
-        COMPONENT_4,
-        ENUM_SIZE
+        std::size_t hash;
+        std::string debugName;
+
+        ComponentType() = default;
+        ComponentType(std::string name) : hash{ std::hash<std::string>()(name) }, debugName{ name } {}
+
+        bool operator==(const ComponentType &rhs) const noexcept
+        {
+            return hash == rhs.hash;
+        }
+
+        bool operator==(const std::string &name) const noexcept
+        {
+            return hash == std::hash<std::string>()(name);
+        }
+
+        bool operator!=(const ComponentType &rhs) const noexcept
+        {
+            return !(*this == rhs);
+        }
+
+        bool operator!=(const std::string &name) const noexcept
+        {
+            return !(*this == name);
+        }
     };
+
+    struct ComponentTypeCmp
+    {
+        bool operator()(const ComponentType &lhs, const ComponentType &rhs) const
+        {
+            return lhs.hash < rhs.hash;
+        }
+    };
+
+    // enum class ComponentType
+    // {
+    //     DEFAULT,
+    //     TRANSFORM,
+    //     MOTION,
+    //     SHAPE,
+    //     COLLIDER,
+    //     COMPONENT_1,
+    //     COMPONENT_2,
+    //     COMPONENT_3,
+    //     COMPONENT_4,
+    //     ENUM_SIZE
+    // };
 
     /*! The base class for a Component. */
     class Component
@@ -73,6 +114,6 @@ namespace rz::core
       private:
         UUID64 _id;
     };
-}
+} // namespace rz::core
 
 #endif // RZ_CORE_COMPONENT_HPP

@@ -40,7 +40,7 @@ namespace rz::core
             if (it != _components.end())
                 return it->second;
             else
-                throw std::invalid_argument("ComponentType not found in Entity: " + std::to_string(_id.uuid));
+                throw std::invalid_argument("ComponentType: "+ type.debugName +" not found in Entity: " + std::to_string(_id.uuid));
         }
 
         bool operator==(const Entity &rhs) const noexcept
