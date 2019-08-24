@@ -37,14 +37,14 @@ namespace rz::core
             return hash == rhs.hash;
         }
 
-        bool operator==(const std::string &name) const noexcept
-        {
-            return hash == std::hash<std::string>()(name);
-        }
-
         bool operator!=(const ComponentType &rhs) const noexcept
         {
             return !(*this == rhs);
+        }
+
+        bool operator==(const std::string &name) const noexcept
+        {
+            return hash == std::hash<std::string>()(name);
         }
 
         bool operator!=(const std::string &name) const noexcept
@@ -60,20 +60,6 @@ namespace rz::core
             return lhs.hash < rhs.hash;
         }
     };
-
-    // enum class ComponentType
-    // {
-    //     DEFAULT,
-    //     TRANSFORM,
-    //     MOTION,
-    //     SHAPE,
-    //     COLLIDER,
-    //     COMPONENT_1,
-    //     COMPONENT_2,
-    //     COMPONENT_3,
-    //     COMPONENT_4,
-    //     ENUM_SIZE
-    // };
 
     /*! The base class for a Component. */
     class Component

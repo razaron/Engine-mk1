@@ -56,11 +56,13 @@ namespace rz::core
 		*/
         Entity &createEntity();
 
-        /*!	Copies an object of type T into the ObjectPool.
+        /*!	Removes an Entity from the Space.
+        *
+        *   @param      id      The UUID64 of the Entity to be deleted.
 		*
-		*	@returns    The number of Component%s remaining in the Entity.
+		*	@returns    The number of Entity%s remaining in the Space.
 		*/
-        std::size_t removeEntity(UUID64 id); /*!< Deletes an Entity from the Space. */
+        std::size_t removeEntity(UUID64 id);
 
         //TODO Entity* moveEntity(); /*!< Moves an Entity into another Space. */
         //TODO std::vector<Entity>* getEntities() { return &_entities; } /*!<  */
@@ -75,6 +77,12 @@ namespace rz::core
         void pushEvents(const std::vector<rz::eventstream::Event> &events, rz::eventstream::StreamType streamType);
 
         EntityMap &getEntities() noexcept { return _entities; };
+
+        /*! Gets the unique ID of this Space.
+		*
+		*	@returns	The unique id of this Space.
+		*/
+        UUID64 getID() noexcept { return _id; }
 
         std::shared_ptr<rz::taskscheduler::TaskScheduler> _taskScheduler;
       

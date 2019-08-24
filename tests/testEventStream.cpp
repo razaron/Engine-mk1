@@ -13,12 +13,12 @@ SCENARIO("You can push/pop Events from an EventStream", "[eventstream]")
     {
         EventStream stream;
 
-        stream.pushEvent({ UUID64{ 0 }, EventType::EVENT_1, std::make_shared<std::string>("lolwut") }, StreamType::OUTGOING);
+        stream.pushEvent({ UUID64{ 0 }, EventType{"EVENT_1"}, std::make_shared<std::string>("lolwut") }, StreamType::OUTGOING);
 
         std::vector<Event> events;
         for (unsigned int i = 1; i < 5; i++)
         {
-            Event e{ UUID64{ 0 }, EventType::EVENT_2, std::make_shared<std::string>("dis gun be gud") };
+            Event e{ UUID64{ 0 }, EventType{"EVENT_2"}, std::make_shared<std::string>("dis gun be gud") };
             events.push_back(e);
         }
 
@@ -37,7 +37,7 @@ SCENARIO("You can push/pop Events from an EventStream", "[eventstream]")
         {
             for (unsigned int i = 1; i < 5; i++)
             {
-                stream.pushEvent({ UUID64{ 0 }, EventType::EVENT_2, std::make_shared<std::string>("get in dere") }, StreamType::INCOMING);
+                stream.pushEvent({ UUID64{ 0 }, EventType{"EVENT_2"}, std::make_shared<std::string>("get in dere") }, StreamType::INCOMING);
             }
 
             std::vector<Event> events = stream.popEvents(StreamType::INCOMING);
@@ -55,12 +55,12 @@ SCENARIO("EventStreams can propogate Events to eachother", "[eventstream]")
         EventStream a;
         EventStream b;
 
-        a.pushEvent({ UUID64{ 0 }, EventType::EVENT_1, std::make_shared<std::string>("lolwut") }, StreamType::OUTGOING);
+        a.pushEvent({ UUID64{ 0 }, EventType{"EVENT_1"}, std::make_shared<std::string>("lolwut") }, StreamType::OUTGOING);
 
         std::vector<Event> events;
         for (unsigned int i = 1; i < 5; i++)
         {
-            Event e{ UUID64{ 0 }, EventType::EVENT_2, std::make_shared<std::string>("dis gun be gud") };
+            Event e{ UUID64{ 0 }, EventType{"EVENT_2"}, std::make_shared<std::string>("dis gun be gud") };
             events.push_back(e);
         }
 
@@ -95,7 +95,7 @@ SCENARIO("An EventStream can be used from multiple threads", "[eventstream][conc
             std::vector<Event> events;
             for (auto i = 0u; i < 1000; i++)
             {
-                events.push_back(Event{ UUID64{ 0 }, EventType::EVENT_2, {} });
+                events.push_back(Event{ UUID64{ 0 }, EventType{"EVENT_2"}, {} });
             }
 
             THEN("If the StreamType is INCOMING")
@@ -142,7 +142,7 @@ SCENARIO("An EventStream can be used from multiple threads", "[eventstream][conc
             std::vector<Event> events;
             for (auto i = 0u; i < 1000; i++)
             {
-                events.push_back(Event{ UUID64{ 0 }, EventType::EVENT_2, {} });
+                events.push_back(Event{ UUID64{ 0 }, EventType{"EVENT_2"}, {} });
             }
 
             THEN("If pushing to INCOMING and popping from OUTGOING")
@@ -201,7 +201,7 @@ SCENARIO("An EventStream can be used from multiple threads", "[eventstream][conc
             std::vector<Event> events;
             for (auto i = 0u; i < 1000; i++)
             {
-                events.push_back(Event{ UUID64{ 0 }, EventType::EVENT_2, {} });
+                events.push_back(Event{ UUID64{ 0 }, EventType{"EVENT_2"}, {} });
             }
 
             THEN("If the StreamType is INCOMING")
@@ -278,7 +278,7 @@ SCENARIO("An EventStream can be used from multiple threads", "[eventstream][conc
             std::vector<Event> events;
             for (auto i = 0u; i < 1000; i++)
             {
-                events.push_back(Event{ UUID64{ 0 }, EventType::EVENT_2, {} });
+                events.push_back(Event{ UUID64{ 0 }, EventType{"EVENT_2"}, {} });
             }
 
             THEN("If pushing to INCOMING and popping from OUTGOING")

@@ -28,21 +28,59 @@ namespace rz::eventstream
     /*! The EventType is used to determine how to process an Event. 
 		Events have the format "SCOPE_ACTION".
 	*/
-    enum class EventType
+    // enum class EventType
+    // {
+    //     DEFAULT,                 /*!< Default value. */
+    //     SPACE_NEW_ENTITY,        /*!< Request new Entity from Space. */
+    //     SPACE_DELETE_ENTITY,     /*!< Request deletion of Entity from Space. */
+    //     SPACE_REMOVE_ENTITY,     /*!< Deregister empty Entity from Space. */
+    //     SYSTEM_NEW_COMPONENT,    /*!< Request new Component from System. */
+    //     SYSTEM_DELETE_COMPONENT, /*!< Request deletion of Component from System. */
+    //     ENTITY_ADD_COMPONENT,    /*!< Register newly created Component with Entity. */
+    //     ENTITY_REMOVE_COMPONENT, /*!< Deregister deleted Component from Entity. */
+    //     EVENT_1,
+    //     EVENT_2,
+    //     EVENT_3,
+    //     EVENT_4,
+    //     ENUM_SIZE
+    // };
+
+    /*! Denotes the type of a derived Component object. */
+    struct EventType
     {
-        DEFAULT,                 /*!< Default value. */
-        SPACE_NEW_ENTITY,        /*!< Request new Entity from Space. */
-        SPACE_DELETE_ENTITY,     /*!< Request deletion of Entity from Space. */
-        SPACE_REMOVE_ENTITY,     /*!< Deregister empty Entity from Space. */
-        SYSTEM_NEW_COMPONENT,    /*!< Request new Component from System. */
-        SYSTEM_DELETE_COMPONENT, /*!< Request deletion of Component from System. */
-        ENTITY_ADD_COMPONENT,    /*!< Register newly created Component with Entity. */
-        ENTITY_REMOVE_COMPONENT, /*!< Deregister deleted Component from Entity. */
-        EVENT_1,
-        EVENT_2,
-        EVENT_3,
-        EVENT_4,
-        ENUM_SIZE
+        std::size_t hash;
+        std::string debugName;
+
+        EventType() = default;
+        EventType(std::string name) : hash{ std::hash<std::string>()(name) }, debugName{ name } {}
+
+        bool operator==(const EventType &rhs) const noexcept
+        {
+            return hash == rhs.hash;
+        }
+
+        bool operator!=(const EventType &rhs) const noexcept
+        {
+            return !(*this == rhs);
+        }
+
+        bool operator==(const std::string &name) const noexcept
+        {
+            return hash == std::hash<std::string>()(name);
+        }
+
+        bool operator!=(const std::string &name) const noexcept
+        {
+            return !(*this == name);
+        }
+    };
+
+    struct EventTypeCmp
+    {
+        bool operator()(const EventType &lhs, const EventType &rhs) const
+        {
+            return lhs.hash < rhs.hash;
+        }
     };
 
     /*! Contains the data required to receive and process an Event. */
@@ -130,7 +168,7 @@ namespace rz::eventstream
       private:
         std::vector<Event> _incomingEvents;
         std::vector<Event> _outgoingEvents;
-        std::map<EventType, EventHandler> _eventHandlers;
+        std::map<EventType, EventHandler, EventTypeCmp> _eventHandlers;
 
         std::mutex _incomingEventsMutex;
         std::mutex _outgoingEventsMutex;

@@ -6,7 +6,7 @@ using namespace rz::eventstream;
 System::System() noexcept
     : _id{}, _pool{}, _interval{ 1.0 }, _eventStream{}, _componentTypes{}
 {
-    registerHandler(EventType::SYSTEM_NEW_COMPONENT, [&](const Event &e) {
+    registerHandler(EventType{"SYSTEM_NEW_COMPONENT"}, [&](const Event &e) {
         auto data = std::static_pointer_cast<SYSTEM_NEW_COMPONENT>(e.data);
 
         // If ComponentType is valid, do something
@@ -18,7 +18,7 @@ System::System() noexcept
 
             Event out{
                 e.recipient,
-                EventType::ENTITY_ADD_COMPONENT,
+                EventType{"ENTITY_ADD_COMPONENT"},
                 ptr
             };
 
@@ -26,7 +26,7 @@ System::System() noexcept
         }
     });
 
-    registerHandler(EventType::SYSTEM_DELETE_COMPONENT, [&](const Event &e) {
+    registerHandler(EventType{"SYSTEM_DELETE_COMPONENT"}, [&](const Event &e) {
         auto data = std::static_pointer_cast<SYSTEM_DELETE_COMPONENT>(e.data);
 
         // If ComponentType is valid, do something
@@ -36,7 +36,7 @@ System::System() noexcept
             {
                 Event out{
                     e.recipient,
-                    EventType::ENTITY_REMOVE_COMPONENT,
+                    EventType{"ENTITY_REMOVE_COMPONENT"},
                     std::make_shared<ENTITY_REMOVE_COMPONENT>(data->ch)
                 };
 

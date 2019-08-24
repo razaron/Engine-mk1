@@ -24,6 +24,7 @@
 #endif
 
 // Helper function
+// TODO concepts to tighten template use
 template <typename T>
 inline bool includes(T a, T b)
 {
@@ -102,7 +103,7 @@ struct alignas(A) AlignedArray
 // UUID STRUCT 64 BITS
 struct UUID64
 {
-    uint64_t uuid;
+    std::uint64_t uuid;
 
     UUID64()
     noexcept
@@ -115,7 +116,7 @@ struct UUID64
         uuid = random;
     }
 
-    UUID64(uint64_t id)
+    UUID64(std::uint64_t id)
     noexcept : uuid{ id } {}
 
     bool operator==(const UUID64 &rhs) const noexcept

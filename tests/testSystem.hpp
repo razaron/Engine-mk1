@@ -8,7 +8,7 @@ class FooSystem : public rz::core::System
   public:
     FooSystem()
     {
-        extendHandler(rz::eventstream::EventType::EVENT_1, [&](const rz::eventstream::Event &e) {
+        extendHandler(rz::eventstream::EventType{"EVENT_1"}, [&](const rz::eventstream::Event &e) {
             auto data = std::static_pointer_cast<int>(e.data);
 
             count += *data;
@@ -39,7 +39,7 @@ class BarSystem : public rz::core::System
     {
         for (auto i = 0; i < 5; i++)
         {
-            _eventStream.pushEvent(rz::eventstream::Event{ UUID64{ 0 }, rz::eventstream::EventType::EVENT_1, std::make_shared<int>(i) }, rz::eventstream::StreamType::OUTGOING);
+            _eventStream.pushEvent(rz::eventstream::Event{ UUID64{ 0 }, rz::eventstream::EventType{"EVENT_1"}, std::make_shared<int>(i) }, rz::eventstream::StreamType::OUTGOING);
         }
 
         return rz::taskscheduler::Task{};
