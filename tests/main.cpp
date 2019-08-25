@@ -1,10 +1,5 @@
-#pragma warning(push)
-#pragma warning(disable : 4996)
-
 #define CATCH_CONFIG_RUNNER
 #include <catch.hpp>
-
-#pragma warning(pop)
 
 int main(int argc, char *argv[])
 {

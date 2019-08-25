@@ -8,6 +8,7 @@
 #include <iostream>
 #include <limits>
 #include <map>
+#include <memory>
 
 /*! Components carry the data for a specific feature. */
 namespace rz::core
@@ -22,6 +23,7 @@ namespace rz::core
     /*! A std::map type mapping Component Handle%s to their ComponentType%s. */
     using ComponentMap = std::map<ComponentType, Handle, ComponentTypeCmp>;
 
+    using ComponentArgs = std::pair<ComponentType, std::shared_ptr<void>>;
 
     /*! Denotes the type of a derived Component object. */
     struct ComponentType

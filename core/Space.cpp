@@ -18,8 +18,8 @@ Space::Space(const SystemGraph &systemGraph)
     _systemGraph.reset();
 
     // Starts the chain of events that will create a new Entity from a list of components
-    registerHandler(EventType{"SPACE_NEW_ENTITY"}, [&](const Event &e) {
-        auto data = std::static_pointer_cast<SPACE_NEW_ENTITY>(e.data);
+    registerHandler(core::event::type::SPACE_NEW_ENTITY, [&](const Event &e) {
+        auto data = std::static_pointer_cast<event::data::SPACE_NEW_ENTITY>(e.data);
 
         auto entity = createEntity();
 
@@ -29,23 +29,23 @@ Space::Space(const SystemGraph &systemGraph)
         {
             events.push_back(Event{
                 entity.getID(),
-                EventType{"SYSTEM_NEW_COMPONENT"},
-                std::make_shared<SYSTEM_NEW_COMPONENT>(args) });
+                core::event::type::SYSTEM_NEW_COMPONENT,
+                std::make_shared<event::data::SYSTEM_NEW_COMPONENT>(args) });
         }
 
         pushEvents(events, StreamType::OUTGOING);
     });
 
     // Adds a created Component to the correct entity
-    registerHandler(EventType{"ENTITY_ADD_COMPONENT"}, [&](const Event &e) {
-        auto data = std::static_pointer_cast<ENTITY_ADD_COMPONENT>(e.data);
+    registerHandler(core::event::type::ENTITY_ADD_COMPONENT, [&](const Event &e) {
+        auto data = std::static_pointer_cast<event::data::ENTITY_ADD_COMPONENT>(e.data);
 
         (*this)[e.recipient].addComponent(data->ch);
     });
 
     // Starts the chain of events that will delete an entity
-    registerHandler(EventType{"SPACE_DELETE_ENTITY"}, [&](const Event &e) {
-        auto data = std::static_pointer_cast<SPACE_DELETE_ENTITY>(e.data);
+    registerHandler(core::event::type::SPACE_DELETE_ENTITY, [&](const Event &e) {
+        auto data = std::static_pointer_cast<event::data::SPACE_DELETE_ENTITY>(e.data);
 
         // IF Entity is not being tracked for deletion, track it. ELSE return
         if (std::find(_deletingEntities.begin(), _deletingEntities.end(), e.recipient) == _deletingEntities.end())
@@ -61,8 +61,8 @@ Space::Space(const SystemGraph &systemGraph)
         {
             events.emplace_back(
                 e.recipient,
-                EventType{"SYSTEM_DELETE_COMPONENT"},
-                std::make_shared<SYSTEM_DELETE_COMPONENT>(ComponentHandle{ type, handle }));
+                core::event::type::SYSTEM_DELETE_COMPONENT,
+                std::make_shared<event::data::SYSTEM_DELETE_COMPONENT>(ComponentHandle{ type, handle }));
         }
 
         pushEvents(events, StreamType::OUTGOING);
@@ -70,13 +70,13 @@ Space::Space(const SystemGraph &systemGraph)
         // Create a followup SPACE_REMOVE_ENTITY event to check up on progress
         _eventStream.pushEvent(Event{
                                    e.recipient,
-                                   EventType{"SPACE_REMOVE_ENTITY"},
-                                   std::make_shared<SPACE_REMOVE_ENTITY>() },
+                                   core::event::type::SPACE_REMOVE_ENTITY,
+                                   std::make_shared<event::data::SPACE_REMOVE_ENTITY>() },
                                StreamType::INCOMING);
     });
 
     // Remove an empty Entity from _entities
-    registerHandler(EventType{"SPACE_REMOVE_ENTITY"}, [&](const Event &e) {
+    registerHandler(core::event::type::SPACE_REMOVE_ENTITY, [&](const Event &e) {
         // If Entity is empty, delete it
         if (!(*this)[e.recipient].getComponents().size())
         {
@@ -90,15 +90,15 @@ Space::Space(const SystemGraph &systemGraph)
         {
             _eventStream.pushEvent(Event{
                                        e.recipient,
-                                       EventType{"SPACE_REMOVE_ENTITY"},
-                                       std::make_shared<SPACE_REMOVE_ENTITY>() },
+                                       core::event::type::SPACE_REMOVE_ENTITY,
+                                       std::make_shared<event::data::SPACE_REMOVE_ENTITY>() },
                                    StreamType::INCOMING);
         }
     });
 
     // On succesful Component deletion, removes it's Handle from relevant Entity
-    registerHandler(EventType{"ENTITY_REMOVE_COMPONENT"}, [&](const Event &e) {
-        auto data = std::static_pointer_cast<ENTITY_REMOVE_COMPONENT>(e.data);
+    registerHandler(core::event::type::ENTITY_REMOVE_COMPONENT, [&](const Event &e) {
+        auto data = std::static_pointer_cast<event::data::ENTITY_REMOVE_COMPONENT>(e.data);
 
         (*this)[e.recipient].removeComponent(data->ch);
     });

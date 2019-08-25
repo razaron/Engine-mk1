@@ -2,15 +2,25 @@
 #define RZ_CORE_EVENTDATA_HPP
 
 #include "Component.hpp"
+#include "EventStream.hpp"
 
 #include <list>
 #include <memory>
 #include <utility>
 
-namespace rz::core
+namespace rz::core::event::type
 {
-    using ComponentArgs = std::pair<ComponentType, std::shared_ptr<void>>;
+    const eventstream::EventType SPACE_NEW_ENTITY{"SPACE_NEW_ENTITY"};
+    const eventstream::EventType SPACE_DELETE_ENTITY{"SPACE_DELETE_ENTITY"};
+    const eventstream::EventType SPACE_REMOVE_ENTITY{"SPACE_REMOVE_ENTITY"};
+    const eventstream::EventType SYSTEM_NEW_COMPONENT{"SYSTEM_NEW_COMPONENT"};
+    const eventstream::EventType SYSTEM_DELETE_COMPONENT{"SYSTEM_DELETE_COMPONENT"};
+    const eventstream::EventType ENTITY_ADD_COMPONENT{"ENTITY_ADD_COMPONENT"};
+    const eventstream::EventType ENTITY_REMOVE_COMPONENT{"ENTITY_REMOVE_COMPONENT"};
+}
 
+namespace rz::core::event::data
+{
     struct SPACE_NEW_ENTITY
     {
         std::list<ComponentArgs> components;

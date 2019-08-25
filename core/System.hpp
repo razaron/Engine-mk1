@@ -2,7 +2,7 @@
 #define RZ_CORE_SYSTEM_HPP
 
 #include "Entity.hpp"
-#include "EventData.hpp"
+#include "EventsCore.hpp"
 #include "EventStream.hpp"
 #include "ObjectPool.hpp"
 #include "TaskScheduler.hpp"

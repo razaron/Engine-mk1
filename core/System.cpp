@@ -6,19 +6,19 @@ using namespace rz::eventstream;
 System::System() noexcept
     : _id{}, _pool{}, _interval{ 1.0 }, _eventStream{}, _componentTypes{}
 {
-    registerHandler(EventType{"SYSTEM_NEW_COMPONENT"}, [&](const Event &e) {
-        auto data = std::static_pointer_cast<SYSTEM_NEW_COMPONENT>(e.data);
+    registerHandler(core::event::type::SYSTEM_NEW_COMPONENT, [&](const Event &e) {
+        auto data = std::static_pointer_cast<event::data::SYSTEM_NEW_COMPONENT>(e.data);
 
         // If ComponentType is valid, do something
         if (_componentTypes.count(data->type))
         {
             auto ch = createComponent(data->type, data->argsPtr);
 
-            auto ptr = std::make_shared<ENTITY_ADD_COMPONENT>(ch);
+            auto ptr = std::make_shared<event::data::ENTITY_ADD_COMPONENT>(ch);
 
             Event out{
                 e.recipient,
-                EventType{"ENTITY_ADD_COMPONENT"},
+                core::event::type::ENTITY_ADD_COMPONENT,
                 ptr
             };
 
@@ -26,8 +26,8 @@ System::System() noexcept
         }
     });
 
-    registerHandler(EventType{"SYSTEM_DELETE_COMPONENT"}, [&](const Event &e) {
-        auto data = std::static_pointer_cast<SYSTEM_DELETE_COMPONENT>(e.data);
+    registerHandler(core::event::type::SYSTEM_DELETE_COMPONENT, [&](const Event &e) {
+        auto data = std::static_pointer_cast<event::data::SYSTEM_DELETE_COMPONENT>(e.data);
 
         // If ComponentType is valid, do something
         if (_componentTypes.count(data->ch.first))
@@ -36,8 +36,8 @@ System::System() noexcept
             {
                 Event out{
                     e.recipient,
-                    EventType{"ENTITY_REMOVE_COMPONENT"},
-                    std::make_shared<ENTITY_REMOVE_COMPONENT>(data->ch)
+                    core::event::type::ENTITY_REMOVE_COMPONENT,
+                    std::make_shared<event::data::ENTITY_REMOVE_COMPONENT>(data->ch)
                 };
 
                 _eventStream.pushEvent(out, StreamType::OUTGOING);
