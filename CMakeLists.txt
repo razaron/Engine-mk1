@@ -4,6 +4,14 @@ include_directories (${CMAKE_CURRENT_SOURCE_DIR}/3rd_party/includes ${CMAKE_CURR
 # For -lpthread
 find_package (Threads)
 
+# for -llua
+IF(${CMAKE_GENERATOR} STREQUAL "Unix Makefiles")
+    find_package(Lua)
+    set (REQUIRED_LIBS ${LUA_LIBRARIES} ${REQUIRED_LIBS})
+ELSEIF(${CMAKE_GENERATOR} STREQUAL "Visual Studio 15 2017 Win64" OR ${CMAKE_GENERATOR} STREQUAL "Visual Studio 16 2019")
+    set (REQUIRED_LIBS lua ${REQUIRED_LIBS})
+ENDIF()
+
 # Create engine-framework-lib
 add_subdirectory(framework)
 set (REQUIRED_LIBS engine-framework ${CMAKE_THREAD_LIBS_INIT} ${REQUIRED_LIBS})
