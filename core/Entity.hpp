@@ -18,7 +18,7 @@ namespace rz::core
     class Entity
     {
       public:
-        Entity() noexcept : _id{}, _components{} {} /*!< Default constructor. */
+        Entity() noexcept : _id{0}, _components{} {} /*!< Default constructor. */
 
         /*!	Constructs an Entity object from a pre-constructed map of Component objects.
 		*
@@ -34,6 +34,7 @@ namespace rz::core
 		*
 		*	@returns	A reference to the mapped Handle.
 		*/
+        // TODO const Handle &operator[](std::string typeName) const
         const Handle &operator[](ComponentType type) const
         {
             auto it = _components.find(type);
@@ -46,6 +47,11 @@ namespace rz::core
         bool operator==(const Entity &rhs) const noexcept
         {
             return _id == rhs._id && _components == rhs._components;
+        }
+
+        bool operator!=(const Entity &rhs) const noexcept
+        {
+            return !(*this == rhs);
         }
 
         /*!	Adds a ComponentHandle to the ComponentMap of Entity.
@@ -89,7 +95,7 @@ namespace rz::core
 		*
 		*	@returns	The unique id of this Entity.
 		*/
-        UUID64 getID() noexcept { return _id; }
+        const UUID64 &getID() const noexcept { return _id; }
 
       private:
         UUID64 _id;

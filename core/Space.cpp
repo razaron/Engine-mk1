@@ -47,6 +47,8 @@ Space::Space(const SystemGraph &systemGraph)
     registerHandler(core::event::type::SPACE_DELETE_ENTITY, [&](const Event &e) {
         auto data = std::static_pointer_cast<event::data::SPACE_DELETE_ENTITY>(e.data);
 
+        if(!_entities.count(e.recipient)) return;
+
         // IF Entity is not being tracked for deletion, track it. ELSE return
         if (std::find(_deletingEntities.begin(), _deletingEntities.end(), e.recipient) == _deletingEntities.end())
             _deletingEntities.push_back(e.recipient);
@@ -213,7 +215,7 @@ void Space::extendHandler(rz::eventstream::EventType type, EventHandler handler)
 
 Entity &Space::createEntity()
 {
-    Entity e{};
+    Entity e{{}};
     return _entities[e.getID()] = e;
 }
 

@@ -97,7 +97,7 @@ namespace rz::core
 		*
 		*	@returns The unique id of this Component.
 		*/
-        UUID64 getID() noexcept { return _id; }
+        const UUID64 &getID() const noexcept { return _id; }
 
       private:
         UUID64 _id;

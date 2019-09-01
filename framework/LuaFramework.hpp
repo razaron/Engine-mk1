@@ -91,12 +91,6 @@ namespace rz::lua
                                     "lifetime", &Event::lifetime,
                                     "id", &Event::id);
 
-            lua.new_usertype<EventStream>("EventStream",
-                                          sol::constructors<EventStream()>(),
-                                          "pushEvent", &EventStream::pushEvent,
-                                          "popEvent", &EventStream::popEvent,
-                                          "registerHandler", &EventStream::registerHandler,
-                                          "extendHandler", &EventStream::extendHandler);
         }
     } // namespace eventstream
 
