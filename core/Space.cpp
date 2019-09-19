@@ -74,7 +74,7 @@ Space::Space(const SystemGraph &systemGraph)
                                    e.recipient,
                                    core::event::type::SPACE_REMOVE_ENTITY,
                                    std::make_shared<event::data::SPACE_REMOVE_ENTITY>() },
-                               StreamType::INCOMING);
+                               StreamType::OUTGOING);
     });
 
     // Remove an empty Entity from _entities
@@ -94,7 +94,7 @@ Space::Space(const SystemGraph &systemGraph)
                                        e.recipient,
                                        core::event::type::SPACE_REMOVE_ENTITY,
                                        std::make_shared<event::data::SPACE_REMOVE_ENTITY>() },
-                                   StreamType::INCOMING);
+                                   StreamType::OUTGOING);
         }
     });
 
@@ -187,6 +187,7 @@ void Space::updateSystems(double delta)
         {
             double elapsed = std::min(remaining, v.data->getInterval());
 
+            // TODO Make entities die instantly to remove isDead hack. E.g. Have Space loop ingest events every SystemVertex
             v.data->processEvents();
             v.data->update(entities, elapsed);
 
