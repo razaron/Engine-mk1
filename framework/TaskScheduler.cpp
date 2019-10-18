@@ -147,7 +147,6 @@ Task TaskScheduler::pushGraph(WorkGraph workGraph, Task dependency)
         // Get all dependency work groups
         for (auto &e : v.adjacencyList)
         {
-            // TODO WorkGroup::first is depth. Investigate alternatives, if none auto-generate (currently manually set as in testTaskScheduler.cpp)
             if (g[e.target].data.depth < depth)
             {
                 dependencies.push_back(g[e.target]);

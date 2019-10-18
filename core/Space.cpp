@@ -187,7 +187,6 @@ void Space::updateSystems(double delta)
         {
             double elapsed = std::min(remaining, v.data->getInterval());
 
-            // TODO Make entities die instantly to remove isDead hack. E.g. Have Space loop ingest events every SystemVertex
             v.data->processEvents();
             v.data->update(entities, elapsed);
 

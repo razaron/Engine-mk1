@@ -17,6 +17,7 @@ typedef Vertex<int, const char *> TestVertex;
 typedef Edge<const char *> TestEdge;
 
 // TODO test depth first and branch traversal
+// TODO test cyclic/acyclic directed/undirected graphs
 // TODO test dot file generation
 SCENARIO("Graphs can be traversed in several ways", "[graph]")
 {

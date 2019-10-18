@@ -25,9 +25,9 @@ namespace rz::eventstream
         OUTGOING  /*!< will leave this EventStream. */
     };
 
-    /*! The EventType is used to determine how to process an Event. 
-		Events have the format "SCOPE_ACTION".
-	*/
+    ///*! The EventType is used to determine how to process an Event. 
+	//	Events have the format "SCOPE_ACTION".
+	//*/
     // enum class EventType
     // {
     //     DEFAULT,                 /*!< Default value. */
@@ -45,7 +45,7 @@ namespace rz::eventstream
     //     ENUM_SIZE
     // };
 
-    /*! Denotes the type of a derived Component object. */
+    /*! The EventType is used to determine how to process an Event. */
     struct EventType
     {
         std::size_t hash;

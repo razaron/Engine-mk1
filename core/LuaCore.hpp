@@ -17,6 +17,9 @@ namespace rz::lua
             lua.new_usertype<Component>("Component",
                                         sol::constructors<Component()>(),
                                         "getID", &Component::getID);
+
+            lua.new_usertype<ComponentType>("ComponentType",
+                                            sol::constructors<ComponentType(std::string)>());
         }
     } // namespace component
 
@@ -27,9 +30,12 @@ namespace rz::lua
             using namespace rz::core;
             lua.new_usertype<Entity>("Entity",
                                      sol::constructors<Entity()>(),
-                                     "getID", &Entity::getID);
+                                     "getID", &Entity::getID,
+                                     "has", &Entity::has<ComponentType>,
+                                     sol::meta_function::index, &Entity::operator[]);
 
-            //lua.new_usertype<EntityMap>("EntityMap", sol::meta_function::less_than, &UUID64Cmp::operator());
+            lua["EntityVector"] = [](){ return std::vector<Entity>{}; };
+            lua["EntityMap"] = [](){ return EntityMap{}; };
         }
     } // namespace entity
 
