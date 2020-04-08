@@ -1,0 +1,57 @@
+digraph G {
+    nodesep=1;
+    fixedsize=false
+
+    // BEGIN NODE FORMATTING
+    // Own scope to appear on top
+    {
+        "BEGIN main() loop";
+    }
+
+    // Boxes
+    {
+        node [fixedsize=false];
+        "Space::update";
+        "Space::updateSystems";
+        "Space::publishEvents";
+    
+    }
+
+    // Conditionals
+    {
+        node [shape=diamond];
+        "remaining >= 0.0";
+    }
+
+    // END NODE FORMATTING
+
+    // make invisible ranks
+    rank1 [style=invisible];
+    rank2 [style=invisible];
+
+    // make "invisible" (white) link between them
+    rank1 -> rank2 [color=white];
+
+    // BEGIN NODES
+    "BEGIN main() loop"
+
+    "Space::update";
+
+    "remaining >= 0.0";
+    "remaining -= _intervalMax";
+
+    "Space::updateSystems";
+    "Space::publishEvents";
+    
+    // END NODES
+
+    // BEGIN EDGES
+    "BEGIN main() loop" -> "Space::update";
+    "Space::update" -> "remaining >= 0.0";
+    "remaining >= 0.0" -> "Space::updateSystems" [label="true"];
+    "Space::updateSystems" -> "Space::publishEvents";
+    "Space::publishEvents" -> "remaining -= _intervalMax" -> "remaining >= 0.0";
+    "remaining >= 0.0" -> "BEGIN main() loop" [label="false"];
+
+    // END EDGES
+}

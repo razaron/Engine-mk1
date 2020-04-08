@@ -1,0 +1,23 @@
+digraph G {
+	S -> E0 -> F0, B0;
+	S -> E1 -> F1, B1;
+
+	subgraph cluster_heap {
+		label = "OS HEAP";
+		S[label="Space"];
+		E0[label="Entity0"];
+		E1[label="Entity1"];
+	}
+
+	subgraph cluster_bar {
+		label = "BarSystem::ObjectPool";
+		B0[label="BarComponent"];
+		B1[label="BarComponent"];
+	}
+	
+	subgraph cluster_foo {
+		label = "FooSystem::ObjectPool";
+		F0[label="FooComponent"];
+		F1[label="FooComponent"];
+	}
+}
