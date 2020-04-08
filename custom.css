@@ -1,0 +1,13 @@
+small {
+	font-size: x-small;
+	font-style: italic;
+}
+
+.tparams .paramname {
+    font-weight: bold;
+    vertical-align: top;
+}
+
+div.fragment {
+    padding: 16px;
+}
